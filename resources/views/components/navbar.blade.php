@@ -4,11 +4,11 @@
     <div class="nav-links">
         <a href="{{ route('home') }}">Home</a>
         <a href="{{ route('events.index') }}">Events</a>
-        <a href="{{ route('admin.events.index') }}">Admin</a>
+        <a href="{{ url('/dashboard') }}">Admin</a>
     </div>
 
     <div class="nav-actions">
-        <a href="{{ route('admin.events.create') }}" class="btn btn-solid">Create Event</a>
+        <a href="{{ url('/dashboard/events/create') }}" class="btn btn-solid">Create Event</a>
     </div>
 </nav>
 

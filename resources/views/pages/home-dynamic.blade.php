@@ -15,7 +15,7 @@
                 </p>
                 <div class="hero-actions">
                     <a href="{{ route('events.index') }}" class="btn btn-primary">Browse Events</a>
-                    <a href="{{ route('admin.events.create') }}" class="btn btn-secondary">Create Event</a>
+                    <a href="{{ url('/dashboard/events/create') }}" class="btn btn-secondary">Create Event</a>
                 </div>
             </div>
 

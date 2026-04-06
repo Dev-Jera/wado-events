@@ -8,7 +8,7 @@
                     <p class="eyebrow">Public listings</p>
                     <h1>Events</h1>
                 </div>
-                <a href="{{ route('admin.events.create') }}" class="head-action">Add a new event</a>
+                <a href="{{ url('/dashboard/events/create') }}" class="head-action">Add a new event</a>
             </div>
 
             <div class="events-grid">

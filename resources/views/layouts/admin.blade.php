@@ -28,11 +28,11 @@
 <body>
     <div class="admin-shell">
         <aside class="admin-sidebar">
-            <a href="{{ route('admin.events.index') }}" class="admin-brand">Wado Admin</a>
+            <a href="{{ url('/dashboard') }}" class="admin-brand">Wado Admin</a>
             <nav class="admin-nav" aria-label="Admin navigation">
-                <a href="{{ route('admin.events.index') }}">Dashboard</a>
-                <a href="{{ route('admin.events.create') }}">Create event</a>
-                <a href="{{ route('admin.categories.index') }}">Categories</a>
+                <a href="{{ url('/dashboard') }}">Dashboard</a>
+                <a href="{{ url('/dashboard/events/create') }}">Create event</a>
+                <a href="{{ url('/dashboard/categories') }}">Categories</a>
                 <a href="{{ route('events.index') }}">Public events</a>
             </nav>
         </aside>

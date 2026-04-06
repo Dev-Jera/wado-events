@@ -20,27 +20,40 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@wado.test',
-            'role' => 'admin',
-        ]);
+        $admin = User::query()->updateOrCreate(
+            ['email' => 'admin@wado.test'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+                'role' => 'admin',
+            ],
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'role' => 'customer',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+                'role' => 'customer',
+            ],
+        );
 
         $categories = collect([
             ['name' => 'Music', 'description' => 'Concerts, live sessions, and performance nights.'],
             ['name' => 'Conference', 'description' => 'Professional events, summits, and networking sessions.'],
             ['name' => 'Film', 'description' => 'Premieres, screenings, and cinema experiences.'],
         ])->mapWithKeys(function (array $category) {
-            $record = Category::create([
-                ...$category,
-                'slug' => Str::slug($category['name']).'-'.Str::lower(Str::random(4)),
-            ]);
+            $record = Category::query()->updateOrCreate(
+                ['name' => $category['name']],
+                [
+                    ...$category,
+                    'slug' => Str::slug($category['name']),
+                ],
+            );
 
             return [$record->name => $record];
         });
@@ -102,15 +115,20 @@ class DatabaseSeeder extends Seeder
         foreach ($events as $event) {
             $ticketCategories = collect($event['ticket_categories']);
 
-            $createdEvent = Event::create([
-                ...collect($event)->except(['category_name', 'ticket_categories'])->all(),
-                'user_id' => $admin->id,
-                'category_id' => $categories[$event['category_name']]->id,
-                'slug' => Str::slug($event['title']).'-'.Str::lower(Str::random(6)),
-                'ticket_price' => $ticketCategories->min('price'),
-                'capacity' => $ticketCategories->sum('ticket_count'),
-                'tickets_available' => $ticketCategories->sum('ticket_count'),
-            ]);
+            $createdEvent = Event::query()->updateOrCreate(
+                ['title' => $event['title']],
+                [
+                    ...collect($event)->except(['category_name', 'ticket_categories'])->all(),
+                    'user_id' => $admin->id,
+                    'category_id' => $categories[$event['category_name']]->id,
+                    'slug' => Str::slug($event['title']),
+                    'ticket_price' => $ticketCategories->min('price'),
+                    'capacity' => $ticketCategories->sum('ticket_count'),
+                    'tickets_available' => $ticketCategories->sum('ticket_count'),
+                ],
+            );
+
+            $createdEvent->ticketCategories()->delete();
 
             $ticketCategories->values()->each(function (array $ticketCategory, int $index) use ($createdEvent): void {
                 TicketCategory::create([
