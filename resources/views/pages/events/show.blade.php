@@ -13,7 +13,7 @@
                     <h1>{{ $event->title }}</h1>
                     <p>{{ $event->description }}</p>
                     <div class="hero-actions">
-                        <span class="price-pill">From UGX {{ number_format((float) $event->ticket_price, 2) }}</span>
+                        <span class="price-pill">{{ (float) $event->ticket_price <= 0 ? 'Free Entry' : 'From UGX '.number_format((float) $event->ticket_price, 2) }}</span>
                         <span class="status-pill">{{ ucfirst($event->status) }}</span>
                     </div>
                 </div>
@@ -37,6 +37,17 @@
                 </article>
             </div>
 
+            @if ($event->artists->isNotEmpty())
+                <div class="artists-card">
+                    <h2>Artists</h2>
+                    <div class="artists-grid">
+                        @foreach ($event->artists as $artist)
+                            <span class="artist-pill">{{ $artist->name }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="ticket-options-card">
                 <h2>Ticket categories</h2>
                 <div class="ticket-options-grid">
@@ -45,7 +56,7 @@
                             <strong>{{ $ticketCategory->name }}</strong>
                             <p>{{ $ticketCategory->description ?: 'Custom ticket option for this event.' }}</p>
                             <div class="ticket-option-meta">
-                                <span>UGX {{ number_format((float) $ticketCategory->price, 2) }}</span>
+                                <span>{{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 2) }}</span>
                                 <span>{{ $ticketCategory->tickets_remaining }} / {{ $ticketCategory->ticket_count }} left</span>
                             </div>
                         </article>
@@ -72,6 +83,10 @@
         .detail-card { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
         .detail-card h2 { margin-top: 0; }
         .detail-card p { color: #d7e1f2; line-height: 1.6; }
+        .artists-card { margin-top: 1.2rem; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
+        .artists-card h2 { margin-top: 0; }
+        .artists-grid { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+        .artist-pill { display: inline-flex; align-items: center; padding: 0.65rem 0.95rem; border-radius: 999px; background: rgba(248, 178, 106, 0.16); color: #ffe0bc; font-weight: 700; }
         .ticket-options-card { margin-top: 1.2rem; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
         .ticket-options-card h2 { margin-top: 0; }
         .ticket-options-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }

@@ -10,7 +10,7 @@ class EventController extends Controller
     public function index()
     {
         $events = Event::query()
-            ->with(['category', 'ticketCategories'])
+            ->with(['category', 'ticketCategories', 'artists'])
             ->orderByRaw("CASE WHEN status = 'published' THEN 0 ELSE 1 END")
             ->orderBy('starts_at')
             ->get()
@@ -32,7 +32,7 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        $event->load(['category', 'ticketCategories']);
+        $event->load(['category', 'ticketCategories', 'artists']);
 
         return view('pages.events.show', [
             'event' => $event,

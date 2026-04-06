@@ -10,7 +10,7 @@ class HomeController extends Controller
     public function __invoke()
     {
         $featuredEvents = Event::query()
-            ->with(['category', 'ticketCategories'])
+            ->with(['category', 'ticketCategories', 'artists'])
             ->orderByDesc('is_featured')
             ->orderBy('starts_at')
             ->limit(6)

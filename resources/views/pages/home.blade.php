@@ -99,7 +99,16 @@
 
             <div class="trending-grid">
                 @foreach ($homeEvents->take(5) as $event)
-                    <article class="event-card {{ $loop->index === 1 ? 'event-card-featured' : '' }}">
+                    <article
+                        class="event-card {{ $loop->index === 1 ? 'event-card-featured' : '' }}"
+                        data-description="{{ e($event->description) }}"
+                        data-artists='@json(collect($event->artists ?? [])->pluck("name")->values())'
+                        data-href="{{ $event->url }}"
+                        data-location="{{ e($event->venue.', '.$event->city) }}"
+                        data-time="{{ $event->starts_at->format('h:i A') }}"
+                        data-price="From UGX {{ number_format((float) $event->ticket_price, 0) }}"
+                        data-date="{{ $event->starts_at->format('d M') }}"
+                    >
                         <div class="event-thumb" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}');"></div>
                         <div class="event-content">
                             <h3>{{ $event->title }}</h3>
@@ -127,7 +136,12 @@
                     $categoryKey = \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized');
                     $eventPrice = (float) $event->ticket_price;
                 @endphp
-                <article class="ucard" data-category="{{ $categoryKey }}">
+                <article
+                    class="ucard"
+                    data-category="{{ $categoryKey }}"
+                    data-description="{{ e($event->description) }}"
+                    data-artists='@json(collect($event->artists ?? [])->pluck("name")->values())'
+                >
                     <div class="ucard-thumb" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}');"></div>
                     <div class="ucard-date-badge"><span class="ucard-day">{{ $event->starts_at->format('d') }}</span><span class="ucard-mon">{{ $event->starts_at->format('M') }}</span></div>
                     <div class="ucard-body">
@@ -202,9 +216,14 @@
                 </div>
                 <p class="event-payment-amount">Total: <strong id="event-payment-amount">UGX 0</strong></p>
                 <div class="event-payment-grid">
-                    <button type="button" class="payment-option">Mobile Money</button>
-                    <button type="button" class="payment-option">Card (Visa/Mastercard)</button>
-                    <button type="button" class="payment-option">Bank Transfer</button>
+                    <button type="button" class="payment-option payment-option-mobile">
+                        <img src="{{ asset('images/mtn-logo.png') }}" alt="MTN logo">
+                        <span>MTN MoMo</span>
+                    </button>
+                    <button type="button" class="payment-option payment-option-mobile">
+                        <img src="{{ asset('images/airtel-logo.png') }}" alt="Airtel logo">
+                        <span>Airtel Money</span>
+                    </button>
                 </div>
             </section>
         </div>
@@ -801,6 +820,9 @@
     }
 
     .payment-option {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
         text-align: left;
         border-radius: 10px;
         border: 1px solid #c6d4e9;
@@ -811,6 +833,13 @@
         padding: 0.58rem 0.7rem;
         cursor: pointer;
         transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+    }
+
+    .payment-option img {
+        width: 2rem;
+        height: 2rem;
+        object-fit: contain;
+        flex-shrink: 0;
     }
 
     .payment-option:hover {
@@ -892,6 +921,7 @@
         const modalLink = document.getElementById('event-modal-link');
         const modalDescription = document.getElementById('event-modal-description');
         const modalArtists = document.getElementById('event-modal-artists');
+        const modalArtistsSection = modalArtists?.closest('.event-modal-section');
         const modalAttendees = document.getElementById('event-modal-attendees');
         const categoryPills = document.querySelectorAll('.category-pill');
         const upcomingCards = document.querySelectorAll('.ucard');
@@ -931,6 +961,9 @@
             if (!paymentAmount || !ticketQtyValue) return;
             ticketQtyValue.textContent = String(currentQty);
             paymentAmount.textContent = formatUgx(currentUnitPrice * currentQty);
+            if (modalBuy) {
+                modalBuy.textContent = currentUnitPrice <= 0 ? 'Free Entry' : 'Buy Ticket';
+            }
         };
 
         const cardMatchesCategory = (card, category) => {
@@ -1054,7 +1087,7 @@
             },
             'Neighbourhood Fest': {
                 description: 'A vibrant community celebration with food, performances, local creators, and shared experiences for families and friends.',
-                artists: ['Community Band', 'Culture Troupe', 'Festival Hosts', 'Guest Voices', 'among others'],
+                artists: [],
                 attendees: [
                     { abbr: 'OS', avatar: '/images/hero-image3.jfif' },
                     { abbr: 'KL', avatar: '/images/skilling.jpg' },
@@ -1065,7 +1098,7 @@
             },
             __default: {
                 description: 'Join this event for a complete experience with curated sessions, engaging moments, and a vibrant attendee community.',
-                artists: ['Featured Guests', 'Main Hosts', 'Curated Lineup', 'among others'],
+                artists: [],
                 attendees: [
                     { abbr: 'OS', avatar: '/images/home-hero-bg.jpg' },
                     { abbr: 'KL', avatar: '/images/hero-image2.jpg' },
@@ -1077,10 +1110,11 @@
 
         const enrichData = (data) => {
             const extra = eventExtras[data.title] || eventExtras.__default;
+            const artists = Array.isArray(data.artists) && data.artists.length ? data.artists : extra.artists;
             return {
                 ...data,
-                description: extra.description,
-                artists: extra.artists,
+                description: data.description || extra.description,
+                artists,
                 attendees: extra.attendees,
                 attendeeMore: extra.attendeeMore,
             };
@@ -1112,6 +1146,10 @@
                 chip.textContent = artist;
                 modalArtists.appendChild(chip);
             });
+
+            if (modalArtistsSection) {
+                modalArtistsSection.hidden = !((data.artists || []).length);
+            }
 
             modalAttendees.innerHTML = '';
             (data.attendees || []).forEach((person) => {
@@ -1162,16 +1200,19 @@
             const title = card.querySelector('h3')?.textContent?.trim();
             const category = card.querySelector('p')?.textContent?.trim();
             const image = getBackgroundUrl(card.querySelector('.event-thumb'));
+            const artists = JSON.parse(card.dataset.artists || '[]');
 
             return {
                 title,
                 category,
-                date: 'Upcoming',
-                time: 'To be announced',
-                location: 'See full listing for venue details',
-                price: 'From UGX 20,000',
+                date: card.dataset.date || 'Upcoming',
+                time: card.dataset.time || 'To be announced',
+                location: card.dataset.location || 'See full listing for venue details',
+                price: card.dataset.price || 'From UGX 20,000',
                 image,
-                href: '/events',
+                href: card.dataset.href || '/events',
+                description: card.dataset.description || '',
+                artists,
             };
         };
 
@@ -1186,6 +1227,7 @@
             const price = card.querySelector('.ucard-price')?.textContent?.trim();
             const href = card.querySelector('.ucard-btn')?.getAttribute('href') || '/events';
             const image = getBackgroundUrl(card.querySelector('.ucard-thumb'));
+            const artists = JSON.parse(card.dataset.artists || '[]');
 
             return {
                 title,
@@ -1196,6 +1238,8 @@
                 price,
                 image,
                 href,
+                description: card.dataset.description || '',
+                artists,
             };
         };
 
@@ -1222,6 +1266,10 @@
 
         if (modalBuy && paymentOptions) {
             modalBuy.addEventListener('click', () => {
+                if (currentUnitPrice <= 0) {
+                    window.location.href = modalLink.href;
+                    return;
+                }
                 paymentOptions.hidden = !paymentOptions.hidden;
                 if (!paymentOptions.hidden) {
                     updatePaymentTotal();

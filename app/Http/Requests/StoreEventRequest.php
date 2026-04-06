@@ -24,7 +24,10 @@ class StoreEventRequest extends FormRequest
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'status' => ['required', 'in:draft,published,cancelled'],
             'image_file' => ['nullable', 'image', 'max:5120'],
+            'is_free' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
+            'artists' => ['nullable', 'array'],
+            'artists.*.name' => ['nullable', 'string', 'max:120'],
             'ticket_categories' => ['required', 'array', 'min:1'],
             'ticket_categories.*.name' => ['required', 'string', 'max:100'],
             'ticket_categories.*.price' => ['required', 'numeric', 'min:0'],
@@ -36,6 +39,7 @@ class StoreEventRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'is_free' => $this->boolean('is_free'),
             'is_featured' => $this->boolean('is_featured'),
         ]);
     }

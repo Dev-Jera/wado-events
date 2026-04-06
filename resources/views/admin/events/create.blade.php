@@ -5,6 +5,9 @@
         ['name' => 'VIP', 'price' => '', 'ticket_count' => '', 'description' => ''],
         ['name' => 'Ordinary', 'price' => '', 'ticket_count' => '', 'description' => ''],
     ]);
+    $defaultArtists = old('artists', [
+        ['name' => ''],
+    ]);
 @endphp
 
 @section('title', 'Create Event')
@@ -50,6 +53,23 @@
                 ></div>
             </div>
 
+            <div class="artist-panel">
+                <div class="ticket-tier-head">
+                    <div>
+                        <h3>Artists</h3>
+                        <p>Add artists only for events that need them. Leave this section empty for conferences, sports, worship nights, and other non-artist events.</p>
+                    </div>
+                    <button type="button" class="tier-add-btn" id="add-artist-row">Add artist</button>
+                </div>
+
+                <div id="artist-list" class="ticket-tier-list" data-old='@json($defaultArtists)'></div>
+            </div>
+
+            <label class="checkbox-row">
+                <input type="checkbox" name="is_free" value="1" @checked(old('is_free')) id="is-free-event">
+                <span>This is a free event</span>
+            </label>
+
             <label class="checkbox-row">
                 <input type="checkbox" name="is_featured" value="1" @checked(old('is_featured'))>
                 <span>Feature this event on the home page</span>
@@ -76,6 +96,7 @@
         .field input, .field select, .field textarea { width: 100%; border: 1px solid #d0d5dd; border-radius: 16px; padding: 0.9rem 1rem; font: inherit; color: #101828; background: #fff; }
         .field small { color: #b42318; }
         .ticket-tier-panel { margin-top: 1.5rem; padding: 1.2rem; border-radius: 22px; background: #f8fafc; border: 1px solid #eaecf0; }
+        .artist-panel { margin-top: 1.5rem; padding: 1.2rem; border-radius: 22px; background: #f8fafc; border: 1px solid #eaecf0; }
         .ticket-tier-head { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem; }
         .ticket-tier-head h3 { margin: 0; }
         .ticket-tier-head p { margin: 0.35rem 0 0; color: #667085; line-height: 1.6; }
@@ -99,10 +120,14 @@
         (() => {
             const tierList = document.getElementById('ticket-tier-list');
             const addButton = document.getElementById('add-ticket-tier');
+            const artistList = document.getElementById('artist-list');
+            const addArtistButton = document.getElementById('add-artist-row');
+            const isFreeCheckbox = document.getElementById('is-free-event');
 
-            if (!tierList || !addButton) return;
+            if (!tierList || !addButton || !artistList || !addArtistButton) return;
 
             const oldTiers = JSON.parse(tierList.dataset.old || '[]');
+            const oldArtists = JSON.parse(artistList.dataset.old || '[]');
 
             const buildTierCard = (tier = {}, index = 0) => {
                 const card = document.createElement('div');
@@ -119,7 +144,7 @@
                         </label>
                         <label class="field">
                             <span>Price</span>
-                            <input type="number" step="0.01" min="0" name="ticket_categories[${index}][price]" value="${tier.price ?? ''}" required>
+                            <input type="number" step="0.01" min="0" name="ticket_categories[${index}][price]" value="${tier.price ?? ''}" required class="ticket-price-input">
                         </label>
                         <label class="field">
                             <span>Number of tickets</span>
@@ -152,11 +177,69 @@
             const addTier = (tier = {}) => {
                 tierList.appendChild(buildTierCard(tier, tierList.children.length));
                 syncIndices();
+                syncFreeState();
             };
 
             addButton.addEventListener('click', () => addTier());
 
             oldTiers.forEach((tier) => addTier(tier));
+
+            const buildArtistCard = (artist = {}, index = 0) => {
+                const card = document.createElement('div');
+                card.className = 'ticket-tier-card';
+                card.innerHTML = `
+                    <div class="ticket-tier-card-head">
+                        <strong>Artist ${index + 1}</strong>
+                        <button type="button" class="tier-remove-btn">Remove</button>
+                    </div>
+                    <div class="ticket-tier-grid" style="grid-template-columns: 1fr;">
+                        <label class="field">
+                            <span>Artist name</span>
+                            <input type="text" name="artists[${index}][name]" value="${artist.name ?? ''}" placeholder="Artist or performer name">
+                        </label>
+                    </div>
+                `;
+
+                card.querySelector('.tier-remove-btn').addEventListener('click', () => {
+                    card.remove();
+                    syncArtistIndices();
+                });
+
+                return card;
+            };
+
+            const syncArtistIndices = () => {
+                [...artistList.children].forEach((card, index) => {
+                    card.querySelector('strong').textContent = `Artist ${index + 1}`;
+                    card.querySelectorAll('input').forEach((input) => {
+                        input.name = input.name.replace(/artists\[\d+\]/, `artists[${index}]`);
+                    });
+                });
+            };
+
+            const addArtist = (artist = {}) => {
+                artistList.appendChild(buildArtistCard(artist, artistList.children.length));
+                syncArtistIndices();
+            };
+
+            addArtistButton.addEventListener('click', () => addArtist());
+
+            oldArtists.forEach((artist) => addArtist(artist));
+
+            const syncFreeState = () => {
+                const isFree = !!isFreeCheckbox?.checked;
+                tierList.querySelectorAll('.ticket-price-input').forEach((input) => {
+                    if (isFree) {
+                        input.value = '0';
+                        input.setAttribute('readonly', 'readonly');
+                    } else {
+                        input.removeAttribute('readonly');
+                    }
+                });
+            };
+
+            isFreeCheckbox?.addEventListener('change', syncFreeState);
+            syncFreeState();
         })();
     </script>
 @endsection

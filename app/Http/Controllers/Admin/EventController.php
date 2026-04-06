@@ -8,7 +8,6 @@ use App\Models\Category;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class EventController extends Controller
@@ -16,7 +15,7 @@ class EventController extends Controller
     public function index()
     {
         $events = Event::query()
-            ->with(['organizer', 'category', 'ticketCategories'])
+            ->with(['organizer', 'category', 'ticketCategories', 'artists'])
             ->latest()
             ->get();
 
@@ -42,13 +41,25 @@ class EventController extends Controller
     {
         $admin = User::query()->where('role', 'admin')->first();
         $data = $request->validated();
+        $artists = collect($data['artists'] ?? [])->filter(fn (array $artist) => filled($artist['name'] ?? null));
         $ticketCategories = collect($data['ticket_categories']);
+        $isFree = (bool) ($data['is_free'] ?? false);
+        unset($data['artists']);
         unset($data['ticket_categories']);
         unset($data['image_file']);
+        unset($data['is_free']);
 
         if ($request->hasFile('image_file')) {
             $path = $request->file('image_file')->store('event-images', 'public');
             $data['image_url'] = '/storage/'.$path;
+        }
+
+        if ($isFree) {
+            $ticketCategories = $ticketCategories->map(function (array $ticketCategory) {
+                $ticketCategory['price'] = 0;
+
+                return $ticketCategory;
+            });
         }
 
         $data['slug'] = Str::slug($data['title']).'-'.Str::lower(Str::random(6));
@@ -57,8 +68,15 @@ class EventController extends Controller
         $data['tickets_available'] = $data['capacity'];
         $data['ticket_price'] = $ticketCategories->min('price');
 
-        DB::transaction(function () use ($data, $ticketCategories): void {
+        DB::transaction(function () use ($artists, $data, $ticketCategories): void {
             $event = Event::create($data);
+
+            $artists->values()->each(function (array $artist, int $index) use ($event): void {
+                $event->artists()->create([
+                    'name' => $artist['name'],
+                    'sort_order' => $index,
+                ]);
+            });
 
             $ticketCategories->values()->each(function (array $ticketCategory, int $index) use ($event): void {
                 $event->ticketCategories()->create([
