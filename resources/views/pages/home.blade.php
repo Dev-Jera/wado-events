@@ -1,5 +1,22 @@
 @extends('layouts.app')
 
+@php
+    $homeEvents = $featuredEvents->take(9);
+    $categoryCounts = $homeEvents->groupBy(fn ($event) => \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized'));
+    $iconMap = [
+        'music' => 'icon-music',
+        'sports' => 'icon-sports',
+        'theater' => 'icon-theater',
+        'conference' => 'icon-briefcase',
+        'workshop' => 'icon-tools',
+        'community' => 'icon-community',
+        'comedy' => 'icon-comedy',
+        'film' => 'icon-film',
+        'free event' => 'icon-free',
+        'free' => 'icon-free',
+    ];
+@endphp
+
 @section('content')
     <section class="home-hero">
         <div class="hero-shell">
@@ -60,44 +77,14 @@
                 <div class="categories-track" role="list">
                     <span class="category-pill is-active" role="button" tabindex="0" data-category="all" aria-pressed="true">
                         <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-community"></use></svg><span>All</span></span>
-                        <span class="category-pill-sub">9 events</span>
+                        <span class="category-pill-sub">{{ $homeEvents->count() }} events</span>
                     </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="music" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-music"></use></svg><span>Music</span></span>
-                        <span class="category-pill-sub">8 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="sports" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-sports"></use></svg><span>Sports</span></span>
-                        <span class="category-pill-sub">6 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="theater" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-theater"></use></svg><span>Theater</span></span>
-                        <span class="category-pill-sub">5 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="conference" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-briefcase"></use></svg><span>Conference</span></span>
-                        <span class="category-pill-sub">4 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="workshop" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-tools"></use></svg><span>Workshop</span></span>
-                        <span class="category-pill-sub">4 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="community" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-community"></use></svg><span>Community</span></span>
-                        <span class="category-pill-sub">4 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="comedy" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-comedy"></use></svg><span>Comedy</span></span>
-                        <span class="category-pill-sub">4 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="film" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-film"></use></svg><span>Film</span></span>
-                        <span class="category-pill-sub">5 events</span>
-                    </span>
-                    <span class="category-pill" role="button" tabindex="0" data-category="free" aria-pressed="false">
-                        <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#icon-free"></use></svg><span>Free Events</span></span>
-                        <span class="category-pill-sub">3 events</span>
-                    </span>
+                    @foreach ($categoryCounts as $categoryKey => $events)
+                        <span class="category-pill" role="button" tabindex="0" data-category="{{ $categoryKey }}" aria-pressed="false">
+                            <span class="category-pill-top"><svg class="cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$categoryKey] ?? 'icon-community' }}"></use></svg><span>{{ $events->first()->category_label }}</span></span>
+                            <span class="category-pill-sub">{{ $events->count() }} events</span>
+                        </span>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -111,45 +98,15 @@
             </div>
 
             <div class="trending-grid">
-                <article class="event-card">
-                    <div class="event-thumb" style="background-image: url('{{ asset('images/music.jpg') }}');"></div>
-                    <div class="event-content">
-                        <h3>Live Music Night</h3>
-                        <p>Concerts & Music Shows</p>
-                    </div>
-                </article>
-
-                <article class="event-card event-card-featured">
-                    <div class="event-thumb" style="background-image: url('{{ asset('images/conference.jpg') }}');"></div>
-                    <div class="event-content">
-                        <h3>Business Connect 2026</h3>
-                        <p>Conferences & Corporate Events</p>
-                    </div>
-                </article>
-
-                <article class="event-card">
-                    <div class="event-thumb" style="background-image: url('{{ asset('images/movie.jpg') }}');"></div>
-                    <div class="event-content">
-                        <h3>Film Premiere Weekend</h3>
-                        <p>Film & Screenings</p>
-                    </div>
-                </article>
-
-                <article class="event-card">
-                    <div class="event-thumb" style="background-image: url('{{ asset('images/socker.jpg') }}');"></div>
-                    <div class="event-content">
-                        <h3>City Sports Clash</h3>
-                        <p>Sports & Games</p>
-                    </div>
-                </article>
-
-                <article class="event-card">
-                    <div class="event-thumb" style="background-image: url('{{ asset('images/skilling.jpg') }}');"></div>
-                    <div class="event-content">
-                        <h3>Skills Bootcamp</h3>
-                        <p>Workshops & Training</p>
-                    </div>
-                </article>
+                @foreach ($homeEvents->take(5) as $event)
+                    <article class="event-card {{ $loop->index === 1 ? 'event-card-featured' : '' }}">
+                        <div class="event-thumb" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}');"></div>
+                        <div class="event-content">
+                            <h3>{{ $event->title }}</h3>
+                            <p>{{ $event->category_label }}</p>
+                        </div>
+                    </article>
+                @endforeach
             </div>
         </div>
     </section>
@@ -165,195 +122,32 @@
         </div>
 
         <div class="upcoming-grid" id="upcoming-grid">
-
-            <article class="ucard" data-category="music">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/music.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">14</span><span class="ucard-mon">JUN</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Music</span>
-                    <h3 class="ucard-title">Live Music Night</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Kampala, Uganda
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        7:00 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 50,000</span>
-                        <a href="/events/1" class="ucard-btn">Get Tickets</a>
+            @foreach ($homeEvents as $event)
+                @php
+                    $categoryKey = \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized');
+                    $eventPrice = (float) $event->ticket_price;
+                @endphp
+                <article class="ucard" data-category="{{ $categoryKey }}">
+                    <div class="ucard-thumb" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}');"></div>
+                    <div class="ucard-date-badge"><span class="ucard-day">{{ $event->starts_at->format('d') }}</span><span class="ucard-mon">{{ $event->starts_at->format('M') }}</span></div>
+                    <div class="ucard-body">
+                        <span class="ucard-cat">{{ $event->category_label }}</span>
+                        <h3 class="ucard-title">{{ $event->title }}</h3>
+                        <p class="ucard-meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                            {{ $event->venue }}, {{ $event->city }}
+                        </p>
+                        <p class="ucard-meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            {{ $event->starts_at->format('h:i A') }}
+                        </p>
+                        <div class="ucard-footer">
+                            <span class="ucard-price {{ $eventPrice <= 0 ? 'is-free' : '' }}">{{ $eventPrice <= 0 ? 'Free' : 'UGX '.number_format($eventPrice, 0) }}</span>
+                            <a href="{{ $event->url }}" class="ucard-btn">Get Tickets</a>
+                        </div>
                     </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="conference">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/conference.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">21</span><span class="ucard-mon">JUN</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Conference</span>
-                    <h3 class="ucard-title">Business Connect 2026</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Serena Hotel, Kampala
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        9:00 AM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 150,000</span>
-                        <a href="/events/2" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="film">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/movie.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">28</span><span class="ucard-mon">JUN</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Film</span>
-                    <h3 class="ucard-title">Film Premiere Weekend</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Century Cinemax, Kampala
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        6:30 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 30,000</span>
-                        <a href="/events/3" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="sports">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/socker.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">05</span><span class="ucard-mon">JUL</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Sports</span>
-                    <h3 class="ucard-title">City Sports Clash</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Mandela National Stadium
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        3:00 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 20,000</span>
-                        <a href="/events/4" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="workshop">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/skilling.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">12</span><span class="ucard-mon">JUL</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Workshop</span>
-                    <h3 class="ucard-title">Skills Bootcamp</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Innovation Village, Kampala
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        10:00 AM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 75,000</span>
-                        <a href="/events/5" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="comedy">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/home-hero-bg.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">19</span><span class="ucard-mon">JUL</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Comedy</span>
-                    <h3 class="ucard-title">Laugh Factory Kampala</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Kyadondo Rugby Club
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        8:00 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 40,000</span>
-                        <a href="/events/6" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="theater">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/hero-image2.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">26</span><span class="ucard-mon">JUL</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Theater</span>
-                    <h3 class="ucard-title">Midnight Stage Play</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        National Theatre, Kampala
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        7:30 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price">UGX 35,000</span>
-                        <a href="/events/7" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="community">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/hero-image3.jfif') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">02</span><span class="ucard-mon">AUG</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Community</span>
-                    <h3 class="ucard-title">Neighbourhood Fest</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Lugogo, Kampala
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        12:00 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price is-free">Free</span>
-                        <a href="/events/8" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="ucard" data-category="community">
-                <div class="ucard-thumb" style="background-image: url('{{ asset('images/hero-image2.jpg') }}');"></div>
-                <div class="ucard-date-badge"><span class="ucard-day">09</span><span class="ucard-mon">AUG</span></div>
-                <div class="ucard-body">
-                    <span class="ucard-cat">Free Event</span>
-                    <h3 class="ucard-title">Open Air Praise Night</h3>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                        Freedom Grounds, Kampala
-                    </p>
-                    <p class="ucard-meta">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        5:30 PM
-                    </p>
-                    <div class="ucard-footer">
-                        <span class="ucard-price is-free">Free</span>
-                        <a href="/events/9" class="ucard-btn">Get Tickets</a>
-                    </div>
-                </div>
-            </article>
+                </article>
+            @endforeach
 
         </div>
 

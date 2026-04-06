@@ -5,8 +5,7 @@
     <title>Wado Events</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {{-- CSS --}}
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         :root {
@@ -52,8 +51,6 @@
     </style>
 </head>
 <body>
-
-    {{-- Navbar --}}
     <header class="site-header">
         @include('components.navbar')
     </header>
@@ -62,10 +59,8 @@
         @yield('content')
     </main>
 
-    {{-- Footer --}}
     <footer class="site-footer">
         @include('components.footer')
     </footer>
-
 </body>
 </html>

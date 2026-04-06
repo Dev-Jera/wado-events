@@ -1,22 +1,14 @@
 <nav class="site-nav" aria-label="Main navigation">
-    <a href="/" class="brand">Wado Tickets</a>
+    <a href="{{ route('home') }}" class="brand">Wado Tickets</a>
 
     <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/events">Events</a>
+        <a href="{{ route('home') }}">Home</a>
+        <a href="{{ route('events.index') }}">Events</a>
+        <a href="{{ route('admin.events.index') }}">Admin</a>
     </div>
 
     <div class="nav-actions">
-        @auth
-            <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
-            <form method="POST" action="/logout">
-                @csrf
-                <button class="btn btn-solid" type="submit">Logout</button>
-            </form>
-        @else
-            <a href="/login" class="btn btn-ghost">Login</a>
-            <a href="/register" class="btn btn-solid">Register</a>
-        @endauth
+        <a href="{{ route('admin.events.create') }}" class="btn btn-solid">Create Event</a>
     </div>
 </nav>
 
@@ -84,20 +76,10 @@
         filter: brightness(1.03);
     }
 
-    .btn-ghost {
-        color: #ffffff;
-        border-color: rgba(255, 255, 255, 0.28);
-        background: rgba(255, 255, 255, 0.05);
-    }
-
     .btn-solid {
         color: #ffffff;
         background: linear-gradient(90deg, #ef4444, #b91c1c);
         box-shadow: 0 8px 20px rgba(185, 28, 28, 0.4);
-    }
-
-    .nav-actions form {
-        margin: 0;
     }
 
     @media (max-width: 860px) {

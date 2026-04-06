@@ -1,3 +1,3 @@
 <footer>
-    <p>© {{ date('Y') }} Wado Events Tickets</p>
+    <p>&copy; {{ date('Y') }} Wado Events Tickets</p>
 </footer>
