@@ -1,14 +1,48 @@
+@php
+    $myTicketsUrl = route('tickets.index');
+@endphp
+
 <nav class="site-nav" aria-label="Main navigation">
     <a href="{{ route('home') }}" class="brand">Wado Tickets</a>
 
-    <div class="nav-links">
-        <a href="{{ route('home') }}">Home</a>
-        <a href="{{ route('events.index') }}">Events</a>
-        <a href="{{ url('/dashboard') }}">Admin</a>
-    </div>
+    <a href="{{ $myTicketsUrl }}" class="mobile-ticket-link" aria-label="My tickets">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8zm5 0v10m5-10v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
 
-    <div class="nav-actions">
-        <a href="{{ url('/dashboard/events/create') }}" class="btn btn-solid">Create Event</a>
+    <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav-panel">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="nav-panel" id="site-nav-panel">
+        <div class="nav-links">
+            <a href="{{ route('home') }}">Home</a>
+            <a href="{{ route('events.index') }}">Events</a>
+            @auth
+                <a href="{{ $myTicketsUrl }}">My Tickets</a>
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ url('/dashboard') }}">Admin</a>
+                @endif
+            @endauth
+        </div>
+
+        <div class="nav-actions">
+            @guest
+                <a href="{{ route('login') }}" class="btn btn-ghost">Log in</a>
+                <a href="{{ route('register') }}" class="btn btn-solid">Sign up</a>
+            @endguest
+
+            @auth
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ url('/dashboard/events/create') }}" class="btn btn-solid">Create Event</a>
+                @endif
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost">Log out</button>
+                </form>
+            @endauth
+        </div>
     </div>
 </nav>
 
@@ -36,11 +70,17 @@
         white-space: nowrap;
     }
 
+    .nav-panel,
     .nav-links,
     .nav-actions {
         display: flex;
         align-items: center;
         gap: 0.6rem;
+    }
+
+    .nav-panel {
+        flex: 1;
+        justify-content: space-between;
     }
 
     .nav-links a {
@@ -82,16 +122,104 @@
         box-shadow: 0 8px 20px rgba(185, 28, 28, 0.4);
     }
 
+    .btn-ghost {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .nav-actions form {
+        margin: 0;
+    }
+
+    .mobile-menu-toggle,
+    .mobile-ticket-link {
+        display: none;
+    }
+
+    .mobile-menu-toggle {
+        width: 2.9rem;
+        height: 2.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        flex-direction: column;
+        cursor: pointer;
+    }
+
+    .mobile-menu-toggle span {
+        width: 1.15rem;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+    }
+
+    .mobile-ticket-link {
+        width: 2.9rem;
+        height: 2.9rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255,255,255,0.08);
+    }
+
+    .mobile-ticket-link svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
     @media (max-width: 860px) {
         .site-nav {
-            border-radius: 16px;
-            flex-wrap: wrap;
-            justify-content: center;
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
         }
 
         .brand {
+            width: auto;
+            text-align: left;
+        }
+
+        .mobile-menu-toggle,
+        .mobile-ticket-link {
+            display: inline-flex;
+        }
+
+        .nav-panel {
+            display: none;
+            grid-column: 1 / -1;
             width: 100%;
-            text-align: center;
+            flex-direction: column;
+            align-items: stretch;
+            padding-top: 0.7rem;
+        }
+
+        .site-nav.is-open .nav-panel {
+            display: flex;
+        }
+
+        .nav-links,
+        .nav-actions {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .nav-actions form,
+        .nav-actions form button,
+        .nav-actions .btn {
+            width: 100%;
+        }
+
+        .nav-actions form button {
+            justify-content: center;
         }
     }
 
@@ -100,16 +228,19 @@
             width: calc(100% - 1rem);
             padding: 0.75rem;
         }
-
-        .nav-links {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .nav-actions {
-            width: 100%;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
     }
 </style>
+
+<script>
+    (() => {
+        const nav = document.querySelector('.site-nav');
+        const toggle = nav?.querySelector('.mobile-menu-toggle');
+
+        if (!nav || !toggle) return;
+
+        toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('is-open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+    })();
+</script>

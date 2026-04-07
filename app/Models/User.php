@@ -56,6 +56,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Event::class);
     }
 
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

@@ -216,11 +216,11 @@
                 </div>
                 <p class="event-payment-amount">Total: <strong id="event-payment-amount">UGX 0</strong></p>
                 <div class="event-payment-grid">
-                    <button type="button" class="payment-option payment-option-mobile">
+                    <button type="button" class="payment-option payment-option-mobile" data-provider="mtn">
                         <img src="{{ asset('images/mtn-logo.png') }}" alt="MTN logo">
                         <span>MTN MoMo</span>
                     </button>
-                    <button type="button" class="payment-option payment-option-mobile">
+                    <button type="button" class="payment-option payment-option-mobile" data-provider="airtel">
                         <img src="{{ asset('images/airtel-logo.png') }}" alt="Airtel logo">
                         <span>Airtel Money</span>
                     </button>
@@ -1267,7 +1267,7 @@
         if (modalBuy && paymentOptions) {
             modalBuy.addEventListener('click', () => {
                 if (currentUnitPrice <= 0) {
-                    window.location.href = modalLink.href;
+                    window.location.href = `${modalLink.href}/checkout`;
                     return;
                 }
                 paymentOptions.hidden = !paymentOptions.hidden;
@@ -1296,6 +1296,13 @@
             btn.addEventListener('click', () => {
                 paymentOptionButtons.forEach((item) => item.classList.remove('is-selected'));
                 btn.classList.add('is-selected');
+                const provider = btn.dataset.provider;
+
+                if (!provider) {
+                    return;
+                }
+
+                window.location.href = `${modalLink.href}/checkout?payment_provider=${provider}`;
             });
         });
 

@@ -31,4 +31,9 @@ class TicketCategory extends Model
     {
         return $this->belongsTo(Event::class);
     }
+
+    public function tickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
 }

@@ -41,6 +41,30 @@
             min-height: 100vh;
         }
 
+        .site-flash {
+            position: fixed;
+            top: 6.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 45;
+            width: min(560px, calc(100% - 2rem));
+            padding: 0.95rem 1.1rem;
+            border-radius: 16px;
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+        }
+
+        .site-flash-success {
+            background: #e8fff3;
+            color: #0a7f4f;
+            border: 1px solid #9ce1be;
+        }
+
+        .site-flash-warning {
+            background: #fff6e5;
+            color: #9a6700;
+            border: 1px solid #f4d28c;
+        }
+
         .site-footer {
             padding: 1.25rem 1rem 1.5rem;
             text-align: center;
@@ -51,16 +75,28 @@
     </style>
 </head>
 <body>
-    <header class="site-header">
-        @include('components.navbar')
-    </header>
+    @php($isFullBleed = trim((string) $__env->yieldContent('fullbleed')) === '1')
+
+    @unless($isFullBleed)
+        <header class="site-header">
+            @include('components.navbar')
+        </header>
+    @endunless
 
     <main class="page-content">
+        @if (session('success'))
+            <div class="site-flash {{ $isFullBleed ? 'site-flash-fullbleed' : '' }} site-flash-success">{{ session('success') }}</div>
+        @endif
+        @if (session('warning'))
+            <div class="site-flash {{ $isFullBleed ? 'site-flash-fullbleed' : '' }} site-flash-warning">{{ session('warning') }}</div>
+        @endif
         @yield('content')
     </main>
 
-    <footer class="site-footer">
-        @include('components.footer')
-    </footer>
+    @unless($isFullBleed)
+        <footer class="site-footer">
+            @include('components.footer')
+        </footer>
+    @endunless
 </body>
 </html>

@@ -59,4 +59,9 @@ class Event extends Model
     {
         return $this->hasMany(EventArtist::class)->orderBy('sort_order');
     }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
 }

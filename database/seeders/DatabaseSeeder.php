@@ -44,7 +44,21 @@ class DatabaseSeeder extends Seeder
 
         $categories = collect([
             ['name' => 'Music', 'description' => 'Concerts, live sessions, and performance nights.'],
+            ['name' => 'Sports', 'description' => 'Matches, tournaments, and fan experiences.'],
+            ['name' => 'Church', 'description' => 'Fellowship gatherings, worship services, and ministry events.'],
+            ['name' => 'Charity', 'description' => 'Giving drives, support events, and social impact gatherings.'],
+            ['name' => 'Musical Concerts', 'description' => 'Live performances, concerts, and entertainment experiences.'],
+            ['name' => 'Fundraising', 'description' => 'Campaign launches, donor drives, and community fundraising events.'],
+            ['name' => 'Educational', 'description' => 'Learning sessions, workshops, trainings, and academic events.'],
+            ['name' => 'Gaming', 'description' => 'Esports, tournaments, gaming nights, and interactive competitions.'],
             ['name' => 'Conference', 'description' => 'Professional events, summits, and networking sessions.'],
+            ['name' => 'Conferences', 'description' => 'Professional conferences, summits, and business networking sessions.'],
+            ['name' => 'Kids Events', 'description' => 'Children-focused activities, fun days, and family entertainment.'],
+            ['name' => 'Wellness', 'description' => 'Health, fitness, mindfulness, and wellbeing experiences.'],
+            ['name' => 'Family', 'description' => 'Family-friendly outings, celebrations, and shared experiences.'],
+            ['name' => 'Corporate Events', 'description' => 'Company meetings, launches, networking, and staff experiences.'],
+            ['name' => 'Free Events', 'description' => 'Open-access community events with free entry.'],
+            ['name' => 'Comedy', 'description' => 'Stand-up shows, comic performances, and laughter-filled nights.'],
             ['name' => 'Film', 'description' => 'Premieres, screenings, and cinema experiences.'],
         ])->mapWithKeys(function (array $category) {
             $record = Category::query()->updateOrCreate(

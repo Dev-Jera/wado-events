@@ -15,6 +15,11 @@
                     <div class="hero-actions">
                         <span class="price-pill">{{ (float) $event->ticket_price <= 0 ? 'Free Entry' : 'From UGX '.number_format((float) $event->ticket_price, 2) }}</span>
                         <span class="status-pill">{{ ucfirst($event->status) }}</span>
+                        @if ($event->ticketCategories->isNotEmpty())
+                            <a href="{{ route('checkout.create', $event) }}" class="buy-ticket-btn">
+                                {{ (float) $event->ticket_price <= 0 ? 'Reserve Spot' : 'Buy Ticket' }}
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -59,6 +64,9 @@
                                 <span>{{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 2) }}</span>
                                 <span>{{ $ticketCategory->tickets_remaining }} / {{ $ticketCategory->ticket_count }} left</span>
                             </div>
+                            <a href="{{ route('checkout.create', [$event, 'ticket_category' => $ticketCategory->id]) }}" class="ticket-option-btn">
+                                {{ (float) $ticketCategory->price <= 0 ? 'Reserve now' : 'Buy now' }}
+                            </a>
                         </article>
                     @empty
                         <p>No ticket categories added yet.</p>
@@ -79,6 +87,8 @@
         .price-pill, .status-pill { display: inline-flex; padding: 0.72rem 1rem; border-radius: 999px; font-weight: 700; }
         .price-pill { color: #09111c; background: #f8b26a; }
         .status-pill { background: rgba(255, 255, 255, 0.14); }
+        .buy-ticket-btn, .ticket-option-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 999px; font-weight: 700; }
+        .buy-ticket-btn { color: #fff; background: linear-gradient(90deg, #ef4444, #b91c1c); padding: 0.72rem 1rem; }
         .details-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.2rem; }
         .detail-card { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
         .detail-card h2 { margin-top: 0; }
@@ -93,6 +103,7 @@
         .ticket-option { padding: 1rem; border-radius: 18px; background: rgba(255, 255, 255, 0.05); }
         .ticket-option p { color: #d7e1f2; line-height: 1.6; }
         .ticket-option-meta { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-weight: 700; }
+        .ticket-option-btn { margin-top: 0.85rem; color: #09111c; background: #f8b26a; padding: 0.7rem 0.95rem; }
         @media (max-width: 900px) { .details-grid, .ticket-options-grid { grid-template-columns: 1fr; } }
     </style>
 @endsection
