@@ -69,11 +69,6 @@
                         </label>
                     </div>
 
-                    <div class="auth-strength" id="register-strength" aria-live="polite">
-                        <div class="auth-strength-track"><span></span></div>
-                        <small>Strength: too weak</small>
-                    </div>
-
                     <button type="submit" class="auth-btn">Create account</button>
                 </form>
 
@@ -98,9 +93,19 @@
                     <span class="auth-art-dot auth-art-dot-top"></span>
                     <span class="auth-art-dot auth-art-dot-bottom"></span>
                     <div class="auth-art-alert">
-                        <div class="auth-art-alert-input" id="auth-art-password-preview">************</div>
-                        <p id="auth-art-password-feedback">Password is too simple or there are not enough characters in it</p>
+                        <div class="auth-art-alert-input">
+                            <span id="auth-art-password-preview">************</span>
+                            <span class="auth-art-mini-eye" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                    <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <p id="auth-art-password-feedback"><span class="auth-art-warn-icon">!</span><span id="auth-art-password-feedback-text">Password is too simple or there are not enough characters in it</span></p>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -141,10 +146,6 @@
         .auth-eye-btn svg { width: 18px; height: 18px; }
         .auth-eye-btn .eye-off { opacity: 1; }
         .auth-eye-btn.is-visible .eye-off { opacity: 0; }
-        .auth-strength { margin-top: -0.25rem; }
-        .auth-strength-track { width: 100%; height: 6px; border-radius: 999px; background: #e8edf5; overflow: hidden; }
-        .auth-strength-track span { display: block; height: 100%; width: 18%; background: #e15567; transition: width 140ms ease, background-color 140ms ease; }
-        .auth-strength small { margin-top: 0.38rem; display: block; color: #5d6475; font-size: 0.74rem; }
         .auth-btn { height: 44px; border: 1px solid #0d5cc2; border-radius: 8px; background: #1662d3; color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; }
         .auth-divider { display: flex; align-items: center; gap: 0.8rem; margin: 1rem 0; }
         .auth-divider hr { flex: 1; border: none; border-top: 1px solid #d8e1f0; }
@@ -162,8 +163,13 @@
         .auth-art-dot-top { right: 190px; top: -158px; background: #17bf86; box-shadow: 0 0 0 6px rgba(23, 191, 134, 0.2); }
         .auth-art-dot-bottom { right: 16px; top: -22px; background: #cc3be9; box-shadow: 0 0 0 6px rgba(204, 59, 233, 0.2); }
         .auth-art-alert { background: #fff; border: 1px solid #e8edf6; border-radius: 14px; box-shadow: 0 10px 24px rgba(37, 74, 136, 0.1); padding: 0.7rem 0.75rem 0.6rem; }
-        .auth-art-alert-input { border: 1px solid #f1a5af; border-radius: 8px; min-height: 36px; display: flex; align-items: center; padding: 0 0.6rem; color: #4b5267; font-size: 0.85rem; letter-spacing: 0.04em; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-        .auth-art-alert p { margin: 0.45rem 0 0; color: #d74e63; font-size: 0.72rem; line-height: 1.25; }
+        .auth-art-alert-input { border: 1px solid #f1a5af; border-radius: 8px; min-height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 0.6rem; color: #4b5267; font-size: 0.85rem; letter-spacing: 0.04em; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .auth-art-mini-eye { color: #1673d5; display: inline-flex; align-items: center; justify-content: center; }
+        .auth-art-mini-eye svg { width: 14px; height: 14px; }
+        .auth-art-alert p { margin: 0.45rem 0 0; color: #d74e63; font-size: 0.72rem; line-height: 1.25; display: flex; align-items: center; gap: 0.35rem; }
+        .auth-art-warn-icon { width: 11px; height: 11px; border: 1px solid currentColor; border-radius: 50%; font-size: 8px; line-height: 9px; text-align: center; flex-shrink: 0; }
+        .auth-art-label { position: absolute; left: -78px; bottom: -18px; background: #f020bf; color: #fff; font-size: 0.66rem; line-height: 1; font-weight: 700; padding: 5px 11px; border-radius: 4px; }
+        .auth-art-label::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 6px solid #f020bf; }
         @media (max-width: 1100px) { .auth-art { display: none; } }
         @media (max-width: 860px) { .auth-shell { grid-template-columns: 1fr; width: 100%; } .auth-visual { padding: 3.1rem 1.25rem 1.6rem; align-items: center; text-align: center; } .auth-logo-name, .auth-title, .auth-tagline { width: auto; } .auth-title { font-size: 2.35rem; } .auth-tagline { max-width: none; } .auth-card { padding: 1.25rem; } .auth-card-panel { width: 100%; margin-left: 0; } .auth-pw-row, .auth-social { grid-template-columns: 1fr; } .auth-event-wrap { justify-content: center; } }
     </style>
@@ -176,12 +182,11 @@
                 if (initialized) return;
 
                 const passwordInput = document.getElementById('register-password');
-                const meter = document.querySelector('#register-strength .auth-strength-track span');
-                const meterText = document.querySelector('#register-strength small');
                 const previewText = document.getElementById('auth-art-password-preview');
                 const feedbackText = document.getElementById('auth-art-password-feedback');
+                const feedbackTextValue = document.getElementById('auth-art-password-feedback-text');
 
-                if (!passwordInput || !meter || !meterText) return;
+                if (!passwordInput) return;
                 initialized = true;
 
                 const toggleButtons = document.querySelectorAll('.auth-eye-btn');
@@ -213,16 +218,13 @@
 
                 const render = () => {
                     const state = evaluateStrength(passwordInput.value || '');
-                    meter.style.width = state.width + '%';
-                    meter.style.backgroundColor = state.color;
-                    meterText.textContent = state.text;
 
                     if (previewText) {
                         const masked = '*'.repeat(Math.min((passwordInput.value || '').length, 18));
                         previewText.textContent = masked;
                     }
-                    if (feedbackText) {
-                        feedbackText.textContent = state.detail;
+                    if (feedbackText && feedbackTextValue) {
+                        feedbackTextValue.textContent = state.detail;
                         feedbackText.style.color = state.color;
                     }
                 };
