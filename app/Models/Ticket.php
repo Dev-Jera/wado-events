@@ -15,12 +15,14 @@ class Ticket extends Model
         'event_id',
         'ticket_category_id',
         'ticket_code',
+        'qr_code_path',
         'quantity',
         'unit_price',
         'total_amount',
         'payment_provider',
         'status',
         'purchased_at',
+        'used_at',
     ];
 
     protected function casts(): array
@@ -29,6 +31,7 @@ class Ticket extends Model
             'unit_price' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'purchased_at' => 'datetime',
+            'used_at' => 'datetime',
         ];
     }
 

@@ -7,103 +7,284 @@
 @section('content')
     <section class="event-show">
         <div class="event-show-shell">
-            <div class="event-hero" style="background-image: linear-gradient(rgba(7, 16, 28, 0.55), rgba(7, 16, 28, 0.82)), url('{{ $image }}')">
-                <div class="hero-panel">
-                    <p class="eyebrow">{{ $event->category?->name ?? 'Uncategorized' }}</p>
-                    <h1>{{ $event->title }}</h1>
-                    <p>{{ $event->description }}</p>
-                    <div class="hero-actions">
-                        <span class="price-pill">{{ (float) $event->ticket_price <= 0 ? 'Free Entry' : 'From UGX '.number_format((float) $event->ticket_price, 2) }}</span>
-                        <span class="status-pill">{{ ucfirst($event->status) }}</span>
-                        @if ($event->ticketCategories->isNotEmpty())
-                            <a href="{{ route('checkout.create', $event) }}" class="buy-ticket-btn">
-                                {{ (float) $event->ticket_price <= 0 ? 'Reserve Spot' : 'Buy Ticket' }}
-                            </a>
-                        @endif
-                    </div>
+
+            {{-- Hero --}}
+            <div class="event-hero" style="background-image: linear-gradient(rgba(7,16,28,0.35), rgba(7,16,28,0.88)), url('{{ $image }}')">
+                <p class="eyebrow">{{ $event->category?->name ?? 'Uncategorized' }}</p>
+                <h1>{{ $event->title }}</h1>
+                <p class="hero-desc">{{ $event->description }}</p>
+                <div class="hero-actions">
+                    <span class="pill-price">{{ (float) $event->ticket_price <= 0 ? 'Free Entry' : 'From UGX '.number_format((float) $event->ticket_price, 0) }}</span>
+                    <span class="pill-status">{{ ucfirst($event->status) }}</span>
+                    @if ($event->ticketCategories->isNotEmpty())
+                        <a href="{{ route('checkout.create', $event) }}" class="btn-buy">
+                            {{ (float) $event->ticket_price <= 0 ? 'Reserve Spot' : 'Buy Ticket' }}
+                        </a>
+                    @endif
                 </div>
             </div>
 
-            <div class="details-grid">
-                <article class="detail-card">
-                    <h2>Schedule</h2>
-                    <p>{{ $event->starts_at->format('l, d M Y') }}</p>
-                    <p>{{ $event->starts_at->format('h:i A') }}@if($event->ends_at) - {{ $event->ends_at->format('h:i A') }}@endif</p>
-                </article>
-                <article class="detail-card">
-                    <h2>Location</h2>
-                    <p>{{ $event->venue }}</p>
-                    <p>{{ $event->city }}, {{ $event->country }}</p>
-                </article>
-                <article class="detail-card">
-                    <h2>Tickets</h2>
-                    <p>{{ $event->tickets_available }} left</p>
-                    <p>Capacity: {{ $event->capacity }}</p>
-                </article>
+            {{-- Schedule / Location / Tickets --}}
+            <div class="details-row">
+                <div class="detail-card">
+                    <p class="dc-label">Schedule</p>
+                    <p class="dc-main">{{ $event->starts_at->format('l, d M Y') }}</p>
+                    <p class="dc-sub">{{ $event->starts_at->format('h:i A') }}@if($event->ends_at) – {{ $event->ends_at->format('h:i A') }}@endif</p>
+                </div>
+                <div class="detail-card">
+                    <p class="dc-label">Location</p>
+                    <p class="dc-main">{{ $event->venue }}</p>
+                    <p class="dc-sub">{{ $event->city }}, {{ $event->country }}</p>
+                </div>
+                <div class="detail-card">
+                    <p class="dc-label">Tickets</p>
+                    <p class="dc-main">{{ $event->tickets_available }} left</p>
+                    <p class="dc-sub">Capacity: {{ $event->capacity }}</p>
+                </div>
             </div>
 
+            {{-- Ticket categories --}}
+            <div class="section-card">
+                <p class="section-title">Ticket categories</p>
+                <div class="tickets-grid">
+                    @forelse ($event->ticketCategories as $ticketCategory)
+                        <div class="ticket-item">
+                            <p class="ti-name">{{ $ticketCategory->name }}</p>
+                            <p class="ti-desc">{{ $ticketCategory->description ?: 'Custom ticket option for this event.' }}</p>
+                            <div class="ti-footer">
+                                <span class="ti-price">{{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 0) }}</span>
+                                <span class="ti-left">{{ $ticketCategory->tickets_remaining }} / {{ $ticketCategory->ticket_count }} left</span>
+                                <a href="{{ route('checkout.create', [$event, 'ticket_category' => $ticketCategory->id]) }}" class="ti-btn">
+                                    {{ (float) $ticketCategory->price <= 0 ? 'Reserve now' : 'Buy now' }}
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="dc-sub">No ticket categories added yet.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Artists (only shown if present) --}}
             @if ($event->artists->isNotEmpty())
-                <div class="artists-card">
-                    <h2>Artists</h2>
-                    <div class="artists-grid">
+                <div class="section-card">
+                    <p class="section-title">Artists &amp; Speakers</p>
+                    <div class="artists-wrap">
                         @foreach ($event->artists as $artist)
-                            <span class="artist-pill">{{ $artist->name }}</span>
+                            <span class="artist-tag">{{ $artist->name }}</span>
                         @endforeach
                     </div>
                 </div>
             @endif
 
-            <div class="ticket-options-card">
-                <h2>Ticket categories</h2>
-                <div class="ticket-options-grid">
-                    @forelse ($event->ticketCategories as $ticketCategory)
-                        <article class="ticket-option">
-                            <strong>{{ $ticketCategory->name }}</strong>
-                            <p>{{ $ticketCategory->description ?: 'Custom ticket option for this event.' }}</p>
-                            <div class="ticket-option-meta">
-                                <span>{{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 2) }}</span>
-                                <span>{{ $ticketCategory->tickets_remaining }} / {{ $ticketCategory->ticket_count }} left</span>
-                            </div>
-                            <a href="{{ route('checkout.create', [$event, 'ticket_category' => $ticketCategory->id]) }}" class="ticket-option-btn">
-                                {{ (float) $ticketCategory->price <= 0 ? 'Reserve now' : 'Buy now' }}
-                            </a>
-                        </article>
-                    @empty
-                        <p>No ticket categories added yet.</p>
-                    @endforelse
-                </div>
-            </div>
         </div>
     </section>
 
     <style>
-        .event-show { padding: 9rem 1rem 4rem; background: linear-gradient(180deg, #07101c 0%, #0b1627 100%); }
-        .event-show-shell { width: min(1100px, calc(100% - 2rem)); margin: 0 auto; }
-        .event-hero { min-height: 420px; border-radius: 30px; overflow: hidden; background-size: cover; background-position: center; display: flex; align-items: end; padding: 2rem; }
-        .hero-panel { width: min(620px, 100%); }
-        .event-hero h1 { margin: 0; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 0.98; }
-        .event-hero p { color: #d7e1f2; line-height: 1.7; }
-        .hero-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
-        .price-pill, .status-pill { display: inline-flex; padding: 0.72rem 1rem; border-radius: 999px; font-weight: 700; }
-        .price-pill { color: #09111c; background: #f8b26a; }
-        .status-pill { background: rgba(255, 255, 255, 0.14); }
-        .buy-ticket-btn, .ticket-option-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 999px; font-weight: 700; }
-        .buy-ticket-btn { color: #fff; background: linear-gradient(90deg, #ef4444, #b91c1c); padding: 0.72rem 1rem; }
-        .details-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.2rem; }
-        .detail-card { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
-        .detail-card h2 { margin-top: 0; }
-        .detail-card p { color: #d7e1f2; line-height: 1.6; }
-        .artists-card { margin-top: 1.2rem; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
-        .artists-card h2 { margin-top: 0; }
-        .artists-grid { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-        .artist-pill { display: inline-flex; align-items: center; padding: 0.65rem 0.95rem; border-radius: 999px; background: rgba(248, 178, 106, 0.16); color: #ffe0bc; font-weight: 700; }
-        .ticket-options-card { margin-top: 1.2rem; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 1.4rem; }
-        .ticket-options-card h2 { margin-top: 0; }
-        .ticket-options-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-        .ticket-option { padding: 1rem; border-radius: 18px; background: rgba(255, 255, 255, 0.05); }
-        .ticket-option p { color: #d7e1f2; line-height: 1.6; }
-        .ticket-option-meta { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-weight: 700; }
-        .ticket-option-btn { margin-top: 0.85rem; color: #09111c; background: #f8b26a; padding: 0.7rem 0.95rem; }
-        @media (max-width: 900px) { .details-grid, .ticket-options-grid { grid-template-columns: 1fr; } }
+        /* ── Page ── */
+        .event-show {
+            padding: 9rem 1rem 4rem;
+            background: linear-gradient(180deg, #07101c 0%, #0b1627 100%);
+            min-height: 100vh;
+        }
+        .event-show-shell {
+            width: min(1000px, calc(100% - 2rem));
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ── Hero ── */
+        .event-hero {
+            border-radius: 20px;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 300px;
+        }
+        .eyebrow {
+            font-size: 12px;
+            color: #1a73e8;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .event-hero h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.2;
+            margin: 0 0 8px;
+        }
+        .hero-desc {
+            font-size: 14px;
+            color: #b0bfd4;
+            line-height: 1.6;
+            max-width: 560px;
+            margin: 0 0 16px;
+        }
+        .hero-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .pill-price {
+            background: #1a73e8;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 16px;
+            border-radius: 999px;
+        }
+        .pill-status {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: 0.5px solid rgba(255,255,255,0.2);
+        }
+        .btn-buy {
+            background: #e8241a;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+        }
+        .btn-buy:hover { opacity: 0.9; }
+
+        /* ── Detail cards ── */
+        .details-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .detail-card {
+            background: rgba(26,115,232,0.08);
+            border: 0.5px solid rgba(26,115,232,0.2);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+        .dc-label {
+            font-size: 11px;
+            color: #1a73e8;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .dc-main {
+            font-size: 15px;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .dc-sub {
+            font-size: 13px;
+            color: #8a9ab8;
+        }
+
+        /* ── Section cards (tickets, artists) ── */
+        .section-card {
+            background: rgba(26,115,232,0.06);
+            border: 0.5px solid rgba(26,115,232,0.15);
+            border-radius: 14px;
+            padding: 18px 20px;
+        }
+        .section-title {
+            font-size: 11px;
+            color: #1a73e8;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        /* ── Ticket items ── */
+        .tickets-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .ticket-item {
+            background: rgba(255,255,255,0.04);
+            border: 0.5px solid rgba(26,115,232,0.15);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .ti-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .ti-desc {
+            font-size: 12px;
+            color: #8a9ab8;
+            line-height: 1.5;
+        }
+        .ti-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .ti-price {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a73e8;
+        }
+        .ti-left {
+            font-size: 12px;
+            color: #6b7ea0;
+        }
+        .ti-btn {
+            background: #e8241a;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .ti-btn:hover { background: #c01e15; }
+
+        /* ── Artists ── */
+        .artists-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .artist-tag {
+            background: rgba(26,115,232,0.12);
+            color: #7ab3f5;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 0.5px solid rgba(26,115,232,0.3);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .details-row,
+            .tickets-grid { grid-template-columns: 1fr; }
+            .event-hero h1 { font-size: 1.5rem; }
+        }
     </style>
 @endsection

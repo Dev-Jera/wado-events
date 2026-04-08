@@ -24,6 +24,7 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
         'role',
     ];
@@ -66,8 +67,23 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === 'admin';
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isGateAgent(): bool
+    {
+        return in_array($this->role, ['agent', 'gate', 'gate_agent'], true);
+    }
+
+    public function isGateStaff(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdmin() || $this->isGateAgent();
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->isAdmin();
+        return $this->isSuperAdmin() || $this->isAdmin();
     }
 }

@@ -12,6 +12,7 @@
 
             <form method="POST" action="{{ route('checkout.store', $event) }}" class="checkout-card">
                 @csrf
+                <input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', $idempotencyKey) }}">
                 <h2>Choose your ticket</h2>
 
                 <label>
@@ -42,7 +43,13 @@
                     @error('payment_provider') <small>{{ $message }}</small> @enderror
                 </label>
 
-                <button type="submit" class="checkout-btn">Complete purchase</button>
+                <label>
+                    <span>Mobile money number</span>
+                    <input type="text" name="phone_number" value="{{ old('phone_number', $phoneNumber) }}" placeholder="e.g. 2567XXXXXXXX">
+                    @error('phone_number') <small>{{ $message }}</small> @enderror
+                </label>
+
+                <button type="submit" class="checkout-btn">Initiate payment</button>
             </form>
         </div>
     </section>

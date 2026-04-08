@@ -33,6 +33,9 @@
                 <a href="{{ url('/dashboard') }}">Dashboard</a>
                 <a href="{{ url('/dashboard/events/create') }}">Create event</a>
                 <a href="{{ url('/dashboard/categories') }}">Categories</a>
+                <a href="{{ route('payments.admin.index') }}">Payment Monitor</a>
+                <a href="{{ route('gate.portal') }}">Gate Portal</a>
+                <a href="{{ route('admin.users.index') }}">Users & Roles</a>
                 <a href="{{ route('events.index') }}">Public events</a>
             </nav>
         </aside>

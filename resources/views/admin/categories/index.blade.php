@@ -55,7 +55,7 @@
         .categories-grid { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(320px, 1.1fr); gap: 1rem; }
         .category-panel { padding: 1.5rem; }
         .category-panel h2 { margin-top: 0; }
-        .category-panel p { color: #667085; line-height: 1.6; }
+        .category-panel p { color: #000000; line-height: 1.6; }
         .category-form { display: grid; gap: 1rem; margin-top: 1rem; }
         .field { display: grid; gap: 0.45rem; color: #344054; font-weight: 600; }
         .field input, .field textarea { width: 100%; border: 1px solid #d0d5dd; border-radius: 16px; padding: 0.9rem 1rem; font: inherit; color: #101828; background: #fff; }

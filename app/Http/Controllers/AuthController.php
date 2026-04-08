@@ -44,12 +44,14 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'phone' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
             'password' => $data['password'],
             'role' => 'customer',
         ]);
@@ -75,6 +77,15 @@ class AuthController extends Controller
             return $checkoutRedirect;
         }
 
-        return $request->session()->pull('url.intended', route('tickets.index'));
+        $user = $request->user();
+        if ($user?->isSuperAdmin() || $user?->isAdmin()) {
+            return url('/dashboard');
+        }
+
+        if ($user?->isGateStaff()) {
+            return route('gate.portal');
+        }
+
+        return route('tickets.index');
     }
 }

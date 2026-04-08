@@ -59,12 +59,12 @@
         .flash-success { padding: 1rem 1.2rem; color: #166534; margin-bottom: 1rem; border: 1px solid #bbf7d0; background: #f0fdf4; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
         .stat-card { padding: 1.4rem; }
-        .stat-card span { display: block; color: #667085; margin-bottom: 0.6rem; }
+        .stat-card span { display: block; color: #000000; margin-bottom: 0.6rem; }
         .stat-card strong { font-size: 2rem; }
         .panel { padding: 1.4rem; }
         .panel-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
         .panel-head h2 { margin: 0; }
-        .panel-head p { margin: 0.35rem 0 0; color: #667085; }
+        .panel-head p { margin: 0.35rem 0 0; color: #000000; }
         .primary-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.9rem 1.1rem; border-radius: 999px; background: linear-gradient(135deg, #f15a24, #dc2626); color: #fff; text-decoration: none; font-weight: 700; }
         .table-wrap { overflow-x: auto; }
         .events-table { width: 100%; border-collapse: collapse; }

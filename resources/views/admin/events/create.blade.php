@@ -88,7 +88,7 @@
     <style>
         .form-panel { background: #fff; border-radius: 24px; padding: 1.5rem; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07); }
         .panel-copy h2 { margin: 0; }
-        .panel-copy p { color: #667085; max-width: 62ch; line-height: 1.6; }
+        .panel-copy p { color: #000000; max-width: 62ch; line-height: 1.6; }
         .event-form { margin-top: 1.4rem; }
         .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
         .field { display: grid; gap: 0.45rem; color: #344054; font-weight: 600; }
@@ -99,7 +99,7 @@
         .artist-panel { margin-top: 1.5rem; padding: 1.2rem; border-radius: 22px; background: #f8fafc; border: 1px solid #eaecf0; }
         .ticket-tier-head { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem; }
         .ticket-tier-head h3 { margin: 0; }
-        .ticket-tier-head p { margin: 0.35rem 0 0; color: #667085; line-height: 1.6; }
+        .ticket-tier-head p { margin: 0.35rem 0 0; color: #000000; line-height: 1.6; }
         .ticket-tier-list { display: grid; gap: 1rem; }
         .ticket-tier-card { padding: 1rem; border-radius: 18px; background: #fff; border: 1px solid #dfe3ea; }
         .ticket-tier-card-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
@@ -111,7 +111,7 @@
         .block-error { display: block; margin-bottom: 0.8rem; color: #b42318; }
         .checkbox-row { display: inline-flex; align-items: center; gap: 0.7rem; margin-top: 1.2rem; color: #344054; font-weight: 600; }
         .submit-btn { margin-top: 1.5rem; border: 0; border-radius: 999px; padding: 0.95rem 1.2rem; background: linear-gradient(135deg, #f15a24, #dc2626); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-        .helper-note { margin-top: 1rem; color: #667085; }
+        .helper-note { margin-top: 1rem; color: #000000; }
         .helper-note a { color: #b45309; font-weight: 700; text-decoration: none; }
         @media (max-width: 860px) { .field-grid, .ticket-tier-grid { grid-template-columns: 1fr; } .ticket-tier-head, .ticket-tier-card-head { flex-direction: column; align-items: start; } }
     </style>

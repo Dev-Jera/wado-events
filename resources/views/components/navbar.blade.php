@@ -3,7 +3,9 @@
 @endphp
 
 <nav class="site-nav" aria-label="Main navigation">
-    <a href="{{ route('home') }}" class="brand">Wado Tickets</a>
+    <a href="{{ route('home') }}" class="brand" aria-label="Wado Tickets home">
+        <img src="{{ asset('images/wado-logo.png') }}" alt="Wado Tickets">
+    </a>
 
     <a href="{{ $myTicketsUrl }}" class="mobile-ticket-link" aria-label="My tickets">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8zm5 0v10m5-10v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -21,8 +23,14 @@
             <a href="{{ route('events.index') }}">Events</a>
             @auth
                 <a href="{{ $myTicketsUrl }}">My Tickets</a>
-                @if (auth()->user()->isAdmin())
+                @if (auth()->user()->isGateStaff())
+                    <a href="{{ route('gate.portal') }}">Gate Portal</a>
+                @endif
+                @if (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
                     <a href="{{ url('/dashboard') }}">Admin</a>
+                    @if (auth()->user()->isSuperAdmin())
+                        <a href="{{ \App\Filament\Resources\PaymentTransactions\PaymentTransactionResource::getUrl() }}">Payments</a>
+                    @endif
                 @endif
             @endauth
         </div>
@@ -34,8 +42,11 @@
             @endguest
 
             @auth
-                @if (auth()->user()->isAdmin())
+                @if (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
                     <a href="{{ url('/dashboard/events/create') }}" class="btn btn-solid">Create Event</a>
+                @endif
+                @if (auth()->user()->isGateStaff())
+                    <a href="{{ route('tickets.verify.index') }}" class="btn btn-ghost">Scanner</a>
                 @endif
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -63,11 +74,19 @@
     }
 
     .brand {
+        display: inline-flex;
+        align-items: center;
         text-decoration: none;
         color: #ffffff;
         font-weight: 700;
         letter-spacing: 0.01em;
         white-space: nowrap;
+    }
+
+    .brand img {
+        height: 34px;
+        width: auto;
+        display: block;
     }
 
     .nav-panel,
