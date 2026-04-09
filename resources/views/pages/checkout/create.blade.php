@@ -3,23 +3,72 @@
 @section('content')
     <section class="checkout-page">
         <div class="checkout-shell">
-            <div class="checkout-summary">
-                <p class="checkout-kicker">Secure checkout</p>
-                <h1>{{ $event->title }}</h1>
-                <p>{{ $event->venue }}, {{ $event->city }} · {{ $event->starts_at->format('d M Y, h:i A') }}</p>
-                <a href="{{ route('events.show', $event) }}" class="checkout-back">Back to event</a>
+
+            {{-- LEFT: Event info + order summary --}}
+            <div class="checkout-left">
+
+                <div class="event-banner" style="background-image: linear-gradient(rgba(7,16,28,0.3), rgba(7,16,28,0.85)), url('{{ asset(ltrim((string) $event->image_url, '/')) }}')">
+                    <p class="banner-cat">{{ $event->category?->name ?? 'Event' }}</p>
+                    <p class="banner-title">{{ $event->title }}</p>
+                    <div class="banner-meta">
+                        <span class="banner-meta-item">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                            {{ $event->starts_at->format('l, d M Y · h:i A') }}
+                        </span>
+                        <span class="banner-meta-item">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+                            {{ $event->venue }}, {{ $event->city }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <p class="os-title">Order summary</p>
+                    <div class="os-row">
+                        <span class="os-label">Ticket type</span>
+                        <span class="os-val" id="summary-category">—</span>
+                    </div>
+                    <div class="os-row">
+                        <span class="os-label">Unit price</span>
+                        <span class="os-val" id="summary-price">—</span>
+                    </div>
+                    <div class="os-row">
+                        <span class="os-label">Quantity</span>
+                        <span class="os-val" id="summary-qty">1</span>
+                    </div>
+                    <div class="os-total">
+                        <span class="os-total-label">Total</span>
+                        <span class="os-total-val" id="summary-total">—</span>
+                    </div>
+                </div>
+
+                <a href="{{ route('events.show', $event) }}" class="checkout-back">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L6 8l4 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Back to event
+                </a>
+
             </div>
 
-            <form method="POST" action="{{ route('checkout.store', $event) }}" class="checkout-card">
+            {{-- RIGHT: Form --}}
+            <form method="POST" action="{{ route('checkout.store', $event) }}" class="checkout-right" id="checkout-form">
                 @csrf
                 <input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', $idempotencyKey) }}">
-                <h2>Choose your ticket</h2>
+                <input type="hidden" name="payment_provider" id="payment_provider_input" value="{{ old('payment_provider', $selectedPaymentProvider) }}">
 
-                <label>
+                <p class="form-title">Payment details</p>
+                <p class="form-sub">Fill in your details to complete your booking</p>
+
+                <label class="field">
                     <span>Ticket category</span>
-                    <select name="ticket_category_id" required>
+                    <select name="ticket_category_id" id="ticket_category_id" required>
                         @foreach ($event->ticketCategories as $ticketCategory)
-                            <option value="{{ $ticketCategory->id }}" @selected(old('ticket_category_id', $selectedCategoryId) == $ticketCategory->id)>
+                            <option
+                                value="{{ $ticketCategory->id }}"
+                                data-price="{{ (float) $ticketCategory->price }}"
+                                data-label="{{ $ticketCategory->name }}"
+                                data-price-label="{{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 0) }}"
+                                @selected(old('ticket_category_id', $selectedCategoryId) == $ticketCategory->id)
+                            >
                                 {{ $ticketCategory->name }} · {{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 0) }} · {{ $ticketCategory->tickets_remaining }} left
                             </option>
                         @endforeach
@@ -27,47 +76,262 @@
                     @error('ticket_category_id') <small>{{ $message }}</small> @enderror
                 </label>
 
-                <label>
+                <label class="field">
                     <span>Quantity</span>
-                    <input type="number" name="quantity" min="1" max="20" value="{{ old('quantity', $selectedQuantity) }}" required>
+                    <input type="number" name="quantity" id="quantity" min="1" max="20" value="{{ old('quantity', $selectedQuantity ?? 1) }}" required>
                     @error('quantity') <small>{{ $message }}</small> @enderror
                 </label>
 
-                <label>
-                    <span>Payment provider</span>
-                    <select name="payment_provider">
-                        <option value="">Select provider</option>
-                        <option value="mtn" @selected(old('payment_provider', $selectedPaymentProvider) === 'mtn')>MTN MoMo</option>
-                        <option value="airtel" @selected(old('payment_provider', $selectedPaymentProvider) === 'airtel')>Airtel Money</option>
-                    </select>
-                    @error('payment_provider') <small>{{ $message }}</small> @enderror
-                </label>
+                <div class="field-divider"></div>
 
-                <label>
+                <div class="field">
+                    <span class="field-span">Payment provider</span>
+                    <div class="provider-grid">
+                        <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'mtn' ? 'is-selected' : '' }}" data-provider="mtn">
+                            <div class="provider-icon mtn-icon">M</div>
+                            <span class="provider-name">MTN MoMo</span>
+                        </button>
+                        <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'airtel' ? 'is-selected' : '' }}" data-provider="airtel">
+                            <div class="provider-icon airtel-icon">A</div>
+                            <span class="provider-name">Airtel Money</span>
+                        </button>
+                    </div>
+                    @error('payment_provider') <small class="field-error">{{ $message }}</small> @enderror
+                </div>
+
+                <label class="field">
                     <span>Mobile money number</span>
                     <input type="text" name="phone_number" value="{{ old('phone_number', $phoneNumber) }}" placeholder="e.g. 2567XXXXXXXX">
                     @error('phone_number') <small>{{ $message }}</small> @enderror
                 </label>
 
-                <button type="submit" class="checkout-btn">Initiate payment</button>
+                <div class="field-divider"></div>
+
+                <button type="submit" class="checkout-btn">Initiate payment →</button>
+
+                <p class="secure-note">
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1L3 3.5v4C3 10.5 5.5 13.5 8 15c2.5-1.5 5-4.5 5-7.5v-4L8 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+                    Secured · Your payment is encrypted
+                </p>
             </form>
+
         </div>
     </section>
 
     <style>
-        .checkout-page { min-height: 100vh; padding: 8.5rem 1rem 4rem; background: #ffffff; }
-        .checkout-shell { width: min(1080px, calc(100% - 2rem)); margin: 0 auto; display: grid; grid-template-columns: 1fr minmax(320px, 420px); gap: 1.2rem; }
-        .checkout-summary { border-radius: 28px; padding: 1.8rem; background: #ffffff; border: 1px solid #d8e7f5; color: #123d63; box-shadow: 0 14px 34px rgba(11, 126, 208, 0.08); }
-        .checkout-card { border-radius: 28px; padding: 1.8rem; background: #0b7ed0; border: 1px solid #0b7ed0; display: grid; gap: 1rem; color: #ffffff; }
-        .checkout-kicker { margin: 0; color: #0b7ed0; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.13em; font-weight: 700; }
-        .checkout-summary h1 { margin: 0.7rem 0 0; font-size: clamp(2rem, 4vw, 3.3rem); }
-        .checkout-summary p { color: #4b6377; line-height: 1.7; }
-        .checkout-back { color: #c21f32; text-decoration: none; font-weight: 700; }
-        .checkout-card h2 { margin: 0; }
-        .checkout-card label { display: grid; gap: 0.45rem; font-weight: 600; color: #ffffff; }
-        .checkout-card select, .checkout-card input { width: 100%; border-radius: 16px; border: 1px solid #c7dff1; background: #ffffff; color: #123d63; padding: 0.95rem 1rem; }
-        .checkout-card small { color: #ffe0e0; }
-        .checkout-btn { border: 0; border-radius: 999px; padding: 1rem 1.3rem; font-weight: 700; color: #fff; background: linear-gradient(90deg, #ef4444, #b91c1c); cursor: pointer; }
-        @media (max-width: 900px) { .checkout-shell { grid-template-columns: 1fr; } }
+        :root {
+            --brand-blue: #1a73e8;
+            --brand-blue-dark: #1558c0;
+            --brand-red: #e8241a;
+            --brand-red-dark: #c01e15;
+        }
+
+        .checkout-page {
+            min-height: 100vh;
+            padding: 8.5rem 1rem 4rem;
+            background: #07101c;
+        }
+
+        .checkout-shell {
+            width: min(960px, calc(100% - 2rem));
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        /* ── Left ── */
+        .checkout-left { display: flex; flex-direction: column; gap: 12px; }
+
+        .event-banner {
+            border-radius: 16px; overflow: hidden;
+            height: 210px;
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 18px 20px;
+        }
+
+        .banner-cat {
+            font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--brand-blue); margin-bottom: 4px;
+        }
+
+        .banner-title {
+            font-size: 1.25rem; font-weight: 700; color: #fff;
+            line-height: 1.2; margin-bottom: 10px;
+        }
+
+        .banner-meta { display: flex; flex-direction: column; gap: 4px; }
+
+        .banner-meta-item {
+            font-size: 11px; color: #8a9ab8;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .banner-meta-item svg { opacity: 0.6; flex-shrink: 0; }
+
+        .order-summary {
+            background: #111d2e; border: 0.5px solid #1e3050;
+            border-radius: 16px; padding: 16px 18px;
+        }
+
+        .os-title {
+            font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--brand-blue); margin-bottom: 10px;
+        }
+
+        .os-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 0.5px solid #1a2d45;
+        }
+
+        .os-row:last-of-type { border-bottom: none; }
+        .os-label { font-size: 12px; color: #5a7a9a; }
+        .os-val { font-size: 13px; font-weight: 600; color: #fff; }
+
+        .os-total {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; padding-top: 10px; border-top: 1px solid #1e3050;
+        }
+
+        .os-total-label { font-size: 13px; font-weight: 700; color: #fff; }
+        .os-total-val { font-size: 16px; font-weight: 700; color: var(--brand-blue); }
+
+        .checkout-back {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; color: #4a6480; text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .checkout-back:hover { color: var(--brand-blue); }
+
+        /* ── Right ── */
+        .checkout-right {
+            background: #111d2e; border: 0.5px solid #1e3050;
+            border-radius: 16px; padding: 20px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+
+        .form-title { font-size: 15px; font-weight: 700; color: #fff; }
+        .form-sub { font-size: 12px; color: #5a7a9a; margin-top: -8px; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; }
+
+        .field span, .field-span {
+            font-size: 11px; font-weight: 600; color: #c0cfe8; letter-spacing: 0.04em;
+        }
+
+        .field select,
+        .field input[type="text"],
+        .field input[type="number"] {
+            width: 100%; height: 42px;
+            border: 1px solid #1e3050; border-radius: 10px;
+            background: #0d1929; color: #fff;
+            padding: 0 12px; font-size: 13px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            appearance: auto;
+        }
+
+        .field select:focus,
+        .field input:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+
+        .field select option { background: #0d1929; color: #fff; }
+        .field small, .field-error { font-size: 11px; color: var(--brand-red); font-weight: 500; }
+
+        .field-divider { height: 0.5px; background: #1e3050; }
+
+        .provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+
+        .provider-btn {
+            border: 1px solid #1e3050; border-radius: 10px;
+            background: #0d1929; padding: 10px 12px;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; transition: border-color 0.15s, background 0.15s;
+        }
+
+        .provider-btn:hover { border-color: var(--brand-blue); }
+
+        .provider-btn.is-selected {
+            border-color: var(--brand-blue);
+            background: rgba(26,115,232,0.1);
+        }
+
+        .provider-icon {
+            width: 28px; height: 28px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; flex-shrink: 0;
+        }
+
+        .mtn-icon { background: #ffcc00; color: #111; }
+        .airtel-icon { background: var(--brand-red); color: #fff; }
+
+        .provider-name { font-size: 12px; font-weight: 600; color: #c0cfe8; }
+        .provider-btn.is-selected .provider-name { color: #fff; }
+
+        .checkout-btn {
+            height: 48px; border: none; border-radius: 12px;
+            background: var(--brand-red); color: #fff;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .checkout-btn:hover { background: var(--brand-red-dark); }
+
+        .secure-note {
+            text-align: center; font-size: 11px; color: #2a4060;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+
+        @media (max-width: 760px) {
+            .checkout-shell { grid-template-columns: 1fr; }
+            .event-banner { height: 170px; }
+        }
     </style>
+
+    <script>
+        (() => {
+            const categorySelect = document.getElementById('ticket_category_id');
+            const quantityInput = document.getElementById('quantity');
+            const summaryCategory = document.getElementById('summary-category');
+            const summaryPrice = document.getElementById('summary-price');
+            const summaryQty = document.getElementById('summary-qty');
+            const summaryTotal = document.getElementById('summary-total');
+            const providerInput = document.getElementById('payment_provider_input');
+            const providerBtns = document.querySelectorAll('.provider-btn');
+
+            const formatUgx = (n) => n <= 0 ? 'Free' : 'UGX ' + Math.round(n).toLocaleString('en-US');
+
+            const updateSummary = () => {
+                const selected = categorySelect?.options[categorySelect.selectedIndex];
+                const price = parseFloat(selected?.dataset.price || 0);
+                const label = selected?.dataset.label || '—';
+                const priceLabel = selected?.dataset.priceLabel || '—';
+                const qty = parseInt(quantityInput?.value || 1, 10);
+
+                if (summaryCategory) summaryCategory.textContent = label;
+                if (summaryPrice) summaryPrice.textContent = priceLabel;
+                if (summaryQty) summaryQty.textContent = qty;
+                if (summaryTotal) summaryTotal.textContent = price <= 0 ? 'Free' : formatUgx(price * qty);
+            };
+
+            if (categorySelect) categorySelect.addEventListener('change', updateSummary);
+            if (quantityInput) quantityInput.addEventListener('input', updateSummary);
+
+            providerBtns.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    providerBtns.forEach((b) => b.classList.remove('is-selected'));
+                    btn.classList.add('is-selected');
+                    if (providerInput) providerInput.value = btn.dataset.provider;
+                });
+            });
+
+            updateSummary();
+        })();
+    </script>
 @endsection
