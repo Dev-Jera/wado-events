@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GatePortalController;
 use App\Http\Controllers\HomeController;
@@ -28,12 +29,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/my-tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/my-tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    Route::get('/my-tickets/{ticket}/download', [TicketController::class, 'download'])->name('tickets.download');
+    Route::get('/my-tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
 
     Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
     Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
     Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
 
-    Route::get('/payments/{paymentTransaction}', [PaymentController::class, 'show'])->name('payments.show');
     Route::get('/admin/payments', [PaymentController::class, 'adminIndex'])->name('payments.admin.index');
     Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
 
@@ -42,11 +44,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
     Route::post('/admin/users/agents', [UserManagementController::class, 'storeAgent'])->name('admin.users.storeAgent');
     Route::post('/admin/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('admin.users.updateRole');
+    Route::get('/admin/events/{event}', [AdminEventController::class, 'show'])->name('admin.events.show');
 });
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
+// MarzPay Webhook - Must bypass CSRF protection
 Route::post('/payments/marzepay/webhook', PaymentWebhookController::class)
-    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->withoutMiddleware(VerifyCsrfToken::class)
     ->name('payments.webhook.marzepay');

@@ -9,359 +9,595 @@
         $selectedEventId = (int) old('selected_event_id', $selectedEventId ?? 0);
     @endphp
 
-    <section class="verify-page">
-        <div class="verify-shell">
-            <h1>Ticket Verification</h1>
-            <p>Scan QR payload, verify online, or verify from offline export data when internet is down.</p>
+    <section class="vp">
+        <div class="vp-shell">
 
-            <section class="verify-scanner">
-                <div class="verify-scanner-head">
-                    <strong>Camera Scanner</strong>
-                    <span id="scanner-status">Idle</span>
+            {{-- ── PAGE HEADER ── --}}
+            <header class="vp-header">
+                <div class="vp-header-badge">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
                 </div>
-                <div id="qr-reader"></div>
-                <div class="verify-scanner-actions">
-                    <button type="button" id="start-scan">Start camera</button>
-                    <button type="button" id="stop-scan" class="ghost" disabled>Stop camera</button>
+                <div>
+                    <h1>Ticket Verification</h1>
+                    <p>Scan QR codes, verify by code, or use offline export when internet is unavailable.</p>
                 </div>
-            </section>
+            </header>
 
-            <form method="POST" action="{{ route('tickets.verify.store') }}" class="verify-form">
-                @csrf
-                <input type="hidden" id="scanned-payload" name="scanned_payload" value="{{ old('scanned_payload') }}">
-                <input type="hidden" id="device-id" name="device_id" value="{{ old('device_id') }}">
+            <div class="vp-grid">
 
-                <label>
-                    <span>Gate event</span>
-                    <select name="selected_event_id" required>
-                        <option value="">Select event...</option>
-                        @foreach ($events as $event)
-                            <option value="{{ $event->id }}" @selected($selectedEventId === (int) $event->id)>
-                                {{ $event->title }} ({{ $event->starts_at?->format('d M, H:i') }})
-                            </option>
-                        @endforeach
-                    </select>
-                </label>
+                {{-- ── LEFT COLUMN ── --}}
+                <div class="vp-left">
 
-                <label>
-                    <span>Ticket code</span>
-                    <input id="ticket-code-input" type="text" name="ticket_code" value="{{ old('ticket_code') }}" placeholder="WADO-1-7-ABC123" required>
-                </label>
+                    {{-- Scanner card --}}
+                    <div class="vp-card scanner-card">
+                        <div class="vp-card-head">
+                            <div class="vp-card-title">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="7" height="7" x="7" y="7" rx="1"/></svg>
+                                Camera Scanner
+                            </div>
+                            <span id="scanner-status" class="vp-badge badge-idle">Idle</span>
+                        </div>
 
-                <label class="verify-checkbox">
-                    <input type="checkbox" name="mark_as_used" value="1" checked>
-                    <span>Mark as used after successful verification</span>
-                </label>
+                        <div id="scanner-feedback" class="scanner-feedback fb-warning">
+                            Choose an event first, then start the camera.
+                        </div>
 
-                <label class="verify-checkbox">
-                    <input id="auto-submit" type="checkbox" value="1" checked>
-                    <span>Auto-submit after scan</span>
-                </label>
+                        <div id="qr-reader" class="qr-viewport"></div>
 
-                <button id="verify-submit" type="submit">Verify ticket</button>
-            </form>
+                        <div class="scanner-actions">
+                            <button type="button" id="start-scan" class="btn btn-primary">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                Start camera
+                            </button>
+                            <button type="button" id="stop-scan" class="btn btn-ghost" disabled>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="6" height="16" x="4" y="4" rx="1"/><rect width="6" height="16" x="14" y="4" rx="1"/></svg>
+                                Stop camera
+                            </button>
+                        </div>
+                    </div>
 
-            <form method="POST" action="{{ route('tickets.verify.store') }}" class="verify-form lookup-form">
-                @csrf
-                <input type="hidden" name="selected_event_id" value="{{ $selectedEventId }}">
-                <label>
-                    <span>Find by name, phone, or email</span>
-                    <input type="text" name="lookup" value="{{ old('lookup') }}" placeholder="Search attendee by name / phone / email">
-                </label>
-                <button type="submit" class="ghost-btn">Search attendee</button>
-            </form>
+                    {{-- Offline tools --}}
+                    <div class="vp-card">
+                        <div class="vp-card-head">
+                            <div class="vp-card-title">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.92 1.16h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.93 6.93l1.17-1.17a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M16.5 1.5a5 5 0 0 1 5 5"/><path d="M16.5 5.5a1 1 0 0 1 1 1"/></svg>
+                                Offline Tools
+                            </div>
+                            @if ($selectedEventId > 0)
+                                <a href="{{ route('tickets.verify.export', ['event_id' => $selectedEventId]) }}" class="vp-link">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                    Export tickets
+                                </a>
+                            @else
+                                <span class="vp-muted">Select an event to export</span>
+                            @endif
+                        </div>
 
-            <section class="offline-tools">
-                <div class="offline-head">
-                    <strong>Offline verification tools</strong>
-                    @if ($selectedEventId > 0)
-                        <a href="{{ route('tickets.verify.export', ['event_id' => $selectedEventId]) }}">Download valid tickets export</a>
-                    @else
-                        <span>Select an event to download export</span>
+                        <div class="offline-row">
+                            <label class="file-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                Load JSON export
+                                <input type="file" id="offline-file" accept="application/json">
+                            </label>
+                            <input type="text" id="offline-search" class="vp-input" placeholder="Search by code, name, or phone…">
+                        </div>
+                        <div id="offline-table-wrap"></div>
+                    </div>
+
+                </div>
+
+                {{-- ── RIGHT COLUMN ── --}}
+                <div class="vp-right">
+
+                    {{-- Verify form --}}
+                    <div class="vp-card">
+                        <div class="vp-card-head">
+                            <div class="vp-card-title">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Verify Ticket
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ route('tickets.verify.store') }}" class="vp-form" id="verify-form">
+                            @csrf
+                            <input type="hidden" id="scanned-payload" name="scanned_payload" value="{{ old('scanned_payload') }}">
+                            <input type="hidden" id="device-id" name="device_id" value="{{ old('device_id') }}">
+
+                            <div class="field">
+                                <label class="field-label" for="selected-event-id">Gate Event</label>
+                                <select id="selected-event-id" name="selected_event_id" class="vp-input" required>
+                                    <option value="">Select event…</option>
+                                    @foreach ($events as $event)
+                                        <option value="{{ $event->id }}" @selected($selectedEventId === (int) $event->id)>
+                                            {{ $event->title }} ({{ $event->starts_at?->format('d M, H:i') }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label" for="ticket-code-input">Ticket Code</label>
+                                <div class="input-with-icon">
+                                    <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <input id="ticket-code-input" type="text" name="ticket_code" class="vp-input has-icon" value="{{ old('ticket_code') }}" placeholder="WADO-1-7-ABC123" required>
+                                </div>
+                            </div>
+
+                            <div class="checks-row">
+                                <label class="vp-check">
+                                    <input type="checkbox" name="mark_as_used" value="1" checked>
+                                    <span class="check-box"></span>
+                                    Mark as used after verification
+                                </label>
+                                <label class="vp-check">
+                                    <input id="auto-submit" type="checkbox" value="1" checked>
+                                    <span class="check-box"></span>
+                                    Auto-submit after scan
+                                </label>
+                            </div>
+
+                            <button id="verify-submit" type="submit" class="btn btn-primary btn-full">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Verify Ticket
+                            </button>
+                        </form>
+                    </div>
+
+                    {{-- Lookup form --}}
+                    <div class="vp-card">
+                        <div class="vp-card-head">
+                            <div class="vp-card-title">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                Attendee Lookup
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('tickets.verify.store') }}" class="vp-form">
+                            @csrf
+                            <input type="hidden" name="selected_event_id" value="{{ $selectedEventId }}">
+                            <div class="field">
+                                <label class="field-label">Search by name, phone, or email</label>
+                                <div class="input-with-icon">
+                                    <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    <input type="text" name="lookup" class="vp-input has-icon" value="{{ old('lookup') }}" placeholder="e.g. John Smith / +41…">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline btn-full">Search Attendee</button>
+                        </form>
+                    </div>
+
+                    {{-- Verification result --}}
+                    @if ($verification)
+                        <div class="vp-result {{ $verification['ok'] ? 'result-ok' : 'result-bad' }}">
+                            <div class="result-head">
+                                @if ($verification['ok'])
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    Valid Ticket
+                                @else
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+                                    Invalid Ticket
+                                @endif
+                            </div>
+                            <p class="result-msg">{{ $verification['message'] }}</p>
+
+                            @if (! empty($verification['ticket']))
+                                <div class="result-grid">
+                                    <div class="result-item"><span>Ticket code</span>{{ $verification['ticket']->ticket_code }}</div>
+                                    <div class="result-item"><span>Event</span>{{ $verification['ticket']->event->title }}</div>
+                                    <div class="result-item"><span>Holder</span>{{ $verification['ticket']->user->name }}</div>
+                                    <div class="result-item"><span>Phone</span>{{ $verification['ticket']->user->phone ?: 'N/A' }}</div>
+                                    <div class="result-item"><span>Status</span>{{ ucfirst((string) $verification['ticket']->status) }}</div>
+                                </div>
+                            @endif
+                        </div>
                     @endif
+
                 </div>
-                <div class="offline-row">
-                    <input type="file" id="offline-file" accept="application/json">
-                    <input type="text" id="offline-search" placeholder="Search offline data by code / name / phone">
-                </div>
-                <div id="offline-table-wrap"></div>
-            </section>
+            </div>
 
-            @if ($verification)
-                <article class="verify-result {{ $verification['ok'] ? 'ok' : 'bad' }}">
-                    <strong>{{ $verification['ok'] ? 'Valid ticket' : 'Invalid ticket' }}</strong>
-                    <p>{{ $verification['message'] }}</p>
-
-                    @if (! empty($verification['ticket']))
-                        <ul>
-                            <li><span>Ticket code:</span> {{ $verification['ticket']->ticket_code }}</li>
-                            <li><span>Event:</span> {{ $verification['ticket']->event->title }}</li>
-                            <li><span>Holder:</span> {{ $verification['ticket']->user->name }}</li>
-                            <li><span>Phone:</span> {{ $verification['ticket']->user->phone ?: 'N/A' }}</li>
-                            <li><span>Status:</span> {{ ucfirst((string) $verification['ticket']->status) }}</li>
-                        </ul>
-                    @endif
-                </article>
-            @endif
-
+            {{-- QR payload + lookup results (full-width) --}}
             @if ($payload)
-                <section class="payload-view">
-                    <h2>Scanned QR payload (read-only)</h2>
-                    <table>
-                        <tbody>
-                            @foreach ($payload as $key => $value)
-                                <tr>
-                                    <th>{{ $key }}</th>
-                                    <td>{{ is_scalar($value) ? (string) $value : json_encode($value) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </section>
+                <div class="vp-card vp-card-full">
+                    <div class="vp-card-head">
+                        <div class="vp-card-title">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                            Scanned QR Payload
+                        </div>
+                        <span class="vp-muted">read-only</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="vp-table">
+                            <tbody>
+                                @foreach ($payload as $key => $value)
+                                    <tr>
+                                        <th>{{ $key }}</th>
+                                        <td>{{ is_scalar($value) ? (string) $value : json_encode($value) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             @endif
 
             @if ($lookupResults->isNotEmpty())
-                <section class="payload-view">
-                    <h2>Name / Phone matches</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Event</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($lookupResults as $ticket)
+                <div class="vp-card vp-card-full">
+                    <div class="vp-card-head">
+                        <div class="vp-card-title">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Name / Phone Matches
+                        </div>
+                        <span class="vp-badge badge-blue">{{ $lookupResults->count() }} found</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="vp-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $ticket->ticket_code }}</td>
-                                    <td>{{ $ticket->user->name }}</td>
-                                    <td>{{ $ticket->user->phone ?: 'N/A' }}</td>
-                                    <td>{{ $ticket->event->title }}</td>
-                                    <td>{{ ucfirst((string) $ticket->status) }}</td>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Event</th>
+                                    <th>Status</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </section>
+                            </thead>
+                            <tbody>
+                                @foreach ($lookupResults as $ticket)
+                                    <tr>
+                                        <td class="mono">{{ $ticket->ticket_code }}</td>
+                                        <td>{{ $ticket->user->name }}</td>
+                                        <td>{{ $ticket->user->phone ?: 'N/A' }}</td>
+                                        <td>{{ $ticket->event->title }}</td>
+                                        <td>
+                                            <span class="status-pill {{ strtolower((string) $ticket->status) === 'used' ? 'pill-used' : 'pill-valid' }}">
+                                                {{ ucfirst((string) $ticket->status) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             @endif
+
         </div>
     </section>
 
     <style>
-        .verify-page { min-height: 100vh; background: #f2f6fb; padding: 8rem 1rem 3rem; }
-        .verify-shell { width: min(760px, calc(100% - 2rem)); margin: 0 auto; background: #fff; border: 1px solid #dce5f1; border-radius: 16px; padding: 1.5rem; }
-        .verify-shell h1 { margin: 0; color: #0f1d33; }
-        .verify-shell p { color: #000000; }
-        .verify-scanner { margin-top: 1rem; border: 1px solid #d7e3f3; border-radius: 12px; padding: 0.9rem; background: #f8fbff; }
-        .verify-scanner-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.6rem; color: #1a355a; }
-        #scanner-status { font-size: 0.8rem; color: #6a7c96; }
-        #qr-reader { width: 100%; min-height: 240px; border: 1px dashed #c5d4ea; border-radius: 10px; overflow: hidden; background: #fff; }
-        .verify-scanner-actions { margin-top: 0.65rem; display: flex; gap: 0.55rem; }
-        .verify-scanner-actions button { height: 38px; border: 0; border-radius: 8px; background: #1f69d6; color: #fff; font-weight: 700; cursor: pointer; padding: 0 0.85rem; }
-        .verify-scanner-actions .ghost { background: #e6edf8; color: #375682; }
-        .verify-form { display: grid; gap: 0.9rem; margin-top: 1rem; }
-        .verify-form label { display: grid; gap: 0.35rem; color: #22344f; font-weight: 700; }
-        .verify-form input[type='text'], .verify-form select { height: 42px; border: 1px solid #cfdced; border-radius: 8px; padding: 0 0.8rem; }
-        .verify-checkbox { display: flex; align-items: center; gap: 0.55rem; font-weight: 500; }
-        .verify-form button { height: 42px; border: 0; border-radius: 8px; background: #1f69d6; color: #fff; font-weight: 700; cursor: pointer; }
-        .lookup-form { margin-top: 0.8rem; }
-        .lookup-form .ghost-btn { background: #eff4fc; color: #26486f; border: 1px solid #cedcef; }
-        .offline-tools { margin-top: 1rem; border: 1px solid #d7e3f3; border-radius: 12px; padding: 0.9rem; background: #fff; }
-        .offline-head { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; }
-        .offline-head a { color: #1f69d6; font-weight: 700; text-decoration: none; }
-        .offline-row { margin-top: 0.65rem; display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; }
-        .offline-row input { height: 42px; border: 1px solid #cfdced; border-radius: 8px; padding: 0 0.8rem; }
-        #offline-file { padding: 0.55rem 0.6rem; }
-        #offline-table-wrap { margin-top: 0.7rem; }
-        .payload-view { margin-top: 1rem; border: 1px solid #d7e3f3; border-radius: 12px; padding: 0.9rem; background: #fff; }
-        .payload-view h2 { margin: 0 0 0.65rem; color: #17375f; font-size: 0.96rem; }
-        .payload-view table { width: 100%; border-collapse: collapse; }
-        .payload-view th, .payload-view td { border: 1px solid #e3ebf6; padding: 0.45rem 0.5rem; text-align: left; font-size: 0.84rem; color: #244166; vertical-align: top; }
-        .payload-view th { background: #f6f9ff; width: 30%; }
-        .verify-result { margin-top: 1rem; border-radius: 10px; padding: 0.9rem 1rem; }
-        .verify-result.ok { border: 1px solid #bde7cb; background: #f2fbf5; color: #16643d; }
-        .verify-result.bad { border: 1px solid #f7c2c8; background: #fff5f6; color: #8d1f2f; }
-        .verify-result p { margin: 0.3rem 0 0; color: inherit; }
-        .verify-result ul { margin: 0.65rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; }
-        .verify-result li span { font-weight: 700; }
-        @media (max-width: 780px) {
+        /* ── tokens ── */
+        :root {
+            --red:       #D42B2B;
+            --red-dark:  #B01E1E;
+            --red-light: #FFF0F0;
+            --red-mid:   #FCDCDC;
+            --blue:      #1A4FBF;
+            --blue-dark: #133999;
+            --blue-light:#EEF3FF;
+            --blue-mid:  #D0DCFA;
+            --blue-tint: #F0F4FF;
+            --white:     #FFFFFF;
+            --off:       #EDF1FA;
+            --border:    #D4DCF0;
+            --text:      #111827;
+            --muted:     #5A6A8A;
+            --radius:    13px;
+            --shadow:    0 2px 10px rgba(26,79,191,.1), 0 1px 3px rgba(0,0,0,.06);
+        }
+
+        /* ── layout ── */
+        .vp { min-height:100vh; background:var(--off); padding:7rem 1rem 3rem; }
+        .vp-shell { width:min(1100px, 100%); margin:0 auto; display:flex; flex-direction:column; gap:1.25rem; }
+
+        /* ── header ── */
+        .vp-header {
+            display:flex; align-items:center; gap:1rem;
+            background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);
+            border-radius:var(--radius); padding:1.4rem 1.6rem; color:var(--white);
+        }
+        .vp-header-badge {
+            flex-shrink:0; width:44px; height:44px; border-radius:10px;
+            background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center;
+        }
+        .vp-header h1 { margin:0; font-size:1.25rem; font-weight:800; letter-spacing:-.01em; }
+        .vp-header p  { margin:.2rem 0 0; font-size:.82rem; opacity:.8; }
+
+        /* ── 2-col grid ── */
+        .vp-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+        .vp-left, .vp-right { display:flex; flex-direction:column; gap:1.25rem; }
+
+        /* ── card ── */
+        .vp-card {
+            background:var(--white); border:1px solid var(--border);
+            border-radius:var(--radius); padding:1.15rem 1.3rem;
+            box-shadow:var(--shadow);
+        }
+        .vp-card-full { width:100%; }
+        .vp-card-head {
+            display:flex; align-items:center; justify-content:space-between;
+            gap:.6rem;
+            background:var(--blue-tint); margin:-1.15rem -1.3rem 1rem;
+            padding:.75rem 1.3rem; border-radius:var(--radius) var(--radius) 0 0;
+            border-bottom:1px solid var(--border);
+        }
+        .vp-card-title {
+            display:flex; align-items:center; gap:.45rem;
+            font-size:.78rem; font-weight:700; color:var(--blue);
+            text-transform:uppercase; letter-spacing:.07em;
+        }
+
+        /* ── scanner ── */
+        .scanner-card { border-top:3px solid var(--red); }
+        .scanner-feedback {
+            border-radius:8px; padding:.65rem .8rem;
+            font-size:.83rem; font-weight:600; border:1px solid;
+            margin-bottom:.85rem;
+        }
+        .fb-neutral  { background:var(--blue-tint); color:var(--blue);    border-color:var(--blue-mid); }
+        .fb-info     { background:var(--blue-light); color:#0e4fa8;        border-color:var(--blue-mid); }
+        .fb-success  { background:#F0FBF4;            color:#146c3a;        border-color:#B8E8CA; }
+        .fb-warning  { background:#FFFAED;            color:#8B5C00;        border-color:#F5DFA0; }
+        .fb-error    { background:var(--red-light);  color:var(--red-dark);border-color:var(--red-mid); }
+        .qr-viewport {
+            width:100%; min-height:220px;
+            border:2px dashed var(--blue-mid); border-radius:10px;
+            background:var(--blue-tint); overflow:hidden;
+        }
+        .scanner-actions { margin-top:.75rem; display:flex; gap:.5rem; }
+
+        /* ── buttons ── */
+        .btn {
+            display:inline-flex; align-items:center; gap:.45rem;
+            height:40px; padding:0 1rem; border:none; border-radius:8px;
+            font-size:.84rem; font-weight:700; cursor:pointer; transition:.15s;
+        }
+        .btn-primary  { background:var(--red); color:var(--white); }
+        .btn-primary:hover { background:var(--red-dark); }
+        .btn-ghost    { background:var(--blue-tint); color:var(--blue); border:1px solid var(--border); }
+        .btn-ghost:hover { background:var(--blue-mid); }
+        .btn-outline  { background:var(--blue-tint); color:var(--blue); border:1.5px solid var(--blue); }
+        .btn-outline:hover { background:var(--blue-mid); }
+        .btn-full     { width:100%; justify-content:center; }
+        .btn[disabled] { opacity:.4; cursor:not-allowed; }
+
+        /* ── forms ── */
+        .vp-form { display:flex; flex-direction:column; gap:.85rem; }
+        .field { display:flex; flex-direction:column; gap:.35rem; }
+        .field-label { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+        .vp-input {
+            height:42px; border:1.5px solid var(--border); border-radius:8px;
+            padding:0 .85rem; font-size:.875rem; color:var(--text);
+            background:var(--blue-tint);
+            transition:border-color .15s, background .15s;
+        }
+        .vp-input:focus { outline:none; border-color:var(--blue); background:var(--white); }
+        .input-with-icon { position:relative; }
+        .input-icon { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+        .vp-input.has-icon { padding-left:2.4rem; }
+
+        /* ── checkboxes ── */
+        .checks-row { display:flex; flex-direction:column; gap:.5rem; background:var(--blue-tint); border-radius:8px; padding:.65rem .75rem; border:1px solid var(--border); }
+        .vp-check { display:flex; align-items:center; gap:.55rem; font-size:.84rem; font-weight:500; color:var(--text); cursor:pointer; }
+        .vp-check input[type=checkbox] { display:none; }
+        .check-box {
+            width:18px; height:18px; border:2px solid var(--border); border-radius:4px;
+            background:var(--white); flex-shrink:0; position:relative; transition:.15s;
+        }
+        .vp-check input[type=checkbox]:checked + .check-box { background:var(--blue); border-color:var(--blue); }
+        .vp-check input[type=checkbox]:checked + .check-box::after {
+            content:''; position:absolute; left:4px; top:1px;
+            width:6px; height:10px; border:2px solid #fff; border-top:none; border-left:none;
+            transform:rotate(45deg);
+        }
+
+        /* ── offline ── */
+        .offline-row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; margin-bottom:.75rem; }
+        .file-label {
+            display:flex; align-items:center; gap:.5rem; height:42px;
+            border:1.5px solid var(--border); border-radius:8px; padding:0 .85rem;
+            font-size:.83rem; font-weight:600; color:var(--blue); cursor:pointer;
+            background:var(--blue-tint); white-space:nowrap; overflow:hidden;
+        }
+        .file-label:hover { background:var(--blue-mid); }
+        .file-label input[type=file] { display:none; }
+
+        /* ── tables ── */
+        .table-wrap { overflow-x:auto; border-radius:8px; border:1px solid var(--border); }
+        .vp-table { width:100%; border-collapse:collapse; font-size:.83rem; }
+        .vp-table thead th {
+            background:var(--blue); color:var(--white); padding:.5rem .75rem;
+            text-align:left; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+        }
+        .vp-table tbody td, .vp-table tbody th {
+            padding:.55rem .75rem; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle;
+        }
+        .vp-table tbody th { background:var(--blue-tint); font-weight:600; color:var(--muted); width:30%; }
+        .vp-table tbody tr:last-child td, .vp-table tbody tr:last-child th { border-bottom:none; }
+        .vp-table tbody tr:hover td { background:var(--blue-tint); }
+        .mono { font-family:monospace; font-size:.8rem; color:var(--blue); font-weight:700; }
+
+        /* ── result ── */
+        .vp-result { border-radius:10px; padding:1rem 1.1rem; border:1.5px solid; }
+        .result-ok  { background:var(--blue-light); border-color:var(--blue-mid); color:var(--blue-dark); }
+        .result-bad { background:var(--red-light);  border-color:var(--red-mid);  color:var(--red-dark); }
+        .result-head { display:flex; align-items:center; gap:.5rem; font-weight:800; font-size:1rem; }
+        .result-msg  { margin:.45rem 0 0; font-size:.875rem; opacity:.85; }
+        .result-grid { margin:.75rem 0 0; display:grid; grid-template-columns:1fr 1fr; gap:.4rem .75rem; }
+        .result-item { font-size:.83rem; color:var(--text); }
+        .result-item span { display:block; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.55; }
+
+        /* ── badges ── */
+        .vp-badge { display:inline-flex; align-items:center; height:22px; border-radius:100px; padding:0 .6rem; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+        .badge-idle { background:var(--off); color:var(--muted); border:1px solid var(--border); }
+        .badge-scan { background:var(--red-light); color:var(--red); border:1px solid var(--red-mid); }
+        .badge-blue { background:var(--blue-light); color:var(--blue); border:1px solid var(--blue-mid); }
+        .vp-link    { display:inline-flex; align-items:center; gap:.35rem; color:var(--red); font-size:.82rem; font-weight:700; text-decoration:none; }
+        .vp-link:hover { text-decoration:underline; }
+        .vp-muted   { font-size:.8rem; color:var(--muted); }
+
+        /* status pills */
+        .status-pill { display:inline-block; padding:.15rem .55rem; border-radius:100px; font-size:.75rem; font-weight:700; }
+        .pill-valid { background:var(--blue-light); color:var(--blue); border:1px solid var(--blue-mid); }
+        .pill-used  { background:var(--red-light);  color:var(--red); border:1px solid var(--red-mid); }
+
+        /* ── responsive ── */
+        @media (max-width: 820px) {
+            .vp-grid { grid-template-columns: 1fr; }
             .offline-row { grid-template-columns: 1fr; }
+            .result-grid { grid-template-columns: 1fr; }
         }
     </style>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
-        (function () {
-            const readerTargetId = 'qr-reader';
-            const statusEl = document.getElementById('scanner-status');
-            const startBtn = document.getElementById('start-scan');
-            const stopBtn = document.getElementById('stop-scan');
-            const codeInput = document.getElementById('ticket-code-input');
-            const payloadInput = document.getElementById('scanned-payload');
-            const deviceInput = document.getElementById('device-id');
-            const autoSubmit = document.getElementById('auto-submit');
-            const submitBtn = document.getElementById('verify-submit');
-            const offlineFile = document.getElementById('offline-file');
-            const offlineSearch = document.getElementById('offline-search');
-            const offlineTableWrap = document.getElementById('offline-table-wrap');
+    (function () {
+        const readerTargetId = 'qr-reader';
+        const statusEl       = document.getElementById('scanner-status');
+        const feedbackEl     = document.getElementById('scanner-feedback');
+        const startBtn       = document.getElementById('start-scan');
+        const stopBtn        = document.getElementById('stop-scan');
+        const eventSelect    = document.getElementById('selected-event-id');
+        const codeInput      = document.getElementById('ticket-code-input');
+        const payloadInput   = document.getElementById('scanned-payload');
+        const deviceInput    = document.getElementById('device-id');
+        const autoSubmit     = document.getElementById('auto-submit');
+        const submitBtn      = document.getElementById('verify-submit');
+        const offlineFile    = document.getElementById('offline-file');
+        const offlineSearch  = document.getElementById('offline-search');
+        const offlineTableWrap = document.getElementById('offline-table-wrap');
 
-            if (!startBtn || !stopBtn || !codeInput || !statusEl || typeof Html5Qrcode === 'undefined') {
-                return;
+        if (!startBtn || !stopBtn || !codeInput || !statusEl || !feedbackEl || !eventSelect || typeof Html5Qrcode === 'undefined') return;
+
+        let scanner = null, running = false, lastCode = '', scanWatchdog = null, selectedCameraLabel = '';
+
+        const setStatus = (text) => { statusEl.textContent = text; };
+
+        const setFeedback = (text, tone = 'neutral') => {
+            feedbackEl.textContent = text;
+            feedbackEl.className = 'scanner-feedback fb-' + tone;
+        };
+
+        const hasSelectedEvent = () => String(eventSelect.value || '').trim() !== '';
+
+        const syncScannerButtons = () => {
+            if (running) { startBtn.disabled = true; stopBtn.disabled = false; return; }
+            startBtn.disabled = !hasSelectedEvent();
+            stopBtn.disabled = true;
+        };
+
+        const resetWatchdog = () => {
+            if (scanWatchdog) clearTimeout(scanWatchdog);
+            if (!running) return;
+            scanWatchdog = setTimeout(() => {
+                setStatus('Scanning… no QR yet');
+                setFeedback('No readable QR detected. Increase brightness, center the code, and hold steady.', 'warning');
+            }, 4000);
+        };
+
+        const pickCamera = async () => {
+            const cameras = await Html5Qrcode.getCameras();
+            if (!Array.isArray(cameras) || !cameras.length) throw new Error('No camera found');
+            const preferred = cameras.find(c => /back|rear|environment/i.test(c.label || '')) || cameras[0];
+            selectedCameraLabel = preferred.label || 'camera';
+            return preferred.id;
+        };
+
+        const parsePayload = (raw) => {
+            try { const p = JSON.parse(raw); if (p && typeof p === 'object' && p.code) return p; } catch (_) {}
+            return null;
+        };
+
+        const applyCode = (decodedText) => {
+            const raw = (decodedText || '').trim();
+            const payload = parsePayload(raw);
+            const code = (payload ? String(payload.code || '') : raw).trim().toUpperCase();
+            if (!code || code === lastCode) return;
+            lastCode = code;
+            codeInput.value = code;
+            if (payloadInput) payloadInput.value = payload ? JSON.stringify(payload) : raw;
+            setStatus('Detected: ' + code);
+            setFeedback('QR detected — ' + code, 'success');
+            if (autoSubmit?.checked && submitBtn) {
+                setFeedback('QR detected. Submitting…', 'info');
+                submitBtn.click();
             }
+        };
 
-            let scanner = null;
-            let running = false;
-            let lastCode = '';
-
-            const setStatus = (text) => {
-                statusEl.textContent = text;
-            };
-
-            const parsePayload = (raw) => {
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && typeof parsed === 'object' && parsed.code) {
-                        return parsed;
-                    }
-                } catch (error) {
-                }
-
-                return null;
-            };
-
-            const applyCode = (decodedText) => {
-                const raw = (decodedText || '').trim();
-                const payload = parsePayload(raw);
-                const code = (payload ? String(payload.code || '') : raw).trim().toUpperCase();
-                if (!code || code === lastCode) {
-                    return;
-                }
-                lastCode = code;
-                codeInput.value = code;
-                if (payloadInput) {
-                    payloadInput.value = payload ? JSON.stringify(payload) : raw;
-                }
-                setStatus('Code detected: ' + code);
-
-                if (autoSubmit && autoSubmit.checked && submitBtn) {
-                    submitBtn.click();
-                }
-            };
-
-            const startScanner = async () => {
-                if (running) return;
-
+        const startScanner = async () => {
+            if (running) return;
+            if (!hasSelectedEvent()) {
+                setStatus('Blocked'); setFeedback('Choose the gate event before starting the scanner.', 'error');
+                syncScannerButtons(); eventSelect.focus(); return;
+            }
+            try {
+                setStatus('Starting…'); setFeedback('Starting camera. Allow access if prompted.', 'info');
+                const cameraId = await pickCamera();
                 scanner = new Html5Qrcode(readerTargetId);
-
-                try {
-                    await scanner.start(
-                        { facingMode: 'environment' },
-                        {
-                            fps: 10,
-                            qrbox: { width: 220, height: 220 },
-                        },
-                        (decodedText) => applyCode(decodedText),
-                        () => {}
-                    );
-
-                    running = true;
-                    startBtn.disabled = true;
-                    stopBtn.disabled = false;
-                    setStatus('Scanning...');
-                } catch (error) {
-                    setStatus('Camera start failed. Check camera permission.');
-                    scanner = null;
-                }
-            };
-
-            const stopScanner = async () => {
-                if (!scanner || !running) return;
-
-                try {
-                    await scanner.stop();
-                    await scanner.clear();
-                } finally {
-                    scanner = null;
-                    running = false;
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    setStatus('Idle');
-                }
-            };
-
-            startBtn.addEventListener('click', startScanner);
-            stopBtn.addEventListener('click', stopScanner);
-            window.addEventListener('beforeunload', stopScanner);
-
-            const getDeviceId = () => {
-                const key = 'ticket_verify_device_id';
-                let value = localStorage.getItem(key);
-                if (!value) {
-                    value = 'scanner-' + Math.random().toString(36).slice(2, 10);
-                    localStorage.setItem(key, value);
-                }
-                return value;
-            };
-
-            if (deviceInput) {
-                deviceInput.value = getDeviceId();
+                await scanner.start(cameraId, { fps:15, qrbox:{width:240,height:240}, aspectRatio:1, rememberLastUsedCamera:true, showTorchButtonIfSupported:true, showZoomSliderIfSupported:true }, (decoded) => { resetWatchdog(); applyCode(decoded); }, () => {});
+                running = true;
+                statusEl.textContent = 'Scanning';
+                statusEl.className = 'vp-badge badge-scan';
+                setFeedback('Live on ' + selectedCameraLabel + '. Hold the QR inside the scan area.', 'info');
+                syncScannerButtons(); resetWatchdog();
+            } catch (err) {
+                setStatus('Error'); setFeedback('Camera could not start. Check permissions and try again.', 'error');
+                scanner = null; syncScannerButtons();
             }
+        };
 
-            let offlineRows = [];
-            const renderOffline = () => {
-                if (!offlineTableWrap) return;
-                const q = (offlineSearch?.value || '').trim().toLowerCase();
-                const rows = offlineRows.filter((row) => {
-                    if (!q) return true;
-                    return [row.code, row.name, row.event, row.phone, row.email]
-                        .filter(Boolean)
-                        .join(' ')
-                        .toLowerCase()
-                        .includes(q);
-                }).slice(0, 50);
-
-                if (!rows.length) {
-                    offlineTableWrap.innerHTML = '<p style="color:#6a7c96;margin:0;">No offline matches.</p>';
-                    return;
-                }
-
-                const body = rows.map((row) => `
-                    <tr>
-                        <td>${row.code || ''}</td>
-                        <td>${row.name || ''}</td>
-                        <td>${row.phone || row.email || ''}</td>
-                        <td>${row.event || ''}</td>
-                        <td>${row.purchased_at || ''}</td>
-                    </tr>
-                `).join('');
-
-                offlineTableWrap.innerHTML = `
-                    <table>
-                        <thead>
-                            <tr><th>Code</th><th>Name</th><th>Phone/Email</th><th>Event</th><th>Purchased</th></tr>
-                        </thead>
-                        <tbody>${body}</tbody>
-                    </table>
-                `;
-            };
-
-            if (offlineSearch) {
-                offlineSearch.addEventListener('input', renderOffline);
+        const stopScanner = async () => {
+            if (!scanner || !running) return;
+            try { await scanner.stop(); await scanner.clear(); }
+            finally {
+                scanner = null; running = false;
+                if (scanWatchdog) { clearTimeout(scanWatchdog); scanWatchdog = null; }
+                statusEl.textContent = 'Idle'; statusEl.className = 'vp-badge badge-idle';
+                setFeedback(hasSelectedEvent() ? 'Scanner stopped. Start again when ready.' : 'Choose an event first, then start the camera.', hasSelectedEvent() ? 'neutral' : 'warning');
+                syncScannerButtons();
             }
+        };
 
-            if (offlineFile) {
-                offlineFile.addEventListener('change', async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    const text = await file.text();
-                    const parsed = JSON.parse(text);
-                    offlineRows = Array.isArray(parsed?.rows) ? parsed.rows : [];
-                    renderOffline();
-                });
-            }
-        })();
+        startBtn.addEventListener('click', startScanner);
+        stopBtn.addEventListener('click', stopScanner);
+        eventSelect.addEventListener('change', () => {
+            if (running) { setFeedback('Event changed — stop and restart the scanner.', 'warning'); return; }
+            setStatus(hasSelectedEvent() ? 'Ready' : 'Idle');
+            setFeedback(hasSelectedEvent() ? 'Event selected. Start the camera.' : 'Choose an event first, then start the camera.', hasSelectedEvent() ? 'neutral' : 'warning');
+            syncScannerButtons();
+        });
+        window.addEventListener('beforeunload', stopScanner);
+
+        const getDeviceId = () => {
+            const key = 'ticket_verify_device_id';
+            let v = localStorage.getItem(key);
+            if (!v) { v = 'scanner-' + Math.random().toString(36).slice(2, 10); localStorage.setItem(key, v); }
+            return v;
+        };
+        if (deviceInput) deviceInput.value = getDeviceId();
+
+        if (!hasSelectedEvent()) { setStatus('Waiting for event'); setFeedback('Choose an event first, then start the camera.', 'warning'); }
+        else { setStatus('Ready'); setFeedback('Event selected. Start the camera to begin scanning.', 'neutral'); }
+        syncScannerButtons();
+
+        /* offline */
+        let offlineRows = [];
+        const renderOffline = () => {
+            if (!offlineTableWrap) return;
+            const q = (offlineSearch?.value || '').trim().toLowerCase();
+            const rows = offlineRows.filter(r => !q || [r.code, r.name, r.event, r.phone, r.email].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0, 50);
+            if (!rows.length) { offlineTableWrap.innerHTML = '<p style="color:var(--muted);margin:.5rem 0 0;font-size:.83rem;">No offline matches.</p>'; return; }
+            offlineTableWrap.innerHTML = `
+                <div class="table-wrap" style="margin-top:.65rem;">
+                <table class="vp-table">
+                    <thead><tr><th>Code</th><th>Name</th><th>Phone/Email</th><th>Event</th><th>Purchased</th></tr></thead>
+                    <tbody>${rows.map(r => `<tr><td class="mono">${r.code||''}</td><td>${r.name||''}</td><td>${r.phone||r.email||''}</td><td>${r.event||''}</td><td>${r.purchased_at||''}</td></tr>`).join('')}</tbody>
+                </table></div>`;
+        };
+        offlineSearch?.addEventListener('input', renderOffline);
+        offlineFile?.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0]; if (!file) return;
+            const parsed = JSON.parse(await file.text());
+            offlineRows = Array.isArray(parsed?.rows) ? parsed.rows : [];
+            renderOffline();
+        });
+    })();
     </script>
 @endsection

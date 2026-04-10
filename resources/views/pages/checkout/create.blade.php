@@ -2,6 +2,22 @@
 
 @section('content')
     <section class="checkout-page">
+        @php
+            $paymentNotice = session('payment_notice');
+        @endphp
+
+        @if (is_array($paymentNotice) && !empty($paymentNotice['message']))
+            <div class="checkout-popup" id="checkout-popup" role="status" aria-live="polite" aria-atomic="true">
+                <div class="checkout-popup-card checkout-popup-{{ $paymentNotice['type'] ?? 'info' }}">
+                    <p class="checkout-popup-title">
+                        {{ ($paymentNotice['type'] ?? 'info') === 'success' ? 'Payment Request Sent' : 'Payment Update' }}
+                    </p>
+                    <p class="checkout-popup-message">{{ $paymentNotice['message'] }}</p>
+                    <button type="button" class="checkout-popup-close" id="checkout-popup-close">OK</button>
+                </div>
+            </div>
+        @endif
+
         <div class="checkout-shell">
 
             {{-- LEFT: Event info + order summary --}}
@@ -139,6 +155,62 @@
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             align-items: start;
+        }
+
+        .checkout-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgba(2, 8, 20, 0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .checkout-popup-card {
+            width: min(520px, calc(100% - 1rem));
+            border-radius: 16px;
+            padding: 1rem 1rem 0.9rem;
+            border: 1px solid #2b4771;
+            background: #10223a;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+        }
+
+        .checkout-popup-success {
+            border-color: #2f855a;
+            background: #0f2b23;
+        }
+
+        .checkout-popup-error {
+            border-color: #a03b41;
+            background: #33161a;
+        }
+
+        .checkout-popup-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .checkout-popup-message {
+            margin: 0.55rem 0 0;
+            color: #d5e2f5;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+
+        .checkout-popup-close {
+            margin-top: 0.9rem;
+            border: none;
+            border-radius: 10px;
+            background: #1a73e8;
+            color: #ffffff;
+            font-size: 0.86rem;
+            font-weight: 700;
+            padding: 0.58rem 1rem;
+            cursor: pointer;
         }
 
         /* ── Left ── */
@@ -304,6 +376,8 @@
             const summaryTotal = document.getElementById('summary-total');
             const providerInput = document.getElementById('payment_provider_input');
             const providerBtns = document.querySelectorAll('.provider-btn');
+            const popup = document.getElementById('checkout-popup');
+            const popupClose = document.getElementById('checkout-popup-close');
 
             const formatUgx = (n) => n <= 0 ? 'Free' : 'UGX ' + Math.round(n).toLocaleString('en-US');
 
@@ -330,6 +404,18 @@
                     if (providerInput) providerInput.value = btn.dataset.provider;
                 });
             });
+
+            if (popup && popupClose) {
+                popupClose.addEventListener('click', () => {
+                    popup.style.display = 'none';
+                });
+
+                popup.addEventListener('click', (event) => {
+                    if (event.target === popup) {
+                        popup.style.display = 'none';
+                    }
+                });
+            }
 
             updateSummary();
         })();

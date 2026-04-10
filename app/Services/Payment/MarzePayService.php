@@ -5,18 +5,25 @@ namespace App\Services\Payment;
 use App\Models\PaymentTransaction;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class MarzePayService
 {
     public function initiateStkPush(PaymentTransaction $payment): array
     {
         $baseUrl = rtrim((string) config('services.marzepay.base_url', ''), '/');
-        $path = (string) config('services.marzepay.stk_path', '/payments/stk-push');
+        $apiKey = (string) config('services.marzepay.api_key', '');
+        $apiSecret = (string) config('services.marzepay.api_secret', '');
 
-        if ($baseUrl === '') {
+        if ($baseUrl === '' || $apiKey === '' || $apiSecret === '') {
+            Log::error('MarzePayService: Missing MarzPay configuration', [
+                'base_url_empty' => $baseUrl === '',
+                'api_key_empty' => $apiKey === '',
+                'api_secret_empty' => $apiSecret === '',
+            ]);
             return [
                 'ok' => false,
-                'message' => 'MARZEPAY_BASE_URL is not configured.',
+                'message' => 'MarzPay is not properly configured.',
                 'payload' => null,
                 'reference' => null,
                 'provider_status' => null,
@@ -25,48 +32,118 @@ class MarzePayService
 
         $callbackUrl = rtrim((string) config('app.url'), '/')
             . '/'
-            . ltrim((string) config('services.marzepay.callback_path', '/payments/marzepay/webhook'), '/');
+            . ltrim((string) config('services.marzepay.callback_path', 'payments/marzepay/webhook'), '/');
+
+        // Generate UUID v4 for reference if needed (idempotency_key should already be UUID)
+        $reference = (string) $payment->idempotency_key;
+
+        // Validate amount (500 - 10,000,000 UGX)
+        $amount = (int) $payment->total_amount;
+        if ($amount < 500 || $amount > 10000000) {
+            Log::error('MarzPay: Invalid amount', [
+                'payment_id' => $payment->id,
+                'amount' => $amount,
+                'min' => 500,
+                'max' => 10000000,
+            ]);
+            return [
+                'ok' => false,
+                'message' => "Invalid amount. MarzPay requires 500 - 10,000,000 UGX. Got: $amount",
+                'payload' => null,
+                'reference' => null,
+                'provider_status' => null,
+            ];
+        }
+
+        $phoneNumber = (string) $payment->phone_number;
+
+        // Normalize phone number to international format: +256XXXXXXXXX
+        if (!str_starts_with($phoneNumber, '+')) {
+            // Remove leading 0 if present
+            if (str_starts_with($phoneNumber, '0')) {
+                $phoneNumber = substr($phoneNumber, 1);
+            }
+            // Add country code
+            $phoneNumber = '+256' . $phoneNumber;
+        }
 
         $payload = [
-            'amount' => (float) $payment->total_amount,
-            'currency' => (string) $payment->currency,
-            'provider' => (string) $payment->payment_provider,
-            'phone' => (string) $payment->phone_number,
-            'reference' => (string) $payment->idempotency_key,
-            'idempotency_key' => (string) $payment->idempotency_key,
-            'callback_url' => $callbackUrl,
+            'amount' => $amount,
+            'phone_number' => $phoneNumber,
+            'country' => (string) config('services.marzepay.country', 'UG'),
+            'reference' => $reference,
             'description' => 'WADO Ticket Payment',
-            'metadata' => [
-                'payment_transaction_id' => $payment->id,
-                'event_id' => $payment->event_id,
-                'ticket_category_id' => $payment->ticket_category_id,
-                'quantity' => $payment->quantity,
-            ],
+            'callback_url' => $callbackUrl,
         ];
 
-        /** @var Response $response */
-        $response = Http::timeout((int) config('services.marzepay.timeout', 30))
-            ->acceptJson()
-            ->asJson()
-            ->withHeaders([
-                'X-API-KEY' => (string) config('services.marzepay.api_key', ''),
-                'X-API-SECRET' => (string) config('services.marzepay.api_secret', ''),
-            ])
-            ->post($baseUrl . $path, $payload);
+        try {
+            // Create Basic Auth header: base64(api_key:api_secret)
+            $credentials = base64_encode($apiKey . ':' . $apiSecret);
+            
+            Log::debug('MarzPay request payload', [
+                'payment_id' => $payment->id,
+                'amount' => $payload['amount'],
+                'phone_number' => $payload['phone_number'],
+                'country' => $payload['country'],
+                'reference' => $payload['reference'],
+            ]);
+            
+            /** @var Response $response */
+            $response = Http::timeout((int) config('services.marzepay.timeout', 30))
+                ->acceptJson()
+                ->withHeaders([
+                    'Authorization' => 'Basic ' . $credentials,
+                ])
+                ->asForm()
+                ->post($baseUrl . '/collect-money', $payload);
+
+            Log::info('MarzPay collection initiated', [
+                'payment_id' => $payment->id,
+                'status_code' => $response->status(),
+                'reference' => $reference,
+                'response_body' => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('MarzPay API call failed', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+            return [
+                'ok' => false,
+                'message' => 'Failed to connect to MarzPay API: ' . $e->getMessage(),
+                'payload' => null,
+                'reference' => null,
+                'provider_status' => null,
+            ];
+        }
 
         $json = $response->json() ?: [];
-        $ok = $response->successful() && $this->normalizeProviderState($json) !== 'failed';
+        $status = (string) data_get($json, 'status', 'failed');
+        $transactionStatus = (string) data_get($json, 'data.transaction.status', 'failed');
+        $isSandboxMode = (bool) data_get($json, 'data.metadata.sandbox_mode', false);
+        
+        // API returns status "success" for both sandbox and live modes
+        // Transaction status can be "pending" (live) or "sandbox" (sandbox mode)
+        $ok = $response->successful() && $status === 'success';
+
+        Log::info('MarzPay collection result', [
+            'payment_id' => $payment->id,
+            'ok' => $ok,
+            'status' => $status,
+            'transaction_status' => $transactionStatus,
+            'sandbox_mode' => $isSandboxMode,
+            'reference' => $reference,
+        ]);
 
         return [
             'ok' => $ok,
-            'message' => (string) data_get($json, 'message', $response->reason() ?: 'Unable to initiate STK push.'),
+            'message' => (string) data_get($json, 'message', $response->reason() ?: 'Unable to initiate collection.'),
             'payload' => $json,
-            'reference' => (string) (data_get($json, 'transaction_id')
+            'reference' => (string) (data_get($json, 'data.transaction.reference')
+                ?? data_get($json, 'data.transaction.uuid')
                 ?? data_get($json, 'reference')
-                ?? data_get($json, 'data.transaction_id')
-                ?? data_get($json, 'data.reference')
                 ?? ''),
-            'provider_status' => $this->normalizeProviderState($json),
+            'provider_status' => $transactionStatus === 'sandbox' ? 'sandbox' : ($ok ? 'pending' : 'failed'),
         ];
     }
 

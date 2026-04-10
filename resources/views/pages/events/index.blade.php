@@ -16,16 +16,7 @@
                     <article class="event-row">
                         <div class="event-banner" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}')"></div>
                         <div class="event-body">
-                            <div class="event-top">
-                                <div class="event-meta-left">
-                                    <div class="event-badges">
-                                        <span class="badge badge-{{ strtolower($event->status) }}">{{ ucfirst($event->status) }}</span>
-                                        <span class="badge badge-category">{{ $event->category_label ?? ($event->category?->name ?? 'Uncategorized') }}</span>
-                                    </div>
-                                    <h2>{{ $event->title }}</h2>
-                                    <p class="event-desc">{{ $event->description }}</p>
-                                </div>
-                            </div>
+                            <h2>{{ $event->title }}</h2>
                             <div class="event-bottom">
                                 <ul class="event-details">
                                     <li class="detail-item">
@@ -34,18 +25,12 @@
                                     </li>
                                     <li class="detail-item">
                                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5c0-2.485-2.015-4.5-4.5-4.5z" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
-                                        {{ $event->venue }}, {{ $event->city }}
-                                    </li>
-                                    <li class="tickets-pill">
-                                        <span class="tickets-count">{{ $event->tickets_available }}</span> / {{ $event->capacity }} tickets left
+                                        {{ $event->venue }}{{ $event->city ? ', ' . $event->city : '' }}
                                     </li>
                                 </ul>
                                 <div class="event-actions">
-                                    <span class="event-price">From UGX {{ number_format((float) $event->ticket_price, 0) }}</span>
-                                    @can('update', $event)
-                                        <a href="{{ route('dashboard.events.edit', $event) }}" class="btn-edit">Edit</a>
-                                    @endcan
-                                    <a href="{{ $event->url ?? route('events.show', $event) }}" class="btn-view">View event ↗</a>
+                                    <span class="event-price">{{ (float) $event->ticket_price <= 0 ? 'Free' : 'From UGX ' . number_format((float) $event->ticket_price, 0) }}</span>
+                                    <a href="{{ $event->url ?? route('events.show', $event) }}" class="btn-view">View details</a>
                                 </div>
                             </div>
                         </div>
@@ -137,40 +122,14 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
         }
-
-        /* ── Top section ── */
-        .event-badges {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-        .badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 999px;
-            display: inline-flex;
-        }
-        .badge-published  { background: #ff6b6b22; color: #ff8080; border: 0.5px solid #ff6b6b44; }
-        .badge-draft      { background: #88888822; color: #aaa;    border: 0.5px solid #88888844; }
-        .badge-cancelled  { background: #f59e0b22; color: #f59e0b; border: 0.5px solid #f59e0b44; }
-        .badge-category   { background: transparent; color: #888;  border: 0.5px solid #333; }
 
         .event-body h2 {
-            margin: 0 0 4px;
-            font-size: 17px;
-            font-weight: 500;
-            color: #fff;
-        }
-        .event-desc {
             margin: 0;
-            font-size: 13px;
-            color: #888;
-            line-height: 1.55;
-            max-width: 560px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
         }
 
         /* ── Bottom section ── */
@@ -186,7 +145,7 @@
             padding: 0;
             margin: 0;
             display: flex;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -198,14 +157,6 @@
             font-size: 13px;
         }
         .detail-item svg { opacity: 0.6; flex-shrink: 0; }
-        .tickets-pill {
-            font-size: 12px;
-            color: #888;
-            background: #252525;
-            border-radius: 999px;
-            padding: 4px 12px;
-        }
-        .tickets-count { color: #f8b26a; }
 
         /* ── Actions ── */
         .event-actions {
@@ -215,30 +166,25 @@
             flex-shrink: 0;
         }
         .event-price {
-            font-size: 13px;
-            color: #888;
-            margin-right: 4px;
+            font-size: 14px;
+            color: #f2b674;
+            font-weight: 600;
+            margin-right: 6px;
         }
-        .btn-edit, .btn-view {
+        .btn-view {
             padding: 7px 18px;
             border-radius: 999px;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
             cursor: pointer;
         }
-        .btn-edit {
-            color: #aaa;
-            border: 0.5px solid #333;
-            background: transparent;
-        }
-        .btn-edit:hover { border-color: #555; color: #ccc; }
         .btn-view {
-            color: #f8b26a;
+            color: #1a0e00;
             border: 0.5px solid #f8b26a;
-            background: transparent;
+            background: #f8b26a;
         }
-        .btn-view:hover { background: #f8b26a11; }
+        .btn-view:hover { background: #e8a250; border-color: #e8a250; }
 
         /* ── Empty state ── */
         .empty-state {

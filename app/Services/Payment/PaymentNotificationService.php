@@ -35,35 +35,10 @@ class PaymentNotificationService
 
     protected function sendSms(Ticket $ticket, PaymentTransaction $payment): void
     {
-        $smsEndpoint = (string) config('services.marzepay.sms_endpoint', '');
-        $phone = (string) ($payment->phone_number ?: $ticket->user?->phone ?: '');
-
-        if ($smsEndpoint === '' || $phone === '') {
-            Log::info('SMS notification skipped', [
-                'ticket_id' => $ticket->id,
-                'phone' => $phone,
-            ]);
-
-            return;
-        }
-
-        $message = sprintf(
-            'Payment confirmed. Ticket %s is ready. Open: %s',
-            $ticket->ticket_code,
-            route('tickets.show', $ticket)
-        );
-
-        Http::timeout((int) config('services.marzepay.timeout', 30))
-            ->acceptJson()
-            ->asJson()
-            ->withHeaders([
-                'X-API-KEY' => (string) config('services.marzepay.api_key', ''),
-                'X-API-SECRET' => (string) config('services.marzepay.api_secret', ''),
-            ])
-            ->post($smsEndpoint, [
-                'to' => $phone,
-                'sender_id' => (string) config('services.marzepay.sms_sender_id', 'WADO'),
-                'message' => $message,
-            ]);
+        // SMS is currently not sent through MarzPay API
+        // Relying on email notifications instead
+        Log::info('SMS notification skipped - not configured with MarzPay v1 API', [
+            'ticket_id' => $ticket->id,
+        ]);
     }
 }

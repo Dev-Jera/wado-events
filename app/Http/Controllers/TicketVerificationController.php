@@ -133,7 +133,7 @@ class TicketVerificationController extends Controller
                 ]);
         }
 
-        $ticketCode = strtoupper(trim((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))));
+        $ticketCode = $this->normalizeTicketCode((string) ($payload['code'] ?? ($data['ticket_code'] ?? '')));
 
         if ($ticketCode === '') {
             return redirect()
@@ -149,6 +149,16 @@ class TicketVerificationController extends Controller
             ->with(['event', 'user', 'ticketCategory'])
             ->where('ticket_code', $ticketCode)
             ->first();
+
+        if (! $ticket && $ticketCode !== '') {
+            $ticket = Ticket::query()
+                ->with(['event', 'user', 'ticketCategory'])
+                ->where('event_id', $selectedEventId)
+                ->get()
+                ->first(function (Ticket $candidate) use ($ticketCode): bool {
+                    return $this->normalizeTicketCode((string) $candidate->ticket_code) === $ticketCode;
+                });
+        }
 
         if (! $ticket) {
             $this->logScan($request, null, $ticketCode, 'rejected', 'Ticket not found', $rawPayload, $selectedEventId);
@@ -261,5 +271,14 @@ class TicketVerificationController extends Controller
     protected function ensureAdmin(Request $request): void
     {
         abort_unless($request->user()?->isGateStaff(), 403);
+    }
+
+    protected function normalizeTicketCode(string $value): string
+    {
+        $value = strtoupper(trim($value));
+        $value = preg_replace('/[\x{2010}-\x{2015}\x{2212}]/u', '-', $value) ?? $value;
+        $value = preg_replace('/\s+/', '', $value) ?? $value;
+
+        return $value;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -50,7 +51,11 @@ class EventsTable
                     ->label('Category')
                     ->relationship('category', 'name'),
             ])
+            ->recordUrl(fn ($record): string => route('admin.events.show', $record))
             ->recordActions([
+                ViewAction::make('details')
+                    ->label('Details')
+                    ->url(fn ($record): string => route('admin.events.show', $record)),
                 EditAction::make(),
             ])
             ->toolbarActions([

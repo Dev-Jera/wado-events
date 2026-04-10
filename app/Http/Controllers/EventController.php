@@ -34,6 +34,14 @@ class EventController extends Controller
     {
         $event->load(['category', 'ticketCategories', 'artists']);
 
+        if ($event->ticketCategories->isNotEmpty()) {
+            $event->forceFill([
+                'capacity' => (int) $event->ticketCategories->sum('ticket_count'),
+                'tickets_available' => (int) $event->ticketCategories->sum('tickets_remaining'),
+                'ticket_price' => (float) $event->ticketCategories->min('price'),
+            ]);
+        }
+
         return view('pages.events.show', [
             'event' => $event,
         ]);

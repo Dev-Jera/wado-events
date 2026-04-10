@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Jobs\IssueTicketForPayment;
 use App\Models\PaymentTransaction;
-use App\Services\Payment\PaymentLifecycleService;
 use App\Services\Payment\PaymentNotificationService;
 use Illuminate\Http\Request;
 
@@ -52,19 +51,6 @@ class PaymentController extends Controller
             'statusFilter' => $status,
             'searchTerm' => $search,
             'statusCounts' => $statusCounts,
-        ]);
-    }
-
-    public function show(Request $request, PaymentTransaction $paymentTransaction, PaymentLifecycleService $lifecycleService)
-    {
-        abort_unless($request->user()?->id === $paymentTransaction->user_id, 403);
-
-        $lifecycleService->expireIfTimedOut($paymentTransaction);
-
-        $paymentTransaction->load(['event', 'ticketCategory', 'ticket']);
-
-        return view('pages.payments.show', [
-            'payment' => $paymentTransaction,
         ]);
     }
 

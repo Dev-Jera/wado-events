@@ -15,6 +15,7 @@ class PaymentTransaction extends Model
     public const STATUS_CONFIRMED = 'CONFIRMED';
     public const STATUS_FAILED = 'FAILED';
     public const STATUS_REFUNDED = 'REFUNDED';
+    public const STATUS_EXPIRED = 'EXPIRED';
 
     protected $fillable = [
         'user_id',

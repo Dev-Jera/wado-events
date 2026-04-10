@@ -34,10 +34,15 @@ class TicketQrService
             data: json_encode($payload, JSON_UNESCAPED_SLASHES),
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::Medium,
-            size: 300,
-            margin: 10,
+            size: 600,
+            margin: 20,
             roundBlockSizeMode: RoundBlockSizeMode::Margin
         ))->build();
+
+        $legacyPngPath = 'qr-codes/ticket-' . $ticket->id . '.png';
+        if (Storage::disk('public')->exists($legacyPngPath)) {
+            Storage::disk('public')->delete($legacyPngPath);
+        }
 
         $path = 'qr-codes/ticket-' . $ticket->id . '.svg';
         Storage::disk('public')->put($path, $result->getString());
@@ -50,12 +55,9 @@ class TicketQrService
         $ticket->loadMissing(['user', 'event']);
 
         $payload = [
-            'v' => 1,
+            'v' => 2,
             'code' => (string) $ticket->ticket_code,
-            'name' => (string) ($ticket->user?->name ?? ''),
             'event_id' => (int) $ticket->event_id,
-            'event' => (string) ($ticket->event?->title ?? ''),
-            'purchased_at' => optional($ticket->purchased_at)->toIso8601String(),
         ];
 
         $payload['sig'] = $this->signPayload($payload);
@@ -91,14 +93,22 @@ class TicketQrService
 
     protected function signPayload(array $payload): string
     {
-        $base = implode('|', [
-            (string) ($payload['v'] ?? ''),
-            strtoupper((string) ($payload['code'] ?? '')),
-            (string) ($payload['name'] ?? ''),
-            (string) ($payload['event_id'] ?? ''),
-            (string) ($payload['event'] ?? ''),
-            (string) ($payload['purchased_at'] ?? ''),
-        ]);
+        $version = (int) ($payload['v'] ?? 1);
+
+        $base = $version >= 2
+            ? implode('|', [
+                'v2',
+                strtoupper((string) ($payload['code'] ?? '')),
+                (string) ($payload['event_id'] ?? ''),
+            ])
+            : implode('|', [
+                (string) ($payload['v'] ?? ''),
+                strtoupper((string) ($payload['code'] ?? '')),
+                (string) ($payload['name'] ?? ''),
+                (string) ($payload['event_id'] ?? ''),
+                (string) ($payload['event'] ?? ''),
+                (string) ($payload['purchased_at'] ?? ''),
+            ]);
 
         return hash_hmac('sha256', $base, $this->resolveSigningSecret());
     }

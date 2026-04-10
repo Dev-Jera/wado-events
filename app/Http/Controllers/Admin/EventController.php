@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEventRequest;
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -93,5 +95,37 @@ class EventController extends Controller
         return redirect()
             ->route('admin.events.index')
             ->with('success', 'Event and ticket categories created successfully.');
+    }
+
+    public function show(Request $request, Event $event)
+    {
+        $this->ensureAdmin($request);
+
+        $event->load(['category', 'organizer', 'artists', 'ticketCategories']);
+
+        $tickets = Ticket::query()
+            ->with(['user', 'ticketCategory'])
+            ->where('event_id', $event->id)
+            ->latest('purchased_at')
+            ->paginate(15);
+
+        $summary = [
+            'buyers_count' => (int) Ticket::query()->where('event_id', $event->id)->distinct('user_id')->count('user_id'),
+            'tickets_sold' => (int) Ticket::query()->where('event_id', $event->id)->sum('quantity'),
+            'revenue' => (float) Ticket::query()->where('event_id', $event->id)->sum('total_amount'),
+            'available' => (int) $event->ticketCategories->sum('tickets_remaining'),
+            'capacity' => (int) $event->ticketCategories->sum('ticket_count'),
+        ];
+
+        return view('admin.events.show', [
+            'event' => $event,
+            'tickets' => $tickets,
+            'summary' => $summary,
+        ]);
+    }
+
+    protected function ensureAdmin(Request $request): void
+    {
+        abort_unless($request->user()?->isAdmin() || $request->user()?->isSuperAdmin(), 403);
     }
 }

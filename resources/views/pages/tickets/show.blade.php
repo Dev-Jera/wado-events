@@ -132,8 +132,8 @@
 
     <div class="tkd-qr-row">
         <div class="tkd-qr-box">
-            @if (isset($qrCodeUrl))
-                <img src="{{ $qrCodeUrl }}" alt="QR Code" style="width:100%;height:100%;object-fit:contain;">
+            @if ($ticket->qr_code_url)
+                <img src="{{ $ticket->qr_code_url }}" alt="QR Code" style="width:100%;height:100%;object-fit:contain;">
             @else
                 <svg viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="21" height="21" fill="white"/>
@@ -167,7 +167,9 @@
         </div>
         <div class="tkd-footer-actions">
             <a href="{{ route('tickets.index') }}" class="tkd-btn tkd-btn-ghost">My Tickets</a>
-            <a href="{{ route('events.show', $ticket->event) }}" class="tkd-btn {{ $isCancelled ? 'tkd-btn-danger' : 'tkd-btn-primary' }}">View Event</a>
+            <a href="{{ route('tickets.download', $ticket) }}" class="tkd-btn tkd-btn-ghost">Download QR</a>
+            <a href="{{ route('tickets.pdf', $ticket) }}" class="tkd-btn tkd-btn-primary">Download Ticket</a>
+            <a href="{{ route('events.show', $ticket->event) }}" class="tkd-btn {{ $isCancelled ? 'tkd-btn-danger' : 'tkd-btn-ghost' }}">View Event</a>
         </div>
     </div>
 
@@ -222,8 +224,8 @@
 .tkd-badge-danger{background:rgba(220,38,38,.15);border-color:rgba(220,38,38,.3);color:#f87171;}
 .tkd-badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
 .tkd-qr-row{background:#111827;padding:16px 24px 20px;display:flex;align-items:center;gap:18px;border-top:1px solid rgba(255,255,255,.05);}
-.tkd-qr-box{width:76px;height:76px;background:#fff;border-radius:10px;padding:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.tkd-qr-box svg,.tkd-qr-box img{width:100%;height:100%;}
+.tkd-qr-box{width:128px;height:128px;background:#fff;border-radius:12px;padding:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.tkd-qr-box svg,.tkd-qr-box img{width:100%;height:100%;object-fit:contain;}
 .tkd-qr-info{flex:1;}
 .tkd-qr-title{font-size:.78rem;font-weight:700;color:#E2E8F0;margin-bottom:4px;}
 .tkd-qr-sub{font-size:.68rem;color:rgba(255,255,255,.32);line-height:1.55;}
@@ -250,6 +252,15 @@
     .tkd-footer{flex-direction:column;align-items:flex-start;}
     .tkd-wrap{padding:0 .5rem;}
     .tkd-qr-row{flex-wrap:wrap;}
+}
+
+@media print {
+    body { background: #fff !important; }
+    body * { visibility: hidden !important; }
+    .tkd-wrap, .tkd-wrap * { visibility: visible !important; }
+    .tkd-wrap { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .tkd-footer-actions, .tkd-back, .tkd-social, .tkd-footer-route { display: none !important; }
+    .tkd-card { box-shadow: none !important; border: none !important; }
 }
 </style>
 @endsection

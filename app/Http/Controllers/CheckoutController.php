@@ -119,14 +119,14 @@ class CheckoutController extends Controller
                 $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
                 $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
-                if ($lockedCategory->tickets_remaining < $quantity || $lockedEvent->tickets_available < $quantity) {
+                if ($lockedCategory->tickets_remaining < $quantity) {
                     throw ValidationException::withMessages([
                         'quantity' => 'Not enough tickets remain for that selection.',
                     ]);
                 }
 
                 $lockedCategory->decrement('tickets_remaining', $quantity);
-                $lockedEvent->decrement('tickets_available', $quantity);
+                $this->syncEventInventory($lockedEvent);
 
                 $ticket = Ticket::create([
                     'user_id' => $user->id,
@@ -157,24 +157,36 @@ class CheckoutController extends Controller
         $existingPayment = PaymentTransaction::query()
             ->where('idempotency_key', $idempotencyKey)
             ->where('user_id', $user->id)
+            ->whereIn('status', [
+                PaymentTransaction::STATUS_INITIATED,
+                PaymentTransaction::STATUS_PENDING,
+            ])
             ->first();
 
         if ($existingPayment) {
-            return $this->redirectForExistingPayment($existingPayment);
+            return $this->redirectForExistingPayment($request, $existingPayment);
+        }
+
+        if (PaymentTransaction::query()
+            ->where('idempotency_key', $idempotencyKey)
+            ->where('user_id', $user->id)
+            ->exists()
+        ) {
+            $idempotencyKey = strtoupper((string) Str::uuid());
         }
 
         $payment = DB::transaction(function () use ($data, $event, $idempotencyKey, $quantity, $ticketCategory, $unitPrice, $user) {
             $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
             $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
-            if ($lockedCategory->tickets_remaining < $quantity || $lockedEvent->tickets_available < $quantity) {
+            if ($lockedCategory->tickets_remaining < $quantity) {
                 throw ValidationException::withMessages([
                     'quantity' => 'Not enough tickets remain for that selection.',
                 ]);
             }
 
             $lockedCategory->decrement('tickets_remaining', $quantity);
-            $lockedEvent->decrement('tickets_available', $quantity);
+            $this->syncEventInventory($lockedEvent);
 
             return PaymentTransaction::query()->create([
                 'user_id' => $user->id,
@@ -192,6 +204,7 @@ class CheckoutController extends Controller
             ]);
         });
 
+        \Illuminate\Support\Facades\Log::error('CheckoutController: initiating Marz Pay request for payment_id=' . $payment->id . ' provider=' . ($data['payment_provider'] ?? ''));
         $initiation = $this->marzePayService->initiateStkPush($payment);
         if (! ($initiation['ok'] ?? false)) {
             $this->paymentLifecycleService->markFailedAndRelease(
@@ -199,9 +212,24 @@ class CheckoutController extends Controller
                 (string) ($initiation['message'] ?? 'Failed to initiate payment.')
             );
 
+            $this->storeCheckoutPrefill($request, $event, [
+                'ticket_category_id' => $ticketCategory->id,
+                'quantity' => $quantity,
+                'payment_provider' => $data['payment_provider'],
+                'phone_number' => trim((string) $data['phone_number']),
+                'idempotency_key' => $idempotencyKey,
+            ]);
+
             return redirect()
-                ->route('payments.show', $payment)
-                ->with('error', (string) ($initiation['message'] ?? 'Failed to initiate payment.'));
+                ->route('checkout.create', [
+                    'event' => $event,
+                    'ticket_category' => $ticketCategory->id,
+                    'payment_provider' => $data['payment_provider'],
+                ])
+                ->with('payment_notice', [
+                    'type' => 'error',
+                    'message' => (string) ($initiation['message'] ?? 'Failed to initiate payment.'),
+                ]);
         }
 
         $payment->forceFill([
@@ -214,12 +242,30 @@ class CheckoutController extends Controller
 
         ExpirePendingPayment::dispatch($payment->id)->delay(now()->addMinutes(5));
 
+        $providerLabel = $this->paymentProviderLabel((string) $data['payment_provider']);
+        $phoneNumber = trim((string) $data['phone_number']);
+
+        $this->storeCheckoutPrefill($request, $event, [
+            'ticket_category_id' => $ticketCategory->id,
+            'quantity' => $quantity,
+            'payment_provider' => $data['payment_provider'],
+            'phone_number' => $phoneNumber,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
         return redirect()
-            ->route('payments.show', $payment)
-            ->with('success', 'Payment initiated. Enter your PIN on phone to complete checkout.');
+            ->route('checkout.create', [
+                'event' => $event,
+                'ticket_category' => $ticketCategory->id,
+                'payment_provider' => $data['payment_provider'],
+            ])
+            ->with('payment_notice', [
+                'type' => 'success',
+                'message' => "We have sent a payment request via {$providerLabel} to {$phoneNumber}. Check your phone and enter your PIN to complete payment.",
+            ]);
     }
 
-    protected function redirectForExistingPayment(PaymentTransaction $payment)
+    protected function redirectForExistingPayment(Request $request, PaymentTransaction $payment)
     {
         if ($payment->ticket_id) {
             return redirect()
@@ -227,8 +273,66 @@ class CheckoutController extends Controller
                 ->with('success', 'Payment already confirmed. Showing your ticket.');
         }
 
+        $event = Event::query()->find($payment->event_id);
+        if (! $event) {
+            return redirect()
+                ->route('events.index')
+                ->with('warning', 'Your payment request was found, but the event is unavailable.');
+        }
+
+        $this->storeCheckoutPrefill($request, $event, [
+            'ticket_category_id' => $payment->ticket_category_id,
+            'quantity' => $payment->quantity,
+            'payment_provider' => $payment->payment_provider,
+            'phone_number' => $payment->phone_number,
+            'idempotency_key' => $payment->idempotency_key,
+        ]);
+
+        $status = strtoupper((string) $payment->status);
+        $noticeType = in_array($status, [PaymentTransaction::STATUS_FAILED, PaymentTransaction::STATUS_REFUNDED], true)
+            ? 'error'
+            : 'info';
+
+        $noticeMessage = in_array($status, [PaymentTransaction::STATUS_PENDING, PaymentTransaction::STATUS_INITIATED], true)
+            ? 'A payment request is already active. Check your phone and enter your PIN to complete payment.'
+            : ((string) ($payment->last_error ?: 'This payment request already exists. Returning latest status.'));
+
         return redirect()
-            ->route('payments.show', $payment)
-            ->with('info', 'This payment request already exists. Returning latest status.');
+            ->route('checkout.create', [
+                'event' => $event,
+                'ticket_category' => $payment->ticket_category_id,
+                'payment_provider' => $payment->payment_provider,
+            ])
+            ->with('payment_notice', [
+                'type' => $noticeType,
+                'message' => $noticeMessage,
+            ]);
+    }
+
+    protected function syncEventInventory(Event $event): void
+    {
+        $inventory = TicketCategory::query()
+            ->where('event_id', $event->id)
+            ->selectRaw('COALESCE(SUM(ticket_count), 0) AS capacity_total, COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
+            ->first();
+
+        $event->forceFill([
+            'capacity' => (int) ($inventory?->capacity_total ?? 0),
+            'tickets_available' => (int) ($inventory?->remaining_total ?? 0),
+        ])->save();
+    }
+
+    protected function storeCheckoutPrefill(Request $request, Event $event, array $payload): void
+    {
+        $request->session()->put("checkout_prefill.{$event->id}", $payload);
+    }
+
+    protected function paymentProviderLabel(string $provider): string
+    {
+        return match (strtolower(trim($provider))) {
+            'mtn' => 'MTN MoMo',
+            'airtel' => 'Airtel Money',
+            default => 'Mobile Money',
+        };
     }
 }
