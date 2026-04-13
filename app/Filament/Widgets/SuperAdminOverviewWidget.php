@@ -2,77 +2,140 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\PaymentTransactions\PaymentTransactionResource;
 use App\Models\Event;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\User;
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
-class SuperAdminOverviewWidget extends StatsOverviewWidget
+class SuperAdminOverviewWidget extends Widget
 {
     protected static ?int $sort = 1;
 
-    protected function getStats(): array
+    protected string $view = 'filament.widgets.super-admin-overview-widget';
+
+    protected int|string|array $columnSpan = 'full';
+
+    protected function getViewData(): array
     {
-        $events = Event::query()->count();
-        $capacity = (int) TicketCategory::query()->sum('ticket_count');
-        $inventoryRemaining = (int) TicketCategory::query()->sum('tickets_remaining');
-        $issuedQr = (int) Ticket::query()->whereNotNull('qr_code_path')->sum('quantity');
-        $scanned = (int) Ticket::query()->where(function ($q): void {
+        $now       = Carbon::now();
+        $thisMonth = $now->month;
+        $thisYear  = $now->year;
+        $lastMonth = $now->copy()->subMonth();
+
+        // ── Needs Attention ──────────────────────────────────────────────────
+        $pendingPayments    = PaymentTransaction::where('status', PaymentTransaction::STATUS_PENDING)->count();
+        $failedPayments     = PaymentTransaction::where('status', PaymentTransaction::STATUS_FAILED)->count();
+        $qrNotIssued        = (int) Ticket::whereNull('qr_code_path')->sum('quantity');
+
+        $issuedQr           = (int) Ticket::whereNotNull('qr_code_path')->sum('quantity');
+        $scanned            = (int) Ticket::where(function ($q): void {
             $q->where('status', 'used')->orWhereNotNull('used_at');
         })->sum('quantity');
-        $pendingPayments = PaymentTransaction::query()->where('status', PaymentTransaction::STATUS_PENDING)->count();
-        $failedPayments = PaymentTransaction::query()->where('status', PaymentTransaction::STATUS_FAILED)->count();
-        $gateAgents = User::query()->whereIn('role', ['agent', 'gate', 'gate_agent'])->count();
+        $atGateUnscanned    = max($issuedQr - $scanned, 0);
+        $inventoryRemaining = (int) TicketCategory::sum('tickets_remaining');
 
-        return [
-            Stat::make('Total Events', (string) $events)
-                ->description('Events currently in system')
-                ->color('primary'),
+        // ── Summary Stats ────────────────────────────────────────────────────
+        $totalEvents        = Event::count();
+        $newEventsThisMonth = Event::whereMonth('created_at', $thisMonth)
+            ->whereYear('created_at', $thisYear)->count();
 
-            Stat::make('Allocated Tickets', number_format($capacity))
-                ->description('From all event ticket categories')
-                ->color('info'),
+        $ticketsSoldThisMonth = (int) PaymentTransaction::where('status', PaymentTransaction::STATUS_CONFIRMED)
+            ->whereMonth('created_at', $thisMonth)->whereYear('created_at', $thisYear)->sum('quantity');
+        $ticketsSoldLastMonth = (int) PaymentTransaction::where('status', PaymentTransaction::STATUS_CONFIRMED)
+            ->whereMonth('created_at', $lastMonth->month)->whereYear('created_at', $lastMonth->year)->sum('quantity');
+        $ticketsSoldTotal     = (int) PaymentTransaction::where('status', PaymentTransaction::STATUS_CONFIRMED)->sum('quantity');
+        $ticketsPctChange     = $ticketsSoldLastMonth > 0
+            ? round((($ticketsSoldThisMonth - $ticketsSoldLastMonth) / $ticketsSoldLastMonth) * 100)
+            : 0;
 
-            Stat::make('Inventory Remaining', number_format($inventoryRemaining))
-                ->description('Unsold seats/tickets left')
-                ->color('warning'),
+        $revenueThisMonth = (float) PaymentTransaction::where('status', PaymentTransaction::STATUS_CONFIRMED)
+            ->whereMonth('created_at', $thisMonth)->whereYear('created_at', $thisYear)->sum('total_amount');
+        $revenueLastMonth = (float) PaymentTransaction::where('status', PaymentTransaction::STATUS_CONFIRMED)
+            ->whereMonth('created_at', $lastMonth->month)->whereYear('created_at', $lastMonth->year)->sum('total_amount');
+        $revenueTotal     = (float) PaymentTransaction::where('status', PaymentTransaction::STATUS_CONFIRMED)->sum('total_amount');
+        $revenuePctChange = $revenueLastMonth > 0
+            ? round((($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100)
+            : 0;
 
-            Stat::make('QR Issued', number_format($issuedQr))
-                ->description('Tickets issued with QR code')
-                ->color('success'),
+        $totalGateAgents = User::whereIn('role', ['agent', 'gate', 'gate_agent'])->count();
+        $inactiveAgents  = 0;
 
-            Stat::make('Scanned', number_format($scanned))
-                ->description('Used/validated at gate')
-                ->color('success'),
+        // ── Events overview ──────────────────────────────────────────────────
+        $events = Event::with('ticketCategories')->latest()->take(8)->get()->map(function (Event $event): array {
+            $capacity = $event->ticketCategories->sum('ticket_count');
+            $sold     = $capacity - $event->ticketCategories->sum('tickets_remaining');
+            $revenue  = (float) PaymentTransaction::where('event_id', $event->id)
+                ->where('status', PaymentTransaction::STATUS_CONFIRMED)
+                ->sum('total_amount');
 
-            Stat::make('At Gate Remaining', number_format(max($issuedQr - $scanned, 0)))
-                ->description('Issued but not yet scanned')
-                ->color('warning'),
+            return [
+                'title'    => $event->title,
+                'capacity' => (int) $capacity,
+                'sold'     => (int) $sold,
+                'revenue'  => $revenue,
+                'status'   => $event->live_status,
+            ];
+        });
 
-            Stat::make('Pending Payments', (string) $pendingPayments)
-                ->description('Awaiting completion')
-                ->url(PaymentTransactionResource::getUrl())
-                ->color('warning'),
+        // ── Chart data (last 6 months) ────────────────────────────────────────
+        $chartData   = [];
+        $maxBarValue = 1;
 
-            Stat::make('Failed Payments', (string) $failedPayments)
-                ->description('Need support follow-up')
-                ->url(PaymentTransactionResource::getUrl())
-                ->color('danger'),
+        for ($i = 5; $i >= 0; $i--) {
+            $month        = $now->copy()->subMonths($i);
+            $issuedMonth  = (int) Ticket::whereNotNull('qr_code_path')
+                ->whereMonth('created_at', $month->month)
+                ->whereYear('created_at', $month->year)
+                ->sum('quantity');
+            $scannedMonth = (int) Ticket::where(function ($q): void {
+                $q->where('status', 'used')->orWhereNotNull('used_at');
+            })->whereMonth('updated_at', $month->month)
+                ->whereYear('updated_at', $month->year)
+                ->sum('quantity');
 
-            Stat::make('Gate Agents', (string) $gateAgents)
-                ->description('Active gate staff accounts')
-                ->url(route('admin.users.index'))
-                ->color('primary'),
-        ];
+            $chartData[] = [
+                'month'   => $month->format('M'),
+                'issued'  => $issuedMonth,
+                'scanned' => $scannedMonth,
+            ];
+            $maxBarValue = max($maxBarValue, $issuedMonth, $scannedMonth);
+        }
+
+        // ── Recent payments ──────────────────────────────────────────────────
+        $recentPayments = PaymentTransaction::with('event')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function (PaymentTransaction $payment): array {
+                return [
+                    'holder'   => $payment->holder_name ?: 'Unknown',
+                    'event'    => Str::limit($payment->event?->title ?? 'Unknown Event', 22),
+                    'phone'    => $payment->phone_number ?: '—',
+                    'amount'   => (float) $payment->total_amount,
+                    'currency' => $payment->currency ?? 'UGX',
+                    'provider' => $payment->payment_provider ?? 'MarzePay',
+                    'status'   => strtolower($payment->status),
+                ];
+            });
+
+        return compact(
+            'pendingPayments', 'failedPayments', 'qrNotIssued', 'atGateUnscanned', 'inventoryRemaining',
+            'totalEvents', 'newEventsThisMonth',
+            'ticketsSoldThisMonth', 'ticketsSoldLastMonth', 'ticketsSoldTotal', 'ticketsPctChange',
+            'revenueThisMonth', 'revenueLastMonth', 'revenueTotal', 'revenuePctChange',
+            'totalGateAgents', 'inactiveAgents',
+            'events', 'chartData', 'maxBarValue', 'recentPayments'
+        );
     }
 
     public static function canView(): bool
     {
         $user = auth()->user();
+
         return $user?->isAdmin() || $user?->isSuperAdmin() ?? false;
     }
 }
