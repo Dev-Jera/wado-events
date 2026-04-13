@@ -74,6 +74,28 @@ class PaymentController extends Controller
         return back()->with('success', 'Ticket email/SMS resend attempted.');
     }
 
+    public function adminConfirm(Request $request, PaymentTransaction $paymentTransaction)
+    {
+        $this->ensureAdmin($request);
+
+        if (! in_array($paymentTransaction->status, [
+            PaymentTransaction::STATUS_PENDING,
+            PaymentTransaction::STATUS_INITIATED,
+        ], true)) {
+            return back()->with('error', 'Only PENDING or INITIATED payments can be manually confirmed.');
+        }
+
+        $paymentTransaction->forceFill([
+            'status'       => PaymentTransaction::STATUS_CONFIRMED,
+            'confirmed_at' => now(),
+            'last_error'   => null,
+        ])->save();
+
+        IssueTicketForPayment::dispatch($paymentTransaction->id);
+
+        return back()->with('success', "Payment #{$paymentTransaction->id} confirmed. Ticket is being issued.");
+    }
+
     protected function ensureAdmin(Request $request): void
     {
         abort_unless($request->user()?->isAdmin() || $request->user()?->isSuperAdmin(), 403);

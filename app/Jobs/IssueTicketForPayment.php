@@ -25,6 +25,31 @@ class IssueTicketForPayment implements ShouldQueue
         return [10, 20, 30];
     }
 
+    protected function extractPayerName(array $payload): ?string
+    {
+        $candidates = [
+            'payer_name',
+            'subscriber_name',
+            'account_holder_name',
+            'account_name',
+            'sender_name',
+            'data.payer_name',
+            'data.subscriber_name',
+            'data.account_holder_name',
+            'data.account_name',
+            'data.sender_name',
+        ];
+
+        foreach ($candidates as $key) {
+            $value = data_get($payload, $key);
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
+
     public function handle(TicketQrService $ticketQrService, PaymentNotificationService $notificationService): void
     {
         $payment = PaymentTransaction::query()
@@ -46,6 +71,8 @@ class IssueTicketForPayment implements ShouldQueue
                 'user_id' => $locked->user_id,
                 'event_id' => $locked->event_id,
                 'ticket_category_id' => $locked->ticket_category_id,
+                'holder_name' => $locked->holder_name,
+                'payer_name' => $this->extractPayerName((array) ($locked->webhook_payload ?? [])),
                 'ticket_code' => $ticketQrService->generateUniqueTicketCode($locked->user_id, $locked->event_id),
                 'qr_code_path' => null,
                 'quantity' => $locked->quantity,

@@ -3,12 +3,14 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\EventBookmarkController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GatePortalController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketDismissController;
 use App\Http\Controllers\TicketVerificationController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -31,6 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::get('/my-tickets/{ticket}/download', [TicketController::class, 'download'])->name('tickets.download');
     Route::get('/my-tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
+    Route::post('/my-tickets/{ticket}/dismiss', [TicketDismissController::class, 'store'])->name('tickets.dismiss');
+
+    Route::post('/events/{event}/bookmark', [EventBookmarkController::class, 'toggle'])->name('events.bookmark');
 
     Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
     Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
@@ -38,6 +43,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin/payments', [PaymentController::class, 'adminIndex'])->name('payments.admin.index');
     Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
+    Route::post('/admin/payments/{paymentTransaction}/confirm', [PaymentController::class, 'adminConfirm'])->name('payments.admin.confirm');
 
     Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
 

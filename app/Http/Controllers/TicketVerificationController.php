@@ -89,10 +89,13 @@ class TicketVerificationController extends Controller
             $matches = Ticket::query()
                 ->with(['event', 'user', 'ticketCategory'])
                 ->where('event_id', $selectedEventId)
-                ->whereHas('user', function ($q) use ($lookup): void {
-                    $q->where('name', 'like', '%' . $lookup . '%')
-                        ->orWhere('phone', 'like', '%' . $lookup . '%')
-                        ->orWhere('email', 'like', '%' . $lookup . '%');
+                ->where(function ($q) use ($lookup): void {
+                    $q->where('holder_name', 'like', '%' . $lookup . '%')
+                        ->orWhereHas('user', function ($uq) use ($lookup): void {
+                            $uq->where('name', 'like', '%' . $lookup . '%')
+                                ->orWhere('phone', 'like', '%' . $lookup . '%')
+                                ->orWhere('email', 'like', '%' . $lookup . '%');
+                        });
                 })
                 ->latest('purchased_at')
                 ->limit(20)

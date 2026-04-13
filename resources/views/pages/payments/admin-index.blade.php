@@ -80,6 +80,14 @@
                                             @csrf
                                             <button type="submit">Resend</button>
                                         </form>
+                                    @elseif (in_array($payment->status, ['PENDING', 'INITIATED']))
+                                        <form method="POST" action="{{ route('payments.admin.confirm', $payment) }}"
+                                              onsubmit="return confirm('Manually confirm payment #{{ $payment->id }} and issue ticket?')">
+                                            @csrf
+                                            <button type="submit" style="background:#15803d;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">
+                                                Force confirm
+                                            </button>
+                                        </form>
                                     @else
                                         -
                                     @endif

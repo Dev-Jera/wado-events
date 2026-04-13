@@ -22,6 +22,7 @@ class PaymentTransaction extends Model
         'event_id',
         'ticket_category_id',
         'ticket_id',
+        'holder_name',
         'idempotency_key',
         'payment_provider',
         'phone_number',

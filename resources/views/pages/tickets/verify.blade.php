@@ -183,8 +183,11 @@
                                 <div class="result-grid">
                                     <div class="result-item"><span>Ticket code</span>{{ $verification['ticket']->ticket_code }}</div>
                                     <div class="result-item"><span>Event</span>{{ $verification['ticket']->event->title }}</div>
-                                    <div class="result-item"><span>Holder</span>{{ $verification['ticket']->user->name }}</div>
+                                    <div class="result-item"><span>Holder</span>{{ $verification['ticket']->holder_name ?: $verification['ticket']->user->name }}</div>
                                     <div class="result-item"><span>Phone</span>{{ $verification['ticket']->user->phone ?: 'N/A' }}</div>
+                                    @if ($verification['ticket']->payer_name)
+                                        <div class="result-item"><span>Payer</span>{{ $verification['ticket']->payer_name }}</div>
+                                    @endif
                                     <div class="result-item"><span>Status</span>{{ ucfirst((string) $verification['ticket']->status) }}</div>
                                 </div>
                             @endif
@@ -243,7 +246,7 @@
                                 @foreach ($lookupResults as $ticket)
                                     <tr>
                                         <td class="mono">{{ $ticket->ticket_code }}</td>
-                                        <td>{{ $ticket->user->name }}</td>
+                                        <td>{{ $ticket->holder_name ?: $ticket->user->name }}</td>
                                         <td>{{ $ticket->user->phone ?: 'N/A' }}</td>
                                         <td>{{ $ticket->event->title }}</td>
                                         <td>

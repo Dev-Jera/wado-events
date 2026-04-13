@@ -15,7 +15,9 @@ class TicketController extends Controller
 
     public function index()
     {
-        $tickets = auth()->user()
+        $user = auth()->user();
+
+        $tickets = $user
             ->tickets()
             ->with(['event', 'ticketCategory'])
             ->latest('purchased_at')
@@ -33,8 +35,19 @@ class TicketController extends Controller
             $ticket->setAttribute('qr_code_url', $this->getQrCodePublicUrl($ticket));
         });
 
+        // Bookmarked upcoming/live events the user doesn't have a ticket for yet
+        $bookmarkedEvents = $user
+            ->bookmarks()
+            ->with('event.ticketCategories')
+            ->get()
+            ->map(fn ($b) => $b->event)
+            ->filter(fn ($e) => $e && in_array($e->live_status, ['upcoming', 'live'], true))
+            ->sortBy(fn ($e) => $e->starts_at)
+            ->values();
+
         return view('pages.tickets.index', [
             'tickets' => $tickets,
+            'bookmarkedEvents' => $bookmarkedEvents,
         ]);
     }
 

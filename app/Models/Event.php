@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Event extends Model
 {
@@ -63,5 +64,34 @@ class Event extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(EventBookmark::class);
+    }
+
+    /**
+     * Runtime lifecycle phase derived from timestamps.
+     * Values: upcoming | live | ended | draft | cancelled
+     */
+    public function getLiveStatusAttribute(): string
+    {
+        if (in_array($this->status, ['draft', 'cancelled'], true)) {
+            return $this->status;
+        }
+
+        $now = now();
+
+        if ($now < $this->starts_at) {
+            return 'upcoming';
+        }
+
+        if ($this->ends_at) {
+            return $now <= $this->ends_at ? 'live' : 'ended';
+        }
+
+        // No ends_at: treat today's events as live, past-date events as ended
+        return $this->starts_at->isToday() ? 'live' : 'ended';
     }
 }

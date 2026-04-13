@@ -13,6 +13,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class SuperAdminOverviewWidget extends StatsOverviewWidget
 {
+    protected static ?int $sort = 1;
+
     protected function getStats(): array
     {
         $events = Event::query()->count();
@@ -70,6 +72,7 @@ class SuperAdminOverviewWidget extends StatsOverviewWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->isSuperAdmin() ?? false;
+        $user = auth()->user();
+        return $user?->isAdmin() || $user?->isSuperAdmin() ?? false;
     }
 }

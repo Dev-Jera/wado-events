@@ -98,6 +98,12 @@
                     @error('quantity') <small>{{ $message }}</small> @enderror
                 </label>
 
+                <label class="field">
+                    <span>Full name</span>
+                    <input type="text" name="holder_name" value="{{ old('holder_name', $holderName) }}" placeholder="e.g. John Smith" required autocomplete="name">
+                    @error('holder_name') <small>{{ $message }}</small> @enderror
+                </label>
+
                 <div class="field-divider"></div>
 
                 <div class="field">

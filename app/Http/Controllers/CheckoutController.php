@@ -35,6 +35,7 @@ class CheckoutController extends Controller
         $selectedPaymentProvider = $request->string('payment_provider')->toString() ?: (string) $prefill->get('payment_provider', '');
         $selectedQuantity = (int) ($prefill->get('quantity', 1));
         $phoneNumber = (string) ($prefill->get('phone_number') ?: optional($request->user())->phone ?: '');
+        $holderName = (string) ($prefill->get('holder_name') ?: optional($request->user())->name ?: '');
 
         $idempotencySessionKey = "checkout_idempotency.{$event->id}";
         $idempotencyKey = old('idempotency_key')
@@ -52,6 +53,7 @@ class CheckoutController extends Controller
             'selectedPaymentProvider' => $selectedPaymentProvider,
             'selectedQuantity' => max($selectedQuantity, 1),
             'phoneNumber' => $phoneNumber,
+            'holderName' => $holderName,
             'idempotencyKey' => $idempotencyKey,
         ]);
     }
@@ -64,6 +66,7 @@ class CheckoutController extends Controller
         $data = $request->validate([
             'ticket_category_id' => ['required', 'integer'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
+            'holder_name' => ['required', 'string', 'max:120'],
             'payment_provider' => ['nullable', 'in:mtn,airtel'],
             'phone_number' => ['nullable', 'string', 'max:40'],
             'idempotency_key' => ['required', 'string', 'max:64'],
@@ -103,6 +106,7 @@ class CheckoutController extends Controller
             $request->session()->put("checkout_prefill.{$event->id}", [
                 'ticket_category_id' => $ticketCategory->id,
                 'quantity' => $quantity,
+                'holder_name' => trim($data['holder_name']),
                 'payment_provider' => $data['payment_provider'] ?? null,
                 'phone_number' => $data['phone_number'] ?? null,
                 'idempotency_key' => $data['idempotency_key'],
@@ -132,6 +136,7 @@ class CheckoutController extends Controller
                     'user_id' => $user->id,
                     'event_id' => $event->id,
                     'ticket_category_id' => $lockedCategory->id,
+                    'holder_name' => trim($data['holder_name']),
                     'ticket_code' => $this->ticketQrService->generateUniqueTicketCode($user->id, $event->id),
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
@@ -192,6 +197,7 @@ class CheckoutController extends Controller
                 'user_id' => $user->id,
                 'event_id' => $event->id,
                 'ticket_category_id' => $lockedCategory->id,
+                'holder_name' => trim($data['holder_name']),
                 'idempotency_key' => $idempotencyKey,
                 'payment_provider' => $data['payment_provider'],
                 'phone_number' => trim((string) $data['phone_number']),
@@ -215,6 +221,7 @@ class CheckoutController extends Controller
             $this->storeCheckoutPrefill($request, $event, [
                 'ticket_category_id' => $ticketCategory->id,
                 'quantity' => $quantity,
+                'holder_name' => trim($data['holder_name']),
                 'payment_provider' => $data['payment_provider'],
                 'phone_number' => trim((string) $data['phone_number']),
                 'idempotency_key' => $idempotencyKey,
@@ -248,6 +255,7 @@ class CheckoutController extends Controller
         $this->storeCheckoutPrefill($request, $event, [
             'ticket_category_id' => $ticketCategory->id,
             'quantity' => $quantity,
+            'holder_name' => trim($data['holder_name']),
             'payment_provider' => $data['payment_provider'],
             'phone_number' => $phoneNumber,
             'idempotency_key' => $idempotencyKey,
