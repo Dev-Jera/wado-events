@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Models\PaymentTransaction;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Str;
@@ -11,11 +12,50 @@ class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
 
+    protected string $view = 'filament.resources.events.edit-event';
+
     protected function getHeaderActions(): array
     {
         return [
             DeleteAction::make(),
         ];
+    }
+
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    {
+        return $this->getRecord()->title ?? 'Edit Event';
+    }
+
+    public function getSubheading(): string|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        $record = $this->getRecord();
+
+        $parts = array_filter([
+            $record->venue,
+            $record->city,
+            $record->starts_at?->format('M d, Y · g:i A'),
+        ]);
+
+        return implode(' · ', $parts) ?: null;
+    }
+
+    public function getEventStats(): array
+    {
+        $record = $this->getRecord();
+
+        if (! $record) {
+            return ['capacity' => 0, 'ticketsSold' => 0, 'revenue' => 0];
+        }
+
+        $capacity    = (int) $record->ticketCategories->sum('ticket_count');
+        $ticketsSold = (int) PaymentTransaction::where('event_id', $record->id)
+            ->where('status', 'CONFIRMED')
+            ->sum('quantity');
+        $revenue     = (float) PaymentTransaction::where('event_id', $record->id)
+            ->where('status', 'CONFIRMED')
+            ->sum('total_amount');
+
+        return compact('capacity', 'ticketsSold', 'revenue');
     }
 
     protected function mutateFormDataBeforeFill(array $data): array
