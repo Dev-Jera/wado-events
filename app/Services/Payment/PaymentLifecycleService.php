@@ -5,10 +5,15 @@ namespace App\Services\Payment;
 use App\Models\Event;
 use App\Models\PaymentTransaction;
 use App\Models\TicketCategory;
+use App\Services\Admin\AdminIncidentNotificationService;
 use Illuminate\Support\Facades\DB;
 
 class PaymentLifecycleService
 {
+    public function __construct(protected AdminIncidentNotificationService $incidentNotifications)
+    {
+    }
+
     public function releaseReservation(PaymentTransaction $payment): void
     {
         DB::transaction(function () use ($payment): void {
@@ -41,6 +46,9 @@ class PaymentLifecycleService
             'failed_at' => now(),
             'last_error' => $message,
         ])->save();
+
+        $payment->loadMissing(['event', 'user']);
+        $this->incidentNotifications->notifyFailedPayment($payment, $message);
     }
 
     public function markRefunded(PaymentTransaction $payment, string $message): void

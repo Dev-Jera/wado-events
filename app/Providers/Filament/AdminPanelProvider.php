@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('dashboard')
             ->login()
+            ->databaseNotifications()
             ->maxContentWidth('full') // ← ADD THIS LINE - removes width constraint
 
             // ── Brand ──────────────────────────────────────
@@ -85,8 +86,8 @@ nav.fi-sidebar-nav {
 .fi-sidebar-item-button.fi-active,
 .fi-sidebar-item-button[aria-current],
 .fi-sidebar-item-button[aria-current="page"] {
-    background-color: #c8102e !important;
-    color: #fff !important;
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
 }
 .fi-sidebar-item-button.fi-active svg,
 .fi-sidebar-item-button.fi-active span,
@@ -94,7 +95,17 @@ nav.fi-sidebar-nav {
 .fi-sidebar-item-button[aria-current] svg,
 .fi-sidebar-item-button[aria-current] span,
 .fi-sidebar-item-button[aria-current] .fi-sidebar-item-label {
-    color: #fff !important;
+    color: #0f172a !important;
+}
+
+/* Active state fallback selectors across Filament variants */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+.fi-sidebar .fi-sidebar-item[aria-current="page"] .fi-sidebar-item-button,
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-item[aria-current="page"] .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-item.fi-active svg,
+.fi-sidebar .fi-sidebar-item[aria-current="page"] svg {
+    color: #0f172a !important;
 }
 
 /* Nav item icons — always white */
@@ -112,6 +123,26 @@ nav.fi-sidebar-nav {
 .fi-sidebar-footer,
 .fi-sidebar-footer * {
     color: #fff !important;
+}
+
+.wado-sidebar-logout {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .35rem .62rem;
+    border-radius: 6px;
+    border: 1px solid #c8102e;
+    background: #c8102e;
+    color: #fff;
+    font-size: .69rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+.wado-sidebar-logout:hover {
+    opacity: .9;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -156,20 +187,20 @@ nav.fi-sidebar-nav {
     overflow: hidden !important;
 }
 .fi-section-header {
-    background: #0d1b3e !important;
+    background: #f8fafc !important;
     padding: .8rem 1.25rem !important;
-    border-bottom: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
 }
 .fi-section-header-heading {
-    color: #fff !important;
+    color: #0f172a !important;
     font-size: .88rem !important;
     font-weight: 700 !important;
 }
 .fi-section-header-description {
-    color: rgba(255,255,255,.55) !important;
+    color: #64748b !important;
     font-size: .72rem !important;
 }
-.fi-section-header svg { color: rgba(255,255,255,.7) !important; }
+.fi-section-header svg { color: #475569 !important; }
 .fi-section-content-ctn { padding: 1.25rem !important; }
 
 /* ── Field labels ── */
@@ -295,6 +326,15 @@ textarea.fi-fo-textarea:focus {
 }
 .fi-btn-secondary, .fi-btn-gray { border-radius: 8px !important; }
 </style>
+')
+
+            ->renderHook('panels::sidebar.footer', fn () => '
+<div class="px-3 pb-3">
+    <form method="POST" action="' . route('filament.admin.auth.logout') . '">
+        ' . csrf_field() . '
+        <button type="submit" class="wado-sidebar-logout">Log out</button>
+    </form>
+</div>
 ')
 
             // ── Resources & pages ──────────────────────────

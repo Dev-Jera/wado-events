@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Ticket;
 use App\Models\TicketScanLog;
+use App\Services\Admin\AdminIncidentNotificationService;
 use App\Services\Ticket\TicketQrService;
 use Illuminate\Http\Request;
 
 class TicketVerificationController extends Controller
 {
-    public function __construct(protected TicketQrService $ticketQrService)
+    public function __construct(
+        protected TicketQrService $ticketQrService,
+        protected AdminIncidentNotificationService $incidentNotifications
+    )
     {
     }
 
@@ -257,7 +261,7 @@ class TicketVerificationController extends Controller
         ?string $rawPayload,
         ?int $selectedEventId = null
     ): void {
-        TicketScanLog::query()->create([
+        $scanLog = TicketScanLog::query()->create([
             'ticket_id' => $ticket?->id,
             'staff_user_id' => $request->user()?->id,
             'ticket_code' => $ticketCode,
@@ -269,6 +273,11 @@ class TicketVerificationController extends Controller
             'user_agent' => $request->userAgent(),
             'scanned_at' => now(),
         ]);
+
+        if ($result !== 'valid') {
+            $scanLog->loadMissing(['ticket.event', 'staff']);
+            $this->incidentNotifications->notifyFailedTicketScan($scanLog, $selectedEventId);
+        }
     }
 
     protected function ensureAdmin(Request $request): void

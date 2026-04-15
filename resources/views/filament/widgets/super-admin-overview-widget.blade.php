@@ -501,15 +501,15 @@
 }
 .wado-badge--upcoming  { background: rgba(37,99,235,.25);  color: #93c5fd; border: 1px solid #2563eb44; }
 .wado-badge--live      { background: rgba(22,163,74,.25);  color: #86efac; border: 1px solid #16a34a44; }
-.wado-badge--ended     { background: rgba(255,255,255,.08); color: var(--wado-white-70); border: 1px solid rgba(255,255,255,.15); }
-.wado-badge--draft     { background: rgba(251,191,36,.15); color: #fcd34d; border: 1px solid #fbbf2440; }
-.wado-badge--cancelled { background: var(--wado-red-dim);  color: #fca5a5; border: 1px solid #c8102e44; }
-.wado-badge--confirmed { background: rgba(22,163,74,.25);  color: #86efac; border: 1px solid #16a34a44; }
-.wado-badge--pending   { background: rgba(251,191,36,.15); color: #fcd34d; border: 1px solid #fbbf2440; }
-.wado-badge--failed    { background: var(--wado-red-dim);  color: #fca5a5; border: 1px solid #c8102e44; }
-.wado-badge--initiated { background: rgba(255,255,255,.08); color: var(--wado-white-70); border: 1px solid rgba(255,255,255,.12); }
-.wado-badge--expired   { background: rgba(255,255,255,.08); color: var(--wado-white-40); border: 1px solid rgba(255,255,255,.10); }
-.wado-badge--refunded  { background: rgba(139,92,246,.2);  color: #c4b5fd; border: 1px solid #8b5cf640; }
+.wado-badge--ended     { background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; }
+.wado-badge--draft     { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.wado-badge--cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.wado-badge--confirmed { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.wado-badge--pending   { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.wado-badge--failed    { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.wado-badge--initiated { background: #dbeafe; color: #1e3a8a; border: 1px solid #bfdbfe; }
+.wado-badge--expired   { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.wado-badge--refunded  { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
 
 /* ── Chart ──────────────────────────────────────────────────────── */
 .wado-card--chart { display: flex; flex-direction: column; }
