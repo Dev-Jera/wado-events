@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('dashboard')
             ->login()
+            ->maxContentWidth('full') // ← ADD THIS LINE - removes width constraint
 
             // ── Brand ──────────────────────────────────────
             ->brandName('WADO')

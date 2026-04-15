@@ -19,15 +19,15 @@
 
     <div class="nav-panel" id="site-nav-panel">
         <div class="nav-links">
-            <a href="{{ route('home') }}">Home</a>
-            <a href="{{ route('events.index') }}">Events</a>
+            <a href="{{ route('home') }}" @class(['active' => request()->routeIs('home')])>Home</a>
+            <a href="{{ route('events.index') }}" @class(['active' => request()->routeIs('events.*')])>Events</a>
             @auth
-                <a href="{{ $myTicketsUrl }}">My Tickets</a>
+                <a href="{{ $myTicketsUrl }}" @class(['active' => request()->routeIs('tickets.index')])>My Tickets</a>
                 @if (auth()->user()->isGateStaff())
-                    <a href="{{ route('gate.portal') }}">Gate Portal</a>
+                    <a href="{{ route('gate.portal') }}" @class(['active' => request()->routeIs('gate.*')])>Gate Portal</a>
                 @endif
                 @if (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
-                    <a href="{{ url('/dashboard') }}">Admin</a>
+                    <a href="{{ url('/dashboard') }}" @class(['active' => request()->is('dashboard*')])>Admin</a>
                     @if (auth()->user()->isSuperAdmin())
                         <a href="{{ \App\Filament\Resources\PaymentTransactions\PaymentTransactionResource::getUrl() }}">Payments</a>
                     @endif
@@ -109,11 +109,24 @@
         font-size: 0.95rem;
         padding: 0.35rem 0.75rem;
         border-radius: 999px;
-        transition: background 0.2s ease;
+        transition: background 0.2s ease, color 0.2s ease;
     }
 
     .nav-links a:hover {
         background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+
+    /* Active page link — white bg, dark text so it's always readable */
+    .nav-links a.active {
+        background: #ffffff;
+        color: #0d1b3e;
+        font-weight: 700;
+    }
+
+    .nav-links a.active:hover {
+        background: #f1f5f9;
+        color: #0d1b3e;
     }
 
     .btn {
@@ -239,6 +252,15 @@
 
         .nav-actions form button {
             justify-content: center;
+        }
+
+        /* On mobile, active link uses a subtle left border instead of white pill */
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border-left: 3px solid #ef4444;
+            border-radius: 8px;
+            padding-left: calc(0.75rem - 3px);
         }
     }
 

@@ -24,6 +24,7 @@ class EventForm
         return $schema->components([
 
             Tabs::make()
+                ->contained()
                 ->tabs([
 
                     // ── Tab 1: Event Details ──────────────────────────────
