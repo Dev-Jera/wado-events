@@ -41,6 +41,10 @@ class PaymentTransactionsTable
                         });
                     })
                     ->wrap(),
+                TextColumn::make('quantity')
+                    ->label('Tickets')
+                    ->numeric()
+                    ->sortable(),
                 TextColumn::make('total_amount')
                     ->label('Amount')
                     ->formatStateUsing(fn ($state): string => 'UGX ' . number_format((float) $state, 0)),
@@ -67,6 +71,11 @@ class PaymentTransactionsTable
                     ->sortable(),
             ])
             ->filters([
+                SelectFilter::make('event_id')
+                    ->label('Event')
+                    ->relationship('event', 'title')
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('status')
                     ->options([
                         PaymentTransaction::STATUS_INITIATED => PaymentTransaction::STATUS_INITIATED,
@@ -79,6 +88,7 @@ class PaymentTransactionsTable
             ->recordActions([
                 Action::make('resend')
                     ->label('Resend')
+                    ->tooltip('Use this after a confirmed payment if the attendee did not receive their ticket. It retries ticket issuance or re-sends the confirmation message.')
                     ->color('primary')
                     ->requiresConfirmation()
                     ->visible(fn (PaymentTransaction $record): bool => $record->status === PaymentTransaction::STATUS_CONFIRMED)

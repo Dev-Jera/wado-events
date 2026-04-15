@@ -12,6 +12,13 @@ class CreateEvent extends CreateRecord
 {
     protected static string $resource = EventResource::class;
 
+    protected string $view = 'filament.resources.events.create-event';
+
+    public function getSubheading(): string|\Illuminate\Contracts\Support\Htmlable|null
+    {
+        return 'Fill in the details below to list your event on the platform.';
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $ticketCategories = collect($data['ticketCategories'] ?? []);

@@ -53,6 +53,8 @@ class PaymentTransactionResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->isSuperAdmin() ?? false;
+        $user = auth()->user();
+
+        return (bool) ($user?->isAdmin() || $user?->isSuperAdmin());
     }
 }
