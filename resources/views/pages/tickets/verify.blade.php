@@ -1,11 +1,18 @@
 @extends('layouts.app')
 
+@php($embedded = request()->boolean('embedded'))
+
+@if ($embedded)
+    @section('fullbleed', '1')
+@endif
+
 @section('content')
     @php
         $verification = session('verification');
         $lookupResults = collect(session('lookup_results', []));
         $payload = is_array($verification['payload'] ?? null) ? $verification['payload'] : null;
         $events = collect($events ?? []);
+        $verificationRows = collect($verificationRows ?? []);
         $selectedEventId = (int) old('selected_event_id', $selectedEventId ?? 0);
     @endphp
 
@@ -13,6 +20,7 @@
         <div class="vp-shell">
 
             {{-- ── PAGE HEADER ── --}}
+            @unless($embedded)
             <header class="vp-header">
                 <div class="vp-header-badge">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
@@ -22,6 +30,7 @@
                     <p>Scan QR codes, verify by code, or use offline export when internet is unavailable.</p>
                 </div>
             </header>
+            @endunless
 
             <div class="vp-grid">
 
@@ -262,6 +271,90 @@
                 </div>
             @endif
 
+            <div class="vp-card vp-card-full">
+                <div class="vp-card-head">
+                    <div class="vp-card-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                        Verification Audit Table
+                    </div>
+                    <span class="vp-muted">Names, QR payload, signature checks, scan state</span>
+                </div>
+
+                @if ($selectedEventId <= 0)
+                    <p class="vp-muted" style="margin:0;">Select a Gate Event above to load verification audit rows.</p>
+                @elseif ($verificationRows->isEmpty())
+                    <p class="vp-muted" style="margin:0;">No tickets found for this event.</p>
+                @else
+                    <div class="table-wrap">
+                        <table class="vp-table">
+                            <thead>
+                                <tr>
+                                    <th>Holder</th>
+                                    <th>Ticket Code</th>
+                                    <th>Payment</th>
+                                    <th>Generated QR Payload</th>
+                                    <th>Generated Signature</th>
+                                    <th>Scan State</th>
+                                    <th>Last Scan Result</th>
+                                    <th>Last Scanned Signature</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($verificationRows as $row)
+                                    @php
+                                        $ticket = $row['ticket'];
+                                        $paymentStatus = strtoupper((string) ($ticket->paymentTransaction?->status ?? 'N/A'));
+                                        $scanState = $ticket->used_at || $ticket->status === 'used'
+                                            ? 'Scanned/used'
+                                            : 'Waiting for scan';
+                                        $scanStatusClass = $scanState === 'Scanned/used' ? 'pill-used' : 'pill-pending';
+                                        $lastScan = $row['latest_scan'];
+                                        $lastResult = strtoupper((string) ($lastScan?->result ?? 'NOT_SCANNED'));
+                                        $resultClass = $lastResult === 'VALID'
+                                            ? 'pill-valid'
+                                            : ($lastResult === 'NOT_SCANNED' ? 'pill-pending' : 'pill-bad');
+                                        $generatedSigOk = (bool) ($row['generated_signature_ok'] ?? false);
+                                        $lastSigOk = $row['latest_signature_ok'];
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $ticket->holder_name ?: ($ticket->user?->name ?? 'N/A') }}</td>
+                                        <td class="mono">{{ $ticket->ticket_code }}</td>
+                                        <td>
+                                            <span class="status-pill {{ $paymentStatus === 'CONFIRMED' ? 'pill-valid' : 'pill-bad' }}">{{ $paymentStatus }}</span>
+                                        </td>
+                                        <td class="payload-cell">
+                                            <details>
+                                                <summary>View payload</summary>
+                                                <pre>{{ $row['generated_payload_json'] }}</pre>
+                                            </details>
+                                        </td>
+                                        <td>
+                                            <span class="status-pill {{ $generatedSigOk ? 'pill-valid' : 'pill-bad' }}">{{ $generatedSigOk ? 'TRUE' : 'FALSE' }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="status-pill {{ $scanStatusClass }}">{{ $scanState }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="status-pill {{ $resultClass }}">{{ $lastResult }}</span>
+                                            @if ($lastScan?->scanned_at)
+                                                <div class="vp-muted" style="margin-top:4px;">{{ $lastScan->scanned_at->format('d M H:i:s') }}</div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if (is_bool($lastSigOk))
+                                                <span class="status-pill {{ $lastSigOk ? 'pill-valid' : 'pill-bad' }}">{{ $lastSigOk ? 'TRUE' : 'FALSE' }}</span>
+                                            @else
+                                                <span class="status-pill pill-pending">N/A</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+
         </div>
     </section>
 
@@ -288,6 +381,10 @@
 
         /* ── layout ── */
         .vp { min-height:100vh; background:var(--off); padding:7rem 1rem 3rem; }
+
+        @if ($embedded)
+        .vp { padding: 1rem; }
+        @endif
         .vp-shell { width:min(1100px, 100%); margin:0 auto; display:flex; flex-direction:column; gap:1.25rem; }
 
         /* ── header ── */
@@ -416,6 +513,19 @@
         .vp-table tbody tr:last-child td, .vp-table tbody tr:last-child th { border-bottom:none; }
         .vp-table tbody tr:hover td { background:var(--blue-tint); }
         .mono { font-family:monospace; font-size:.8rem; color:var(--blue); font-weight:700; }
+        .payload-cell details { max-width: 330px; }
+        .payload-cell summary { cursor: pointer; color: var(--blue); font-weight: 700; }
+        .payload-cell pre {
+            margin-top: .35rem;
+            background: #0f172a;
+            color: #dbeafe;
+            border-radius: 6px;
+            padding: .45rem .55rem;
+            font-size: .72rem;
+            overflow: auto;
+        }
+        .pill-pending { background:#EEF3FF; color:#1A4FBF; border-color:#D0DCFA; }
+        .pill-bad { background:#FFF0F0; color:#B01E1E; border-color:#FCDCDC; }
 
         /* ── result ── */
         .vp-result { border-radius:10px; padding:1rem 1.1rem; border:1.5px solid; }

@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class EventResource extends Resource
 {
@@ -36,6 +38,18 @@ class EventResource extends Resource
         return EventsTable::configure($table);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user?->isEventOwner()) {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query;
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -50,5 +64,42 @@ class EventResource extends Resource
             'create' => CreateEvent::route('/create'),
             'edit' => EditEvent::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return (bool) auth()->user()?->canAccessOperationsPanel();
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) ($user?->isSuperAdmin() || $user?->isAdmin() || $user?->isEventOwner());
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
+            return true;
+        }
+
+        return $user->isEventOwner() && (int) $record->getAttribute('user_id') === (int) $user->id;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canEdit($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin() || auth()->user()?->isEventOwner());
     }
 }

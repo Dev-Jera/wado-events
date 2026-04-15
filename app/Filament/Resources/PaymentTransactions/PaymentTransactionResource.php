@@ -9,6 +9,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class PaymentTransactionResource extends Resource
@@ -37,6 +38,18 @@ class PaymentTransactionResource extends Resource
         return PaymentTransactionsTable::configure($table);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user?->isEventOwner()) {
+            $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+        }
+
+        return $query;
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -55,6 +68,6 @@ class PaymentTransactionResource extends Resource
     {
         $user = auth()->user();
 
-        return (bool) ($user?->isAdmin() || $user?->isSuperAdmin());
+        return (bool) ($user?->canViewOperationsDashboard());
     }
 }

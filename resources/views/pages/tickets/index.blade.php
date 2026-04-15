@@ -19,6 +19,21 @@
         return $phase === 'ended' || $t->status === 'used';
     })->sortByDesc('event.starts_at')->values();
 
+    $refundRequestable = $allTickets->filter(function ($t) {
+        $payment = $t->paymentTransaction;
+
+        if (! $payment) return false;
+        if ($t->dismissed_at || $t->used_at || $t->status === 'used' || $t->status === 'cancelled') return false;
+        if ($payment->refund_requested_at || $payment->status === 'REFUNDED') return false;
+
+        return in_array($payment->status, ['CONFIRMED', 'PENDING', 'INITIATED'], true);
+    })->values();
+
+    $refundRequested = $allTickets->filter(function ($t) {
+        return (bool) ($t->paymentTransaction?->refund_requested_at)
+            && $t->paymentTransaction?->status !== 'REFUNDED';
+    })->values();
+
     $nextTicket      = $upcoming->first();
     $year            = now()->year;
     $bookedThisYear  = $tickets->filter(fn($t) => optional($t->purchased_at)?->year === $year)->count();
@@ -250,6 +265,34 @@
         ══════════════════════════════════════════ --}}
         <div class="db-panel" id="tab-tickets">
 
+            @if ($refundRequestable->isNotEmpty() || $refundRequested->isNotEmpty())
+                <div class="db-card db-refund-card">
+                    <div class="db-card-head">
+                        <h3>Refund Requests</h3>
+                        <span class="db-muted">Request a refund with a reason. Admin will review from the Refunds dashboard.</span>
+                    </div>
+
+                    @foreach ($refundRequestable as $ticket)
+                        <form method="POST" action="{{ route('tickets.refund.request', $ticket) }}" class="db-refund-form">
+                            @csrf
+                            <div class="db-refund-head">
+                                <strong>{{ $ticket->event->title }}</strong>
+                                <span>{{ $ticket->ticket_code }} · {{ $ticket->ticketCategory->name }}</span>
+                            </div>
+                            <textarea name="reason" rows="2" maxlength="500" required placeholder="Explain why you want a refund..."></textarea>
+                            <button type="submit" class="db-btn db-btn-solid">Send refund request</button>
+                        </form>
+                    @endforeach
+
+                    @foreach ($refundRequested as $ticket)
+                        <div class="db-refund-sent-row">
+                            <strong>{{ $ticket->event->title }}</strong>
+                            <span>Request submitted: {{ optional($ticket->paymentTransaction->refund_requested_at)->format('d M Y H:i') }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             @forelse ($allTickets as $ticket)
                 @php
                     $th    = thumbUrl($ticket->event->image_url ?? null);
@@ -466,7 +509,7 @@
     position: absolute;
     top: -80px; right: -80px;
     width: 480px; height: 360px;
-    background: radial-gradient(ellipse, rgba(248,178,106,.10) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(37,99,235,.14) 0%, transparent 70%);
     pointer-events: none;
 }
 .db-hero-inner {
@@ -483,7 +526,7 @@
     font-size: 0.68rem;
     letter-spacing: 0.12em;
     font-weight: 700;
-    color: #f8b26a;
+    color: #93c5fd;
 }
 .db-hero h1 {
     margin: 0;
@@ -509,7 +552,7 @@
 }
 .db-stat { padding: 0 1.4rem; }
 .db-stat:first-child { padding-left: 0; }
-.db-stat strong { display: block; font-size: 1.6rem; font-weight: 800; color: #f8b26a; line-height: 1; }
+.db-stat strong { display: block; font-size: 1.6rem; font-weight: 800; color: #93c5fd; line-height: 1; }
 .db-stat span { font-size: 0.68rem; color: #4a6480; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
 .db-stat-green strong { color: #34d399; }
 .db-stat-red strong   { color: #f87171; }
@@ -542,7 +585,7 @@
     font-family: inherit;
 }
 .db-tab:hover { color: #c0d0e8; }
-.db-tab.active { color: #f8b26a; border-bottom-color: #f8b26a; }
+.db-tab.active { color: #93c5fd; border-bottom-color: #93c5fd; }
 .db-tab em {
     display: inline-flex;
     align-items: center;
@@ -550,8 +593,8 @@
     min-width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: rgba(248,178,106,.18);
-    color: #f8b26a;
+    background: rgba(37,99,235,.18);
+    color: #93c5fd;
     font-style: normal;
     font-size: 0.65rem;
     font-weight: 800;
@@ -603,7 +646,7 @@
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.12em;
-    color: #f8b26a;
+    color: #93c5fd;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -630,14 +673,14 @@
 .db-next-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.7rem; flex-shrink: 0; }
 .db-days {
     text-align: center;
-    background: rgba(248,178,106,.12);
-    border: 1px solid rgba(248,178,106,.3);
+    background: rgba(37,99,235,.12);
+    border: 1px solid rgba(37,99,235,.3);
     border-radius: 14px;
     padding: 0.7rem 1.2rem;
     min-width: 80px;
 }
-.db-days strong { display: block; font-size: 2rem; line-height: 1; font-weight: 800; color: #f8b26a; }
-.db-days span { font-size: 0.6rem; letter-spacing: 0.1em; color: #f8b26a; font-weight: 700; text-transform: uppercase; }
+.db-days strong { display: block; font-size: 2rem; line-height: 1; font-weight: 800; color: #93c5fd; }
+.db-days span { font-size: 0.6rem; letter-spacing: 0.1em; color: #93c5fd; font-weight: 700; text-transform: uppercase; }
 .db-days-live strong { font-size: 1rem; letter-spacing: 0.06em; }
 
 .db-next-empty {
@@ -653,7 +696,7 @@
     gap: 0.6rem;
 }
 .db-next-empty p { margin: 0; font-size: 0.88rem; }
-.db-next-empty a { color: #f8b26a; text-decoration: none; }
+.db-next-empty a { color: #93c5fd; text-decoration: none; }
 
 /* ═══════════════════════════════════════
    BUTTONS
@@ -672,14 +715,14 @@
     font-family: inherit;
     transition: background .15s, color .15s;
 }
-.db-btn-solid { background: #f8b26a; color: #1a0900; }
-.db-btn-solid:hover { background: #e8961a; }
+.db-btn-solid { background: #1d4ed8; color: #ffffff; }
+.db-btn-solid:hover { background: #1e40af; }
 .db-btn-outline {
-    background: rgba(248,178,106,.08);
-    border: 1px solid rgba(248,178,106,.35);
-    color: #f8b26a;
+    background: rgba(37,99,235,.08);
+    border: 1px solid rgba(37,99,235,.35);
+    color: #93c5fd;
 }
-.db-btn-outline:hover { background: rgba(248,178,106,.15); }
+.db-btn-outline:hover { background: rgba(37,99,235,.15); }
 
 /* ═══════════════════════════════════════
    TWO-COL LAYOUT
@@ -719,7 +762,7 @@
 }
 .db-link {
     background: none; border: none; cursor: pointer;
-    color: #f8b26a; font-size: 0.74rem; font-weight: 700;
+    color: #93c5fd; font-size: 0.74rem; font-weight: 700;
     font-family: inherit; padding: 0;
 }
 .db-link:hover { text-decoration: underline; }
@@ -765,7 +808,7 @@
 .db-metric { padding: 0.8rem 1.1rem; border-right: 1px solid #1a2d45; border-bottom: 1px solid #1a2d45; }
 .db-metric:nth-child(2n) { border-right: none; }
 .db-metric-wide { grid-column: span 2; border-right: none; }
-.db-metric strong { display: block; font-size: 1.1rem; font-weight: 800; color: #f8b26a; }
+.db-metric strong { display: block; font-size: 1.1rem; font-weight: 800; color: #93c5fd; }
 .db-metric span   { font-size: 0.7rem; color: #3d5574; }
 .db-prog-label {
     display: flex; justify-content: space-between;
@@ -774,7 +817,7 @@
 }
 .db-prog-label strong { color: #6b829e; }
 .db-prog-bar { margin: 0 1.1rem 1rem; height: 6px; background: #1a2d45; border-radius: 999px; overflow: hidden; }
-.db-prog-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f8b26a, #e8961a); transition: width .4s; }
+.db-prog-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2563eb, #1e40af); transition: width .4s; }
 
 /* ═══════════════════════════════════════
    STATUS PILLS
@@ -791,7 +834,7 @@
 .pill-green  { background: rgba(52,211,153,.12); color: #34d399; border-color: rgba(52,211,153,.3); }
 .pill-gray   { background: rgba(100,130,160,.12); color: #6b829e; border-color: rgba(100,130,160,.3); }
 .pill-red    { background: rgba(248,113,113,.12); color: #f87171; border-color: rgba(248,113,113,.3); }
-.pill-orange { background: rgba(248,178,106,.12); color: #f8b26a; border-color: rgba(248,178,106,.3); }
+.pill-orange { background: rgba(37,99,235,.12); color: #93c5fd; border-color: rgba(37,99,235,.3); }
 
 /* ═══════════════════════════════════════
    MY TICKETS (full cards)
@@ -807,7 +850,7 @@
     margin-bottom: 0.6rem;
     transition: border-color .15s, transform .15s;
 }
-.db-ticket-card:hover { border-color: rgba(248,178,106,.5); transform: translateY(-1px); }
+.db-ticket-card:hover { border-color: rgba(37,99,235,.5); transform: translateY(-1px); }
 .db-ticket-card-img {
     background-size: cover;
     background-position: center;
@@ -879,7 +922,7 @@
     border: 1px solid #1e3050;
     transition: border-color .15s, transform .15s;
 }
-.db-saved-card:hover { border-color: rgba(248,178,106,.5); transform: translateY(-2px); }
+.db-saved-card:hover { border-color: rgba(37,99,235,.5); transform: translateY(-2px); }
 .db-saved-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(5,12,26,.1) 20%, rgba(5,12,26,.88) 100%);
@@ -891,7 +934,7 @@
     padding: 3px 9px; border-radius: 999px; border: 1px solid;
 }
 .db-badge-green  { background: rgba(52,211,153,.15); color: #34d399; border-color: rgba(52,211,153,.3); }
-.db-badge-orange { background: rgba(248,178,106,.15); color: #f8b26a; border-color: rgba(248,178,106,.3); }
+.db-badge-orange { background: rgba(37,99,235,.15); color: #93c5fd; border-color: rgba(37,99,235,.3); }
 .db-badge-red    { background: rgba(248,113,113,.15); color: #f87171; border-color: rgba(248,113,113,.3); }
 .db-badge-live   { background: rgba(248,113,113,.18); color: #f87171; border-color: rgba(248,113,113,.35); animation: pulse-live 2s ease-in-out infinite; }
 @keyframes pulse-live { 0%,100%{opacity:1} 50%{opacity:.6} }
@@ -900,7 +943,7 @@
 }
 .db-saved-info strong { display: block; font-size: 0.88rem; color: #fff; font-weight: 700; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
 .db-saved-info small  { display: flex; align-items: center; gap: 3px; font-size: 0.68rem; color: rgba(200,220,255,.8); margin-top: 3px; }
-.db-saved-price { display: block; margin-top: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: #f8b26a; }
+.db-saved-price { display: block; margin-top: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: #93c5fd; }
 .db-unbookmark-form { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 3; }
 .db-unbookmark-btn {
     width: 26px; height: 26px; border-radius: 50%;
@@ -920,7 +963,43 @@
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.db-activity-booked   { background: rgba(248,178,106,.12); color: #f8b26a; border: 1px solid rgba(248,178,106,.25); }
+.db-activity-booked   { background: rgba(37,99,235,.12); color: #93c5fd; border: 1px solid rgba(37,99,235,.25); }
+
+.db-refund-card { margin-bottom: 0.9rem; }
+.db-refund-form {
+    padding: 0.8rem 1.1rem;
+    border-bottom: 1px solid #111d2e;
+    display: grid;
+    gap: 0.5rem;
+}
+.db-refund-form:last-child { border-bottom: none; }
+.db-refund-head { display: grid; gap: 2px; }
+.db-refund-head strong { color: #d8ecff; font-size: 0.82rem; font-weight: 700; }
+.db-refund-head span { color: #6b829e; font-size: 0.69rem; }
+.db-refund-form textarea {
+    resize: vertical;
+    min-height: 58px;
+    border-radius: 10px;
+    border: 1px solid #2b4160;
+    background: #0b1627;
+    color: #e2ecf8;
+    padding: 0.55rem 0.68rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+}
+.db-refund-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+}
+.db-refund-sent-row {
+    display: grid;
+    gap: 2px;
+    padding: 0.7rem 1.1rem;
+    border-top: 1px solid #111d2e;
+}
+.db-refund-sent-row strong { color: #c8daf0; font-size: 0.8rem; }
+.db-refund-sent-row span { color: #6b829e; font-size: 0.69rem; }
 .db-activity-attended { background: rgba(52,211,153,.10);  color: #34d399; border: 1px solid rgba(52,211,153,.25); }
 .db-activity-cancelled{ background: rgba(248,113,113,.10); color: #f87171; border: 1px solid rgba(248,113,113,.25); }
 

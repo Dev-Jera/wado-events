@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class CategoryResource extends Resource
 {
@@ -50,5 +51,30 @@ class CategoryResource extends Resource
             'create' => CreateCategory::route('/create'),
             'edit' => EditCategory::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return (bool) auth()->user()?->canAccessOperationsPanel();
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin());
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin());
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin());
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin());
     }
 }

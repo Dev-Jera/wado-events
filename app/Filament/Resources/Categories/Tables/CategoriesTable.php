@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories\Tables;
 
+use App\Filament\Resources\Categories\CategoryResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -27,6 +28,11 @@ class CategoriesTable
                     ->counts('events')
                     ->label('Events')
                     ->sortable(),
+                TextColumn::make('access_mode')
+                    ->label('Access')
+                    ->state(fn (): string => auth()->user()?->isGateStaff() ? 'READ ONLY' : 'EDIT')
+                    ->badge()
+                    ->color(fn (string $state): string => $state === 'READ ONLY' ? 'gray' : 'success'),
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
@@ -37,12 +43,15 @@ class CategoriesTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn ($record): bool => CategoryResource::canEdit($record)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => CategoryResource::canDeleteAny()),
+                ])
+                    ->visible(fn (): bool => CategoryResource::canDeleteAny()),
             ]);
     }
 }

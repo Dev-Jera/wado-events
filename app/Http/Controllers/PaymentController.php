@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\IssueTicketForPayment;
 use App\Models\PaymentTransaction;
+use App\Services\Payment\PaymentLifecycleService;
 use App\Services\Payment\PaymentNotificationService;
 use Illuminate\Http\Request;
 
@@ -94,6 +95,43 @@ class PaymentController extends Controller
         IssueTicketForPayment::dispatch($paymentTransaction->id);
 
         return back()->with('success', "Payment #{$paymentTransaction->id} confirmed. Ticket is being issued.");
+    }
+
+    public function adminRefund(Request $request, PaymentTransaction $paymentTransaction, PaymentLifecycleService $paymentLifecycleService)
+    {
+        $this->ensureAdmin($request);
+
+        if (! in_array($paymentTransaction->status, [
+            PaymentTransaction::STATUS_CONFIRMED,
+            PaymentTransaction::STATUS_PENDING,
+            PaymentTransaction::STATUS_INITIATED,
+        ], true)) {
+            return back()->with('error', 'Only CONFIRMED, PENDING, or INITIATED payments can be refunded.');
+        }
+
+        $paymentTransaction->loadMissing('ticket');
+
+        if ($paymentTransaction->ticket?->used_at) {
+            return back()->with('error', 'Scanned tickets cannot be refunded from admin.');
+        }
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $actor = $request->user()?->name ?: 'admin';
+        $reason = trim((string) $data['reason']);
+
+        $result = $paymentLifecycleService->refundWithProvider(
+            $paymentTransaction->fresh(['ticket']),
+            "Manual refund by {$actor}. Reason: {$reason}"
+        );
+
+        if (! ($result['ok'] ?? false)) {
+            return back()->with('error', (string) ($result['message'] ?? 'MarzPay refund failed.'));
+        }
+
+        return back()->with('success', "Payment #{$paymentTransaction->id} refund submitted. " . (string) ($result['message'] ?? ''));
     }
 
     protected function ensureAdmin(Request $request): void

@@ -4,7 +4,6 @@ namespace App\Services\Payment;
 
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -24,11 +23,14 @@ class PaymentNotificationService
         }
 
         $ticketUrl = route('tickets.show', $ticket);
+        $message = "Your payment was confirmed. Ticket code: {$ticket->ticket_code}.";
+        $message .= " If you created an account, sign in to track this ticket: {$ticketUrl}";
+        $message .= ' Keep this ticket code for gate verification.';
 
         Mail::raw(
-            "Your payment was confirmed. Ticket code: {$ticket->ticket_code}. View ticket: {$ticketUrl}",
-            function ($message) use ($recipient): void {
-                $message->to($recipient)->subject('Ticket confirmed - WADO');
+            $message,
+            function ($mailMessage) use ($recipient): void {
+                $mailMessage->to($recipient)->subject('Ticket confirmed - WADO');
             }
         );
     }

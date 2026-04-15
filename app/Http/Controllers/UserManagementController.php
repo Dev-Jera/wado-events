@@ -25,11 +25,19 @@ class UserManagementController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $totalUsers = User::query()->count();
+        $customersCount = User::query()->where('role', 'customer')->count();
+        $adminsCount = User::query()->whereIn('role', ['admin', 'super_admin'])->count();
+
         return view('pages.admin.users.index', [
             'users' => $users,
             'search' => $search,
-            'roleOptions' => ['customer', 'agent', 'gate', 'gate_agent', 'admin'],
+            'roleOptions' => ['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'],
+            'createRoleOptions' => ['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'],
             'isSuperAdmin' => (bool) $request->user()?->isSuperAdmin(),
+            'totalUsers' => $totalUsers,
+            'customersCount' => $customersCount,
+            'adminsCount' => $adminsCount,
         ]);
     }
 
@@ -41,19 +49,26 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['nullable', 'string', 'max:30'],
-            'role' => ['required', 'string', Rule::in(['agent', 'gate', 'gate_agent'])],
+            'role' => ['required', 'string', Rule::in(['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'])],
             'password' => ['nullable', 'string', 'min:8'],
+            'profile_image' => ['nullable', 'image', 'max:3072'],
         ]);
+
+        $profileImagePath = null;
+        if ($request->hasFile('profile_image')) {
+            $profileImagePath = $request->file('profile_image')->store('users/profile-images', 'public');
+        }
 
         User::query()->create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'profile_image_path' => $profileImagePath,
             'role' => $data['role'],
             'password' => $data['password'] ?? Str::random(12),
         ]);
 
-        return back()->with('success', 'Agent account created successfully.');
+        return back()->with('success', 'Account created successfully.');
     }
 
     public function updateRole(Request $request, User $user)
@@ -61,7 +76,7 @@ class UserManagementController extends Controller
         $this->ensureSuperAdmin($request);
 
         $data = $request->validate([
-            'role' => ['required', 'string', Rule::in(['customer', 'agent', 'gate', 'gate_agent', 'admin'])],
+            'role' => ['required', 'string', Rule::in(['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'])],
         ]);
 
         $user->forceFill([
@@ -73,7 +88,7 @@ class UserManagementController extends Controller
 
     protected function ensureAdmin(Request $request): void
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        abort_unless($request->user()?->isAdmin() || $request->user()?->isSuperAdmin(), 403);
     }
 
     protected function ensureSuperAdmin(Request $request): void

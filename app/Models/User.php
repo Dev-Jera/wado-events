@@ -25,6 +25,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'phone',
+        'profile_image_path',
         'password',
         'role',
     ];
@@ -84,11 +85,31 @@ class User extends Authenticatable implements FilamentUser
 
     public function isGateStaff(): bool
     {
-        return $this->isSuperAdmin() || $this->isAdmin() || $this->isGateAgent();
+        return $this->isSuperAdmin() || $this->isAdmin() || $this->isGateAgent() || $this->isVerificationOfficer();
+    }
+
+    public function isVerificationOfficer(): bool
+    {
+        return $this->role === 'verification_officer';
+    }
+
+    public function isEventOwner(): bool
+    {
+        return $this->role === 'event_owner';
+    }
+
+    public function canViewOperationsDashboard(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdmin() || $this->isVerificationOfficer() || $this->isEventOwner();
+    }
+
+    public function canAccessOperationsPanel(): bool
+    {
+        return $this->canViewOperationsDashboard() || $this->isGateStaff();
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->isSuperAdmin() || $this->isAdmin();
+        return $this->canAccessOperationsPanel();
     }
 }

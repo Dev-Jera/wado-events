@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Services\Ticket\TicketQrService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -19,7 +21,7 @@ class TicketController extends Controller
 
         $tickets = $user
             ->tickets()
-            ->with(['event', 'ticketCategory'])
+            ->with(['event', 'ticketCategory', 'paymentTransaction'])
             ->latest('purchased_at')
             ->get();
 
@@ -49,6 +51,63 @@ class TicketController extends Controller
             'tickets' => $tickets,
             'bookmarkedEvents' => $bookmarkedEvents,
         ]);
+    }
+
+    public function requestRefund(Request $request, Ticket $ticket)
+    {
+        abort_unless($ticket->user_id === auth()->id(), 403);
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $payment = PaymentTransaction::query()
+            ->where('ticket_id', $ticket->id)
+            ->latest('id')
+            ->first();
+
+        if (! $payment) {
+            return back()->with('error', 'Refund request failed: payment transaction not found for this ticket.');
+        }
+
+        if ($payment->status === PaymentTransaction::STATUS_REFUNDED || $ticket->status === 'cancelled') {
+            return back()->with('error', 'This ticket is already refunded/cancelled.');
+        }
+
+        if ($ticket->used_at || $ticket->status === 'used') {
+            return back()->with('error', 'Used tickets are not eligible for refund requests.');
+        }
+
+        if (! in_array($payment->status, [
+            PaymentTransaction::STATUS_CONFIRMED,
+            PaymentTransaction::STATUS_PENDING,
+            PaymentTransaction::STATUS_INITIATED,
+        ], true)) {
+            return back()->with('error', 'This payment status is not eligible for refund request.');
+        }
+
+        if ($payment->refund_requested_at && $payment->status !== PaymentTransaction::STATUS_REFUNDED) {
+            return back()->with('info', 'Refund request already submitted for this ticket.');
+        }
+
+        $reason = trim((string) $data['reason']);
+
+        $providerPayload = (array) ($payment->provider_payload ?? []);
+        $providerPayload['customer_refund_request'] = [
+            'requested_at' => now()->toIso8601String(),
+            'reason' => $reason,
+            'ticket_id' => $ticket->id,
+            'user_id' => auth()->id(),
+        ];
+
+        $payment->forceFill([
+            'refund_requested_at' => now(),
+            'refund_request_status' => 'REQUESTED',
+            'refund_request_reason' => $reason,
+            'provider_payload' => $providerPayload,
+        ])->save();
+
+        return back()->with('success', 'Refund request sent. Our team will review it shortly.');
     }
 
     public function show(Ticket $ticket)

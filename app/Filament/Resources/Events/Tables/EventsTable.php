@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Tables;
 
+use App\Filament\Resources\Events\EventResource;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -45,6 +46,12 @@ class EventsTable
                         ? $record->starts_at->format('g:i A')
                         : '')
                     ->sortable(),
+
+                TextColumn::make('access_mode')
+                    ->label('Access')
+                    ->state(fn (): string => auth()->user()?->isGateStaff() ? 'READ ONLY' : 'EDIT')
+                    ->badge()
+                    ->color(fn (string $state): string => $state === 'READ ONLY' ? 'gray' : 'success'),
             ])
 
             ->filters([
@@ -70,15 +77,19 @@ class EventsTable
                     }),
 
                 EditAction::make()
-                    ->url(fn ($record): string => \App\Filament\Resources\Events\EventResource::getUrl('edit', ['record' => $record])),
+                    ->url(fn ($record): string => \App\Filament\Resources\Events\EventResource::getUrl('edit', ['record' => $record]))
+                    ->visible(fn ($record): bool => EventResource::canEdit($record)),
 
-                \Filament\Actions\DeleteAction::make(),
+                \Filament\Actions\DeleteAction::make()
+                    ->visible(fn ($record): bool => EventResource::canDelete($record)),
             ])
 
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => EventResource::canDeleteAny()),
+                ])
+                    ->visible(fn (): bool => EventResource::canDeleteAny()),
             ]);
     }
 }

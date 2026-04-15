@@ -76,18 +76,36 @@
                                 </td>
                                 <td>
                                     @if ($payment->status === 'CONFIRMED')
-                                        <form method="POST" action="{{ route('payments.admin.resend', $payment) }}">
-                                            @csrf
-                                            <button type="submit">Resend</button>
-                                        </form>
+                                        <div style="display:grid;gap:6px;">
+                                            <form method="POST" action="{{ route('payments.admin.resend', $payment) }}">
+                                                @csrf
+                                                <button type="submit">Resend</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('payments.admin.refund', $payment) }}" onsubmit="return confirm('Refund payment #{{ $payment->id }}? This will cancel the ticket and update inventory where applicable.')">
+                                                @csrf
+                                                <input type="text" name="reason" required maxlength="500" placeholder="Refund reason" style="width:100%;margin-bottom:4px;border:1px solid #d1d5db;border-radius:6px;padding:4px 6px;font-size:12px;">
+                                                <button type="submit" style="background:#b91c1c;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">
+                                                    Refund
+                                                </button>
+                                            </form>
+                                        </div>
                                     @elseif (in_array($payment->status, ['PENDING', 'INITIATED']))
-                                        <form method="POST" action="{{ route('payments.admin.confirm', $payment) }}"
-                                              onsubmit="return confirm('Manually confirm payment #{{ $payment->id }} and issue ticket?')">
-                                            @csrf
-                                            <button type="submit" style="background:#15803d;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">
-                                                Force confirm
-                                            </button>
-                                        </form>
+                                        <div style="display:grid;gap:6px;">
+                                            <form method="POST" action="{{ route('payments.admin.confirm', $payment) }}"
+                                                  onsubmit="return confirm('Manually confirm payment #{{ $payment->id }} and issue ticket?')">
+                                                @csrf
+                                                <button type="submit" style="background:#15803d;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">
+                                                    Force confirm
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('payments.admin.refund', $payment) }}" onsubmit="return confirm('Refund payment #{{ $payment->id }}? This will release reserved tickets.')">
+                                                @csrf
+                                                <input type="text" name="reason" required maxlength="500" placeholder="Refund reason" style="width:100%;margin-bottom:4px;border:1px solid #d1d5db;border-radius:6px;padding:4px 6px;font-size:12px;">
+                                                <button type="submit" style="background:#b91c1c;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">
+                                                    Refund
+                                                </button>
+                                            </form>
+                                        </div>
                                     @else
                                         -
                                     @endif

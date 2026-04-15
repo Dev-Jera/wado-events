@@ -25,6 +25,10 @@ class PaymentTransaction extends Model
         'holder_name',
         'idempotency_key',
         'payment_provider',
+        'sales_channel',
+        'collected_by_user_id',
+        'collected_at',
+        'collector_reference',
         'phone_number',
         'quantity',
         'unit_price',
@@ -40,6 +44,9 @@ class PaymentTransaction extends Model
         'confirmed_at',
         'failed_at',
         'refunded_at',
+        'refund_requested_at',
+        'refund_request_reason',
+        'refund_request_status',
         'ticket_issued_at',
         'last_error',
     ];
@@ -52,10 +59,12 @@ class PaymentTransaction extends Model
             'provider_payload' => 'array',
             'webhook_payload' => 'array',
             'expires_at' => 'datetime',
+            'collected_at' => 'datetime',
             'callback_received_at' => 'datetime',
             'confirmed_at' => 'datetime',
             'failed_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'refund_requested_at' => 'datetime',
             'ticket_issued_at' => 'datetime',
         ];
     }
@@ -78,6 +87,11 @@ class PaymentTransaction extends Model
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
+    }
+
+    public function collectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'collected_by_user_id');
     }
 
     public function isTerminal(): bool

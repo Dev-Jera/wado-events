@@ -28,9 +28,48 @@ class TicketVerificationController extends Controller
 
         $selectedEventId = (int) $request->integer('event_id');
 
+        $verificationRows = collect();
+        if ($selectedEventId > 0) {
+            $tickets = Ticket::query()
+                ->with(['user', 'paymentTransaction'])
+                ->where('event_id', $selectedEventId)
+                ->orderByDesc('purchased_at')
+                ->limit(300)
+                ->get();
+
+            $latestScanByTicketId = TicketScanLog::query()
+                ->whereIn('ticket_id', $tickets->pluck('id')->all())
+                ->orderByDesc('scanned_at')
+                ->get()
+                ->groupBy('ticket_id')
+                ->map(fn ($rows) => $rows->first());
+
+            $verificationRows = $tickets->map(function (Ticket $ticket) use ($latestScanByTicketId) {
+                $generatedPayload = $this->ticketQrService->buildSignedPayload($ticket);
+                $generatedSignatureOk = $this->ticketQrService->verifyPayloadSignature($generatedPayload);
+
+                $latestScan = $latestScanByTicketId->get($ticket->id);
+                $latestParsedPayload = $latestScan?->scanned_payload
+                    ? $this->ticketQrService->parsePayload((string) $latestScan->scanned_payload)
+                    : null;
+                $latestSignatureOk = is_array($latestParsedPayload)
+                    ? $this->ticketQrService->verifyPayloadSignature($latestParsedPayload)
+                    : null;
+
+                return [
+                    'ticket' => $ticket,
+                    'generated_payload_json' => json_encode($generatedPayload, JSON_UNESCAPED_SLASHES),
+                    'generated_signature_ok' => $generatedSignatureOk,
+                    'latest_scan' => $latestScan,
+                    'latest_signature_ok' => $latestSignatureOk,
+                ];
+            });
+        }
+
         return view('pages.tickets.verify', [
             'events' => $events,
             'selectedEventId' => $selectedEventId,
+            'verificationRows' => $verificationRows,
         ]);
     }
 

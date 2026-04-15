@@ -9,7 +9,6 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
-use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -352,25 +351,7 @@ textarea.fi-fo-textarea:focus {
             // ── Navigation groups ──────────────────────────
             ->navigationGroups([
                 NavigationGroup::make('Events'),
-                NavigationGroup::make('Operations')
-                    ->collapsed(),
-            ])
-
-            // ── Extra nav items ────────────────────────────
-            ->navigationItems([
-                NavigationItem::make('Gate Scanner')
-                    ->url(fn () => route('tickets.verify.index'))
-                    ->icon('heroicon-o-qr-code')
-                    ->group('Operations')
-                    ->sort(5)
-                    ->isActiveWhen(fn () => request()->routeIs('tickets.verify.*')),
-
-                NavigationItem::make('Users & Agents')
-                    ->url(fn () => route('admin.users.index'))
-                    ->icon('heroicon-o-users')
-                    ->group('Operations')
-                    ->sort(15)
-                    ->isActiveWhen(fn () => request()->routeIs('admin.users.*')),
+                NavigationGroup::make('Operations'),
             ])
 
             // ── Middleware ─────────────────────────────────

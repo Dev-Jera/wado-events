@@ -23,15 +23,6 @@
             <a href="{{ route('events.index') }}" @class(['active' => request()->routeIs('events.*')])>Events</a>
             @auth
                 <a href="{{ $myTicketsUrl }}" @class(['active' => request()->routeIs('tickets.index')])>My Tickets</a>
-                @if (auth()->user()->isGateStaff())
-                    <a href="{{ route('gate.portal') }}" @class(['active' => request()->routeIs('gate.*')])>Gate Portal</a>
-                @endif
-                @if (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
-                    <a href="{{ url('/dashboard') }}" @class(['active' => request()->is('dashboard*')])>Admin</a>
-                    @if (auth()->user()->isSuperAdmin())
-                        <a href="{{ \App\Filament\Resources\PaymentTransactions\PaymentTransactionResource::getUrl() }}">Payments</a>
-                    @endif
-                @endif
             @endauth
         </div>
 
@@ -42,12 +33,6 @@
             @endguest
 
             @auth
-                @if (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
-                    <a href="{{ url('/dashboard/events/create') }}" class="btn btn-solid">Create Event</a>
-                @endif
-                @if (auth()->user()->isGateStaff())
-                    <a href="{{ route('tickets.verify.index') }}" class="btn btn-ghost">Scanner</a>
-                @endif
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-ghost">Log out</button>

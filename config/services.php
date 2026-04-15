@@ -42,6 +42,7 @@ return [
         'webhook_secret' => env('MARZEPAY_WEBHOOK_SECRET'),
         'country' => env('MARZEPAY_COUNTRY', 'UG'),
         'callback_path' => env('MARZEPAY_CALLBACK_PATH', 'payments/marzepay/webhook'),
+        'refund_path' => env('MARZEPAY_REFUND_PATH', 'refund-money'),
         'timeout' => (int) env('MARZEPAY_TIMEOUT', 30),
     ],
 

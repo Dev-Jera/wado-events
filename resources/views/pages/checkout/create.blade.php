@@ -74,6 +74,15 @@
                 <p class="form-title">Payment details</p>
                 <p class="form-sub">Fill in your details to complete your booking</p>
 
+                @guest
+                    <div class="guest-warning" role="alert">
+                        <p class="guest-warning-title">Guest checkout is the default</p>
+                        <p class="guest-warning-text">
+                            Your ticket will be delivered to email (and payment updates to your phone). You will not be able to track tickets in My Tickets unless you choose to create an account now.
+                        </p>
+                    </div>
+                @endguest
+
                 <label class="field">
                     <span>Ticket category</span>
                     <select name="ticket_category_id" id="ticket_category_id" required>
@@ -103,6 +112,38 @@
                     <input type="text" name="holder_name" value="{{ old('holder_name', $holderName) }}" placeholder="e.g. John Smith" required autocomplete="name">
                     @error('holder_name') <small>{{ $message }}</small> @enderror
                 </label>
+
+                @guest
+                    <label class="field">
+                        <span>Email for ticket delivery</span>
+                        <input type="text" name="email" value="{{ old('email', $email ?? '') }}" placeholder="e.g. you@example.com" required autocomplete="email">
+                        @error('email') <small>{{ $message }}</small> @enderror
+                    </label>
+
+                    <label class="account-opt-in" for="create_account">
+                        <input
+                            type="checkbox"
+                            name="create_account"
+                            id="create_account"
+                            value="1"
+                            @checked(old('create_account', $createAccount ?? false))
+                        >
+                        <span>Create account to track tickets</span>
+                    </label>
+
+                    <div id="account_password_fields" class="password-block" style="display: none;">
+                        <label class="field">
+                            <span>Password</span>
+                            <input type="password" name="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
+                            @error('password') <small>{{ $message }}</small> @enderror
+                        </label>
+
+                        <label class="field">
+                            <span>Confirm password</span>
+                            <input type="password" name="password_confirmation" minlength="8" autocomplete="new-password" placeholder="Repeat password">
+                        </label>
+                    </div>
+                @endguest
 
                 <div class="field-divider"></div>
 
@@ -323,6 +364,54 @@
 
         .field-divider { height: 0.5px; background: #1e3050; }
 
+        .guest-warning {
+            border: 1px solid #2d4d76;
+            background: #0f2036;
+            border-radius: 12px;
+            padding: 0.7rem 0.8rem;
+            display: grid;
+            gap: 0.25rem;
+        }
+
+        .guest-warning-title {
+            margin: 0;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #dcecff;
+        }
+
+        .guest-warning-text {
+            margin: 0;
+            font-size: 0.72rem;
+            line-height: 1.45;
+            color: #9eb7d5;
+        }
+
+        .account-opt-in {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.76rem;
+            color: #dcecff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .account-opt-in input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--brand-blue);
+        }
+
+        .password-block {
+            border: 1px solid #1e3050;
+            border-radius: 10px;
+            padding: 0.7rem;
+            display: grid;
+            gap: 0.65rem;
+            background: #0d1929;
+        }
+
         .provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
 
         .provider-btn {
@@ -384,6 +473,8 @@
             const providerBtns = document.querySelectorAll('.provider-btn');
             const popup = document.getElementById('checkout-popup');
             const popupClose = document.getElementById('checkout-popup-close');
+            const createAccountCheckbox = document.getElementById('create_account');
+            const passwordFields = document.getElementById('account_password_fields');
 
             const formatUgx = (n) => n <= 0 ? 'Free' : 'UGX ' + Math.round(n).toLocaleString('en-US');
 
@@ -410,6 +501,16 @@
                     if (providerInput) providerInput.value = btn.dataset.provider;
                 });
             });
+
+            const syncAccountFields = () => {
+                if (!createAccountCheckbox || !passwordFields) return;
+                passwordFields.style.display = createAccountCheckbox.checked ? 'grid' : 'none';
+            };
+
+            if (createAccountCheckbox) {
+                createAccountCheckbox.addEventListener('change', syncAccountFields);
+                syncAccountFields();
+            }
 
             if (popup && popupClose) {
                 popupClose.addEventListener('click', () => {

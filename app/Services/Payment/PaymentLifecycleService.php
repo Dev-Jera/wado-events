@@ -10,8 +10,67 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentLifecycleService
 {
-    public function __construct(protected AdminIncidentNotificationService $incidentNotifications)
+    public function __construct(
+        protected AdminIncidentNotificationService $incidentNotifications,
+        protected MarzePayService $marzePayService
+    )
     {
+    }
+
+    public function refundWithProvider(PaymentTransaction $payment, string $reason): array
+    {
+        if ($payment->status === PaymentTransaction::STATUS_REFUNDED) {
+            return [
+                'ok' => true,
+                'message' => 'Payment is already refunded.',
+            ];
+        }
+
+        if (! in_array($payment->status, [
+            PaymentTransaction::STATUS_CONFIRMED,
+            PaymentTransaction::STATUS_PENDING,
+            PaymentTransaction::STATUS_INITIATED,
+        ], true)) {
+            return [
+                'ok' => false,
+                'message' => 'This payment status is not eligible for refund.',
+            ];
+        }
+
+        $providerResult = $this->marzePayService->requestRefund($payment, $reason);
+
+        if (! ($providerResult['ok'] ?? false)) {
+            $payment->forceFill([
+                'last_error' => 'MarzPay refund failed: ' . (string) ($providerResult['message'] ?? 'Unknown provider error.'),
+                'refund_request_status' => $payment->refund_requested_at ? 'FAILED_PROVIDER' : $payment->refund_request_status,
+            ])->save();
+
+            return [
+                'ok' => false,
+                'message' => (string) ($providerResult['message'] ?? 'MarzPay refund failed.'),
+            ];
+        }
+
+        $providerPayload = (array) ($payment->provider_payload ?? []);
+        $providerPayload['refund'] = [
+            'requested_at' => now()->toIso8601String(),
+            'reason' => $reason,
+            'response' => $providerResult['payload'] ?? null,
+            'provider_status' => $providerResult['provider_status'] ?? null,
+        ];
+
+        $payment->forceFill([
+            'provider_payload' => $providerPayload,
+            'provider_status' => strtoupper((string) ($providerResult['provider_status'] ?? 'REFUND_ACCEPTED')),
+            'refund_request_status' => $payment->refund_requested_at ? 'PROCESSED' : $payment->refund_request_status,
+        ])->save();
+
+        $this->markRefunded($payment->fresh(['ticket']), $reason);
+
+        return [
+            'ok' => true,
+            'message' => (string) ($providerResult['message'] ?? 'Refund accepted by MarzPay and recorded.'),
+        ];
     }
 
     public function releaseReservation(PaymentTransaction $payment): void
@@ -57,6 +116,9 @@ class PaymentLifecycleService
             return;
         }
 
+        $payment->loadMissing('ticket');
+        $shouldRestoreInventory = false;
+
         if ($payment->ticket && $payment->ticket->status !== 'cancelled') {
             $payment->ticket->forceFill([
                 'status' => 'cancelled',
@@ -64,8 +126,18 @@ class PaymentLifecycleService
 
             if ($payment->ticket->used_at) {
                 $message .= ' Ticket had already been scanned.';
+            } else {
+                $shouldRestoreInventory = true;
             }
-        } elseif (! $payment->ticket_id) {
+        } elseif (! $payment->ticket_id && in_array($payment->status, [
+            PaymentTransaction::STATUS_INITIATED,
+            PaymentTransaction::STATUS_PENDING,
+            PaymentTransaction::STATUS_CONFIRMED,
+        ], true)) {
+            $shouldRestoreInventory = true;
+        }
+
+        if ($shouldRestoreInventory) {
             $this->releaseReservation($payment);
         }
 
@@ -73,6 +145,7 @@ class PaymentLifecycleService
             'status' => PaymentTransaction::STATUS_REFUNDED,
             'refunded_at' => now(),
             'last_error' => $message,
+            'refund_request_status' => $payment->refund_requested_at ? 'PROCESSED' : $payment->refund_request_status,
         ])->save();
     }
 

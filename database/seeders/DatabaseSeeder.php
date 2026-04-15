@@ -42,6 +42,30 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
+        $agent = User::query()->updateOrCreate(
+            ['email' => 'agent@wado.test'],
+            [
+                'name' => 'Gate Agent Demo',
+                'phone' => '+256700111222',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+                'role' => 'gate_agent',
+            ],
+        );
+
+        $organisationOwner = User::query()->updateOrCreate(
+            ['email' => 'org@wado.test'],
+            [
+                'name' => 'Organisation Owner Demo',
+                'phone' => '+256700333444',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+                'role' => 'event_owner',
+            ],
+        );
+
         $categories = collect([
             ['name' => 'Music', 'description' => 'Concerts, live sessions, and performance nights.'],
             ['name' => 'Sports', 'description' => 'Matches, tournaments, and fan experiences.'],
@@ -156,5 +180,39 @@ class DatabaseSeeder extends Seeder
                 ]);
             });
         }
+
+        // Demo organisation-owned event for event_owner POV checks.
+        $orgEvent = Event::query()->updateOrCreate(
+            ['title' => 'Organisation Demo Summit'],
+            [
+                'user_id' => $organisationOwner->id,
+                'category_id' => $categories['Conference']->id,
+                'slug' => Str::slug('Organisation Demo Summit'),
+                'venue' => 'UMA Multipurpose Hall',
+                'city' => 'Kampala',
+                'country' => 'Uganda',
+                'description' => 'Seeded event owned by organisation account for role POV testing.',
+                'starts_at' => Carbon::now()->addDays(10)->setTime(10, 0),
+                'ends_at' => Carbon::now()->addDays(10)->setTime(18, 0),
+                'ticket_price' => 100000,
+                'capacity' => 250,
+                'tickets_available' => 250,
+                'status' => 'published',
+                'image_url' => '/images/conference.jpg',
+                'is_featured' => false,
+            ],
+        );
+
+        $orgEvent->ticketCategories()->delete();
+
+        TicketCategory::create([
+            'event_id' => $orgEvent->id,
+            'name' => 'General',
+            'price' => 100000,
+            'ticket_count' => 250,
+            'tickets_remaining' => 250,
+            'description' => 'Organisation demo ticket class.',
+            'sort_order' => 0,
+        ]);
     }
 }

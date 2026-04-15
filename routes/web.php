@@ -12,7 +12,6 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDismissController;
 use App\Http\Controllers\TicketVerificationController;
-use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::get('/my-tickets/{ticket}/download', [TicketController::class, 'download'])->name('tickets.download');
     Route::get('/my-tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
+    Route::post('/my-tickets/{ticket}/refund-request', [TicketController::class, 'requestRefund'])->name('tickets.refund.request');
     Route::post('/my-tickets/{ticket}/dismiss', [TicketDismissController::class, 'store'])->name('tickets.dismiss');
 
     Route::post('/events/{event}/bookmark', [EventBookmarkController::class, 'toggle'])->name('events.bookmark');
@@ -44,12 +44,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/payments', [PaymentController::class, 'adminIndex'])->name('payments.admin.index');
     Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
     Route::post('/admin/payments/{paymentTransaction}/confirm', [PaymentController::class, 'adminConfirm'])->name('payments.admin.confirm');
+    Route::post('/admin/payments/{paymentTransaction}/refund', [PaymentController::class, 'adminRefund'])->name('payments.admin.refund');
 
     Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
+    Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
 
-    Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
-    Route::post('/admin/users/agents', [UserManagementController::class, 'storeAgent'])->name('admin.users.storeAgent');
-    Route::post('/admin/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('admin.users.updateRole');
     Route::get('/admin/events/{event}', [AdminEventController::class, 'show'])->name('admin.events.show');
 });
 

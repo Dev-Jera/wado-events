@@ -195,4 +195,93 @@ class MarzePayService
 
         return 'failed';
     }
+
+    public function requestRefund(PaymentTransaction $payment, string $reason): array
+    {
+        $baseUrl = rtrim((string) config('services.marzepay.base_url', ''), '/');
+        $apiKey = (string) config('services.marzepay.api_key', '');
+        $apiSecret = (string) config('services.marzepay.api_secret', '');
+        $refundPath = '/' . ltrim((string) config('services.marzepay.refund_path', 'refund-money'), '/');
+
+        if ($baseUrl === '' || $apiKey === '' || $apiSecret === '') {
+            return [
+                'ok' => false,
+                'message' => 'MarzPay is not properly configured for refunds.',
+                'payload' => null,
+                'provider_status' => null,
+            ];
+        }
+
+        $reference = (string) ($payment->provider_reference ?: $payment->idempotency_key);
+        $payload = [
+            'reference' => $reference,
+            'transaction_reference' => $reference,
+            'provider_reference' => $reference,
+            'amount' => (int) $payment->total_amount,
+            'currency' => (string) ($payment->currency ?: 'UGX'),
+            'reason' => $reason,
+        ];
+
+        if (! blank($payment->phone_number)) {
+            $payload['phone_number'] = (string) $payment->phone_number;
+        }
+
+        try {
+            $credentials = base64_encode($apiKey . ':' . $apiSecret);
+
+            /** @var Response $response */
+            $response = Http::timeout((int) config('services.marzepay.timeout', 30))
+                ->acceptJson()
+                ->withHeaders([
+                    'Authorization' => 'Basic ' . $credentials,
+                ])
+                ->asForm()
+                ->post($baseUrl . $refundPath, $payload);
+        } catch (\Throwable $exception) {
+            Log::error('MarzPay refund API call failed', [
+                'payment_id' => $payment->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'ok' => false,
+                'message' => 'Failed to connect to MarzPay refund API: ' . $exception->getMessage(),
+                'payload' => null,
+                'provider_status' => null,
+            ];
+        }
+
+        $json = $response->json() ?: [];
+        $status = strtolower((string) (data_get($json, 'status') ?? data_get($json, 'data.status') ?? ''));
+        $transactionStatus = strtolower((string) (
+            data_get($json, 'data.transaction.status')
+            ?? data_get($json, 'data.refund.status')
+            ?? data_get($json, 'refund.status')
+            ?? ''
+        ));
+
+        $ok = $response->successful()
+            && (
+                in_array($status, ['success', 'successful', 'ok', 'accepted', 'processing', 'pending', 'refunded', 'refund', 'reversed', 'reversal'], true)
+                || in_array($transactionStatus, ['accepted', 'processing', 'pending', 'refunded', 'refund', 'reversed', 'reversal'], true)
+            );
+
+        $providerStatus = $transactionStatus !== '' ? $transactionStatus : $status;
+
+        Log::info('MarzPay refund result', [
+            'payment_id' => $payment->id,
+            'ok' => $ok,
+            'status' => $status,
+            'transaction_status' => $transactionStatus,
+            'response_code' => $response->status(),
+            'endpoint' => $baseUrl . $refundPath,
+        ]);
+
+        return [
+            'ok' => $ok,
+            'message' => (string) (data_get($json, 'message') ?: $response->reason() ?: ($ok ? 'Refund request accepted.' : 'MarzPay rejected the refund request.')),
+            'payload' => $json,
+            'provider_status' => $providerStatus !== '' ? $providerStatus : null,
+        ];
+    }
 }

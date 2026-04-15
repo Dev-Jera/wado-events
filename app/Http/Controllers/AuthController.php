@@ -78,12 +78,8 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
-        if ($user?->isSuperAdmin() || $user?->isAdmin()) {
+        if ($user?->canAccessOperationsPanel()) {
             return url('/dashboard');
-        }
-
-        if ($user?->isGateStaff()) {
-            return route('gate.portal');
         }
 
         return route('tickets.index');

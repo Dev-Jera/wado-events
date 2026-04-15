@@ -7,11 +7,14 @@ use App\Models\Event;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
+use App\Models\User;
 use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
 use App\Services\Ticket\TicketQrService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -36,6 +39,8 @@ class CheckoutController extends Controller
         $selectedQuantity = (int) ($prefill->get('quantity', 1));
         $phoneNumber = (string) ($prefill->get('phone_number') ?: optional($request->user())->phone ?: '');
         $holderName = (string) ($prefill->get('holder_name') ?: optional($request->user())->name ?: '');
+        $email = (string) ($prefill->get('email') ?: optional($request->user())->email ?: '');
+        $createAccount = (bool) $prefill->get('create_account', false);
 
         $idempotencySessionKey = "checkout_idempotency.{$event->id}";
         $idempotencyKey = old('idempotency_key')
@@ -54,6 +59,8 @@ class CheckoutController extends Controller
             'selectedQuantity' => max($selectedQuantity, 1),
             'phoneNumber' => $phoneNumber,
             'holderName' => $holderName,
+            'email' => $email,
+            'createAccount' => $createAccount,
             'idempotencyKey' => $idempotencyKey,
         ]);
     }
@@ -63,14 +70,32 @@ class CheckoutController extends Controller
         $event->load('ticketCategories');
         $user = $request->user();
 
+        $rateLimitKey = $this->purchaseRateLimitKey($request, $event);
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 10)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+
+            throw ValidationException::withMessages([
+                'quantity' => 'Too many purchase attempts. Try again in ' . max($seconds, 1) . ' seconds.',
+            ]);
+        }
+        RateLimiter::hit($rateLimitKey, 600);
+
         $data = $request->validate([
             'ticket_category_id' => ['required', 'integer'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'holder_name' => ['required', 'string', 'max:120'],
+            'email' => [$user ? 'nullable' : 'required', 'email', 'max:255'],
             'payment_provider' => ['nullable', 'in:mtn,airtel'],
             'phone_number' => ['nullable', 'string', 'max:40'],
+            'create_account' => ['nullable', 'boolean'],
+            'password' => ['nullable', 'string', 'min:8', 'required_if:create_account,1', 'confirmed'],
             'idempotency_key' => ['required', 'string', 'max:64'],
         ]);
+
+        $createAccount = (bool) ($data['create_account'] ?? false);
+        $resolved = $this->resolveCheckoutUser($request, $data, $createAccount);
+        $user = $resolved['user'];
+        $guestCheckout = (bool) ($resolved['guest_checkout'] ?? false);
 
         $ticketCategory = $event->ticketCategories
             ->firstWhere('id', (int) $data['ticket_category_id']);
@@ -95,27 +120,6 @@ class CheckoutController extends Controller
                 ->withErrors([
                     'phone_number' => 'Phone number is required for mobile money payments.',
                 ]);
-        }
-
-        if (! $user) {
-            $request->session()->put('checkout_redirect', route('checkout.create', [
-                'event' => $event,
-                'ticket_category' => $ticketCategory->id,
-                'payment_provider' => $data['payment_provider'] ?? null,
-            ]));
-            $request->session()->put("checkout_prefill.{$event->id}", [
-                'ticket_category_id' => $ticketCategory->id,
-                'quantity' => $quantity,
-                'holder_name' => trim($data['holder_name']),
-                'payment_provider' => $data['payment_provider'] ?? null,
-                'phone_number' => $data['phone_number'] ?? null,
-                'idempotency_key' => $data['idempotency_key'],
-            ]);
-            $request->session()->put('url.intended', route('checkout.create', ['event' => $event]));
-
-            return redirect()
-                ->route('login')
-                ->with('warning', 'You must log in first to complete your ticket purchase.');
         }
 
         if ($isFree) {
@@ -152,6 +156,12 @@ class CheckoutController extends Controller
 
                 return $ticket;
             });
+
+            if ($guestCheckout) {
+                return redirect()
+                    ->route('events.show', $event)
+                    ->with('success', 'Free ticket issued. We sent your ticket details to your email. Keep your payment phone active for SMS updates.');
+            }
 
             return redirect()
                 ->route('tickets.show', $ticket)
@@ -222,6 +232,8 @@ class CheckoutController extends Controller
                 'ticket_category_id' => $ticketCategory->id,
                 'quantity' => $quantity,
                 'holder_name' => trim($data['holder_name']),
+                'email' => $data['email'] ?? null,
+                'create_account' => $createAccount,
                 'payment_provider' => $data['payment_provider'],
                 'phone_number' => trim((string) $data['phone_number']),
                 'idempotency_key' => $idempotencyKey,
@@ -256,6 +268,8 @@ class CheckoutController extends Controller
             'ticket_category_id' => $ticketCategory->id,
             'quantity' => $quantity,
             'holder_name' => trim($data['holder_name']),
+            'email' => $data['email'] ?? null,
+            'create_account' => $createAccount,
             'payment_provider' => $data['payment_provider'],
             'phone_number' => $phoneNumber,
             'idempotency_key' => $idempotencyKey,
@@ -291,6 +305,9 @@ class CheckoutController extends Controller
         $this->storeCheckoutPrefill($request, $event, [
             'ticket_category_id' => $payment->ticket_category_id,
             'quantity' => $payment->quantity,
+            'holder_name' => $payment->holder_name,
+            'email' => $payment->user?->email,
+            'create_account' => false,
             'payment_provider' => $payment->payment_provider,
             'phone_number' => $payment->phone_number,
             'idempotency_key' => $payment->idempotency_key,
@@ -342,5 +359,89 @@ class CheckoutController extends Controller
             'airtel' => 'Airtel Money',
             default => 'Mobile Money',
         };
+    }
+
+    protected function purchaseRateLimitKey(Request $request, Event $event): string
+    {
+        $userPart = $request->user()?->id ? ('user:' . $request->user()->id) : ('ip:' . $request->ip());
+
+        return 'checkout:purchase:' . $event->id . ':' . $userPart;
+    }
+
+    /**
+     * Resolve the customer used for checkout.
+     * Guest checkout creates a customer record without forcing sign-in.
+     * Optional account creation signs in the user immediately.
+     *
+     * @return array{user: User, guest_checkout: bool}
+     */
+    protected function resolveCheckoutUser(Request $request, array $data, bool $createAccount): array
+    {
+        if ($request->user()) {
+            return [
+                'user' => $request->user(),
+                'guest_checkout' => false,
+            ];
+        }
+
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        $holderName = trim((string) ($data['holder_name'] ?? ''));
+        $phone = trim((string) ($data['phone_number'] ?? '')) ?: null;
+        $sessionGuestUserId = (int) $request->session()->get('checkout_guest_user_id', 0);
+
+        $existing = User::query()->where('email', $email)->first();
+        if ($existing) {
+            if ($sessionGuestUserId > 0 && $existing->id === $sessionGuestUserId) {
+                $existing->forceFill([
+                    'name' => $holderName,
+                    'phone' => $phone,
+                ])->save();
+
+                if ($createAccount) {
+                    $existing->forceFill([
+                        'password' => (string) $data['password'],
+                    ])->save();
+
+                    Auth::login($existing);
+                    $request->session()->regenerate();
+                    $request->session()->forget('checkout_guest_user_id');
+
+                    return [
+                        'user' => $existing,
+                        'guest_checkout' => false,
+                    ];
+                }
+
+                return [
+                    'user' => $existing,
+                    'guest_checkout' => true,
+                ];
+            }
+
+            throw ValidationException::withMessages([
+                'email' => 'An account with this email already exists. Log in to track tickets or use a different email for guest checkout.',
+            ]);
+        }
+
+        $user = User::query()->create([
+            'name' => $holderName,
+            'email' => $email,
+            'phone' => $phone,
+            'password' => $createAccount ? (string) $data['password'] : Str::random(40),
+            'role' => 'customer',
+        ]);
+
+        if ($createAccount) {
+            Auth::login($user);
+            $request->session()->regenerate();
+            $request->session()->forget('checkout_guest_user_id');
+        } else {
+            $request->session()->put('checkout_guest_user_id', $user->id);
+        }
+
+        return [
+            'user' => $user,
+            'guest_checkout' => ! $createAccount,
+        ];
     }
 }
