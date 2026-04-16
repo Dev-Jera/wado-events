@@ -14,6 +14,7 @@
     </div>
 
     <style>
+
         .sp-wrap {
             display: grid;
             gap: .75rem;
@@ -31,13 +32,13 @@
             margin: 0;
             color: #0f172a;
             font-size: 1rem;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .sp-head a {
             color: #0a4fbe;
             font-size: .78rem;
-            font-weight: 700;
+            font-weight: 600;
             text-decoration: none;
         }
 
