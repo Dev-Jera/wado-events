@@ -8,6 +8,7 @@ use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PaymentWebhookController extends Controller
 {
@@ -48,58 +49,63 @@ class PaymentWebhookController extends Controller
             return response()->json(['ok' => false, 'message' => 'Payment transaction not found.'], 404);
         }
 
-        $payment->forceFill([
-            'provider_reference' => $providerReference ?: $payment->provider_reference,
-            'provider_status' => (string) (data_get($payload, 'status') ?? data_get($payload, 'data.status') ?? $payment->provider_status),
-            'callback_received_at' => now(),
-            'webhook_payload' => $payload,
-        ])->save();
-
         $state = $marzePayService->resolveWebhookState($payload);
+        $result = DB::transaction(function () use ($payment, $providerReference, $payload, $state, $lifecycleService): string {
+            $locked = PaymentTransaction::query()->lockForUpdate()->findOrFail($payment->id);
 
-        if ($state === 'confirmed') {
-            if ($payment->status === PaymentTransaction::STATUS_CONFIRMED) {
-                return response()->json(['ok' => true, 'message' => 'Already confirmed.']);
-            }
-
-            if ($payment->status === PaymentTransaction::STATUS_REFUNDED) {
-                return response()->json(['ok' => true, 'message' => 'Already refunded.']);
-            }
-
-            $payment->forceFill([
-                'status' => PaymentTransaction::STATUS_CONFIRMED,
-                'confirmed_at' => now(),
-                'failed_at' => null,
-                'last_error' => null,
+            $locked->forceFill([
+                'provider_reference' => $providerReference ?: $locked->provider_reference,
+                'provider_status' => (string) (data_get($payload, 'status') ?? data_get($payload, 'data.status') ?? $locked->provider_status),
+                'callback_received_at' => now(),
+                'webhook_payload' => $payload,
             ])->save();
 
-            IssueTicketForPayment::dispatch($payment->id);
+            if ($state === 'confirmed') {
+                if ($locked->status === PaymentTransaction::STATUS_CONFIRMED) {
+                    return 'Already confirmed.';
+                }
 
-            return response()->json(['ok' => true, 'message' => 'Payment confirmed.']);
-        }
+                if ($locked->status === PaymentTransaction::STATUS_REFUNDED) {
+                    return 'Already refunded.';
+                }
 
-        if ($state === 'refunded') {
-            $lifecycleService->markRefunded($payment->fresh(['ticket']), 'Payment refunded by provider.');
-
-            return response()->json(['ok' => true, 'message' => 'Payment refunded.']);
-        }
-
-        if ($state === 'pending') {
-            if ($payment->status === PaymentTransaction::STATUS_INITIATED) {
-                $payment->forceFill([
-                    'status' => PaymentTransaction::STATUS_PENDING,
+                $locked->forceFill([
+                    'status' => PaymentTransaction::STATUS_CONFIRMED,
+                    'confirmed_at' => now(),
+                    'failed_at' => null,
+                    'last_error' => null,
                 ])->save();
+
+                IssueTicketForPayment::dispatch($locked->id);
+
+                return 'Payment confirmed.';
             }
 
-            return response()->json(['ok' => true, 'message' => 'Payment still pending.']);
-        }
+            if ($state === 'refunded') {
+                $lifecycleService->markRefunded($locked->fresh(['ticket']), 'Payment refunded by provider.');
 
-        if ($payment->status === PaymentTransaction::STATUS_CONFIRMED) {
-            return response()->json(['ok' => true, 'message' => 'Already confirmed; ignoring failed callback.']);
-        }
+                return 'Payment refunded.';
+            }
 
-        $lifecycleService->markFailedAndRelease($payment, (string) (data_get($payload, 'message') ?: 'Payment failed callback received.'));
+            if ($state === 'pending') {
+                if ($locked->status === PaymentTransaction::STATUS_INITIATED) {
+                    $locked->forceFill([
+                        'status' => PaymentTransaction::STATUS_PENDING,
+                    ])->save();
+                }
 
-        return response()->json(['ok' => true, 'message' => 'Payment marked failed.']);
+                return 'Payment still pending.';
+            }
+
+            if ($locked->status === PaymentTransaction::STATUS_CONFIRMED) {
+                return 'Already confirmed; ignoring failed callback.';
+            }
+
+            $lifecycleService->markFailedAndRelease($locked, (string) (data_get($payload, 'message') ?: 'Payment failed callback received.'));
+
+            return 'Payment marked failed.';
+        });
+
+        return response()->json(['ok' => true, 'message' => $result]);
     }
 }

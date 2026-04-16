@@ -13,8 +13,8 @@
     }
     // For PDF generation, only use external images or data URIs
     $useEventImage = $eventImage && (str_starts_with($eventImage, 'http://') || str_starts_with($eventImage, 'https://'));
-    $isCancelled = $ticket->status === 'cancelled';
-    $isUsed      = $ticket->status === 'used';
+    $isCancelled = $ticket->status === \App\Models\Ticket::STATUS_CANCELLED;
+    $isUsed      = $ticket->status === \App\Models\Ticket::STATUS_USED;
 @endphp
 
 <div class="pdf-ticket-container">

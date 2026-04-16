@@ -38,7 +38,7 @@ class SuperAdminOverviewWidget extends Widget
 
         $issuedQr           = (int) (clone $ticketsBase)->whereNotNull('qr_code_path')->sum('quantity');
         $scanned            = (int) (clone $ticketsBase)->where(function ($q): void {
-            $q->where('status', 'used')->orWhereNotNull('used_at');
+            $q->where('status', Ticket::STATUS_USED)->orWhereNotNull('used_at');
         })->sum('quantity');
         $atGateUnscanned    = max($issuedQr - $scanned, 0);
         $inventoryRemaining = (int) (clone $ticketCategoriesBase)->sum('tickets_remaining');
@@ -102,7 +102,7 @@ class SuperAdminOverviewWidget extends Widget
                 ->whereYear('created_at', $month->year)
                 ->sum('quantity');
             $scannedMonth = (int) (clone $ticketsBase)->where(function ($q): void {
-                $q->where('status', 'used')->orWhereNotNull('used_at');
+                $q->where('status', Ticket::STATUS_USED)->orWhereNotNull('used_at');
             })->whereMonth('updated_at', $month->month)
                 ->whereYear('updated_at', $month->year)
                 ->sum('quantity');

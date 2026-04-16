@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TicketStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Ticket extends Model
 {
     use HasFactory;
+
+    public const STATUS_CONFIRMED = TicketStatus::CONFIRMED->value;
+    public const STATUS_USED = TicketStatus::USED->value;
+    public const STATUS_CANCELLED = TicketStatus::CANCELLED->value;
 
     protected $fillable = [
         'user_id',
@@ -69,5 +74,15 @@ class Ticket extends Model
     public function latestScanLog(): HasOne
     {
         return $this->hasOne(TicketScanLog::class)->latestOfMany('scanned_at');
+    }
+
+    public function isTerminalStatus(): bool
+    {
+        return in_array($this->status, [self::STATUS_USED, self::STATUS_CANCELLED], true);
+    }
+
+    public function statusEnum(): TicketStatus
+    {
+        return TicketStatus::from((string) $this->status);
     }
 }

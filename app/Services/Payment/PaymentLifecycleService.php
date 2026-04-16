@@ -4,6 +4,7 @@ namespace App\Services\Payment;
 
 use App\Models\Event;
 use App\Models\PaymentTransaction;
+use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Services\Admin\AdminIncidentNotificationService;
 use Illuminate\Support\Facades\DB;
@@ -119,9 +120,9 @@ class PaymentLifecycleService
         $payment->loadMissing('ticket');
         $shouldRestoreInventory = false;
 
-        if ($payment->ticket && $payment->ticket->status !== 'cancelled') {
+        if ($payment->ticket && $payment->ticket->status !== Ticket::STATUS_CANCELLED) {
             $payment->ticket->forceFill([
-                'status' => 'cancelled',
+                'status' => Ticket::STATUS_CANCELLED,
             ])->save();
 
             if ($payment->ticket->used_at) {
@@ -151,7 +152,10 @@ class PaymentLifecycleService
 
     public function expireIfTimedOut(PaymentTransaction $payment): void
     {
-        if ($payment->status !== PaymentTransaction::STATUS_PENDING) {
+        if (! in_array($payment->status, [
+            PaymentTransaction::STATUS_INITIATED,
+            PaymentTransaction::STATUS_PENDING,
+        ], true)) {
             return;
         }
 

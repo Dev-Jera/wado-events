@@ -12,7 +12,7 @@ class PaymentController extends Controller
 {
     public function adminIndex(Request $request)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('manageAdminPayments', PaymentTransaction::class);
 
         $status = strtoupper(trim((string) $request->query('status', '')));
         $search = trim((string) $request->query('q', ''));
@@ -57,7 +57,7 @@ class PaymentController extends Controller
 
     public function adminResend(Request $request, PaymentTransaction $paymentTransaction, PaymentNotificationService $notificationService)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('manageAdminPayments', PaymentTransaction::class);
 
         if ($paymentTransaction->status !== PaymentTransaction::STATUS_CONFIRMED) {
             return back()->with('error', 'Only CONFIRMED payments can be resent.');
@@ -77,7 +77,7 @@ class PaymentController extends Controller
 
     public function adminConfirm(Request $request, PaymentTransaction $paymentTransaction)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('manageAdminPayments', PaymentTransaction::class);
 
         if (! in_array($paymentTransaction->status, [
             PaymentTransaction::STATUS_PENDING,
@@ -99,7 +99,7 @@ class PaymentController extends Controller
 
     public function adminRefund(Request $request, PaymentTransaction $paymentTransaction, PaymentLifecycleService $paymentLifecycleService)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('manageAdminPayments', PaymentTransaction::class);
 
         if (! in_array($paymentTransaction->status, [
             PaymentTransaction::STATUS_CONFIRMED,
@@ -134,8 +134,4 @@ class PaymentController extends Controller
         return back()->with('success', "Payment #{$paymentTransaction->id} refund submitted. " . (string) ($result['message'] ?? ''));
     }
 
-    protected function ensureAdmin(Request $request): void
-    {
-        abort_unless($request->user()?->isAdmin() || $request->user()?->isSuperAdmin(), 403);
-    }
 }

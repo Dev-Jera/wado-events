@@ -259,7 +259,7 @@
                                         <td>{{ $ticket->user->phone ?: 'N/A' }}</td>
                                         <td>{{ $ticket->event->title }}</td>
                                         <td>
-                                            <span class="status-pill {{ strtolower((string) $ticket->status) === 'used' ? 'pill-used' : 'pill-valid' }}">
+                                            <span class="status-pill {{ strtolower((string) $ticket->status) === \App\Models\Ticket::STATUS_USED ? 'pill-used' : 'pill-valid' }}">
                                                 {{ ucfirst((string) $ticket->status) }}
                                             </span>
                                         </td>
@@ -304,7 +304,7 @@
                                     @php
                                         $ticket = $row['ticket'];
                                         $paymentStatus = strtoupper((string) ($ticket->paymentTransaction?->status ?? 'N/A'));
-                                        $scanState = $ticket->used_at || $ticket->status === 'used'
+                                        $scanState = $ticket->used_at || $ticket->status === \App\Models\Ticket::STATUS_USED
                                             ? 'Scanned/used'
                                             : 'Waiting for scan';
                                         $scanStatusClass = $scanState === 'Scanned/used' ? 'pill-used' : 'pill-pending';
@@ -320,7 +320,7 @@
                                         <td>{{ $ticket->holder_name ?: ($ticket->user?->name ?? 'N/A') }}</td>
                                         <td class="mono">{{ $ticket->ticket_code }}</td>
                                         <td>
-                                            <span class="status-pill {{ $paymentStatus === 'CONFIRMED' ? 'pill-valid' : 'pill-bad' }}">{{ $paymentStatus }}</span>
+                                            <span class="status-pill {{ $paymentStatus === \App\Models\PaymentTransaction::STATUS_CONFIRMED ? 'pill-valid' : 'pill-bad' }}">{{ $paymentStatus }}</span>
                                         </td>
                                         <td class="payload-cell">
                                             <details>

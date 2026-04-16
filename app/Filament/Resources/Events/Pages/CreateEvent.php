@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Filament\Resources\Pages\CreateRecord;
@@ -42,11 +41,6 @@ class CreateEvent extends CreateRecord
         unset($data['artists'], $data['ticketCategories'], $data['is_free']);
 
         return $data;
-    }
-
-    protected function handleRecordCreation(array $data): Model
-    {
-        return static::getResource()::getModel()::create($data);
     }
 
     protected static function normalizeImagePath(?string $path): ?string

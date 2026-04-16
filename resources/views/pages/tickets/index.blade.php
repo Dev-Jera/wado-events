@@ -5,33 +5,37 @@
     $allTickets = $tickets->sortByDesc('purchased_at')->values();
 
     $upcoming = $tickets->filter(function ($t) {
-        if (! in_array($t->status, ['confirmed', 'active'])) return false;
+        if (! in_array($t->status, [\App\Models\Ticket::STATUS_CONFIRMED, 'active'])) return false;
         if ($t->dismissed_at) return false;
         return in_array($t->event?->live_status ?? 'upcoming', ['upcoming', 'live']);
     })->sortBy('event.starts_at')->values();
 
-    $attended  = $tickets->where('status', 'used')->values();
-    $cancelled = $tickets->where('status', 'cancelled')->values();
+    $attended  = $tickets->where('status', \App\Models\Ticket::STATUS_USED)->values();
+    $cancelled = $tickets->where('status', \App\Models\Ticket::STATUS_CANCELLED)->values();
 
     $pastTickets = $tickets->filter(function ($t) {
         if ($t->dismissed_at) return false;
         $phase = $t->event?->live_status ?? 'upcoming';
-        return $phase === 'ended' || $t->status === 'used';
+        return $phase === 'ended' || $t->status === \App\Models\Ticket::STATUS_USED;
     })->sortByDesc('event.starts_at')->values();
 
     $refundRequestable = $allTickets->filter(function ($t) {
         $payment = $t->paymentTransaction;
 
         if (! $payment) return false;
-        if ($t->dismissed_at || $t->used_at || $t->status === 'used' || $t->status === 'cancelled') return false;
-        if ($payment->refund_requested_at || $payment->status === 'REFUNDED') return false;
+        if ($t->dismissed_at || $t->used_at || $t->status === \App\Models\Ticket::STATUS_USED || $t->status === \App\Models\Ticket::STATUS_CANCELLED) return false;
+        if ($payment->refund_requested_at || $payment->status === \App\Models\PaymentTransaction::STATUS_REFUNDED) return false;
 
-        return in_array($payment->status, ['CONFIRMED', 'PENDING', 'INITIATED'], true);
+        return in_array($payment->status, [
+            \App\Models\PaymentTransaction::STATUS_CONFIRMED,
+            \App\Models\PaymentTransaction::STATUS_PENDING,
+            \App\Models\PaymentTransaction::STATUS_INITIATED,
+        ], true);
     })->values();
 
     $refundRequested = $allTickets->filter(function ($t) {
         return (bool) ($t->paymentTransaction?->refund_requested_at)
-            && $t->paymentTransaction?->status !== 'REFUNDED';
+            && $t->paymentTransaction?->status !== \App\Models\PaymentTransaction::STATUS_REFUNDED;
     })->values();
 
     $nextTicket      = $upcoming->first();
@@ -42,13 +46,13 @@
     $totalSpent      = $tickets->sum(fn($t) => (float) $t->total_amount);
 
     $recentActivities = $allTickets->take(10)->map(function ($ticket) {
-        $state = $ticket->status === 'used' ? 'Attended' : ($ticket->status === 'cancelled' ? 'Cancelled' : 'Confirmed');
-        $kind  = $ticket->status === 'used' ? 'attended' : ($ticket->status === 'cancelled' ? 'cancelled' : 'booked');
-        $headline = $ticket->status === 'used'
+        $state = $ticket->status === \App\Models\Ticket::STATUS_USED ? 'Attended' : ($ticket->status === \App\Models\Ticket::STATUS_CANCELLED ? 'Cancelled' : 'Confirmed');
+        $kind  = $ticket->status === \App\Models\Ticket::STATUS_USED ? 'attended' : ($ticket->status === \App\Models\Ticket::STATUS_CANCELLED ? 'cancelled' : 'booked');
+        $headline = $ticket->status === \App\Models\Ticket::STATUS_USED
             ? 'Attended · ' . $ticket->event->title
-            : ($ticket->status === 'cancelled' ? 'Cancelled · ' . $ticket->event->title : 'Booked · ' . $ticket->event->title);
+            : ($ticket->status === \App\Models\Ticket::STATUS_CANCELLED ? 'Cancelled · ' . $ticket->event->title : 'Booked · ' . $ticket->event->title);
         $meta = $ticket->purchased_at->format('d M Y') . ' · '
-            . ($ticket->status === 'cancelled'
+            . ($ticket->status === \App\Models\Ticket::STATUS_CANCELLED
                 ? 'UGX ' . number_format((float) $ticket->total_amount, 0) . ' refunded'
                 : 'Paid via ' . strtoupper((string) $ticket->payment_provider));
         return compact('ticket', 'headline', 'meta', 'state', 'kind');
@@ -198,7 +202,7 @@
                                 <strong>{{ \Illuminate\Support\Str::limit($ticket->event->title, 30) }}</strong>
                                 <small>{{ $ticket->event->starts_at->format('d M Y') }} · {{ $ticket->ticketCategory->name }}</small>
                             </span>
-                            <span class="db-pill {{ $ticket->status === 'cancelled' ? 'pill-red' : ($ticket->status === 'used' ? 'pill-gray' : 'pill-green') }}">
+                            <span class="db-pill {{ $ticket->status === \App\Models\Ticket::STATUS_CANCELLED ? 'pill-red' : ($ticket->status === \App\Models\Ticket::STATUS_USED ? 'pill-gray' : 'pill-green') }}">
                                 {{ ucfirst((string) $ticket->status) }}
                             </span>
                         </a>
@@ -319,7 +323,7 @@
                         </span>
                         <span class="db-ticket-card-footer">
                             <span class="db-ticket-code">{{ $ticket->ticket_code }}</span>
-                            <span class="db-pill {{ $ticket->status === 'cancelled' ? 'pill-red' : ($ticket->status === 'used' ? 'pill-gray' : 'pill-green') }}">
+                            <span class="db-pill {{ $ticket->status === \App\Models\Ticket::STATUS_CANCELLED ? 'pill-red' : ($ticket->status === \App\Models\Ticket::STATUS_USED ? 'pill-gray' : 'pill-green') }}">
                                 {{ ucfirst((string) $ticket->status) }}
                             </span>
                         </span>
@@ -450,8 +454,8 @@
                                 <strong>{{ \Illuminate\Support\Str::limit($ticket->event->title, 32) }}</strong>
                                 <small>{{ $ticket->event->starts_at->format('d M Y') }} · {{ $ticket->event->venue }}</small>
                             </span>
-                            <span class="db-pill {{ $ticket->status === 'used' ? 'pill-gray' : 'pill-green' }}">
-                                {{ $ticket->status === 'used' ? 'Attended' : 'Ended' }}
+                            <span class="db-pill {{ $ticket->status === \App\Models\Ticket::STATUS_USED ? 'pill-gray' : 'pill-green' }}">
+                                {{ $ticket->status === \App\Models\Ticket::STATUS_USED ? 'Attended' : 'Ended' }}
                             </span>
                             <form method="POST" action="{{ route('tickets.dismiss', $ticket) }}" style="display:contents">
                                 @csrf

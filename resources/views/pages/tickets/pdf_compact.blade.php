@@ -6,8 +6,8 @@
 </head>
 <body>
 @php
-    $isCancelled = $ticket->status === 'cancelled';
-    $isUsed = $ticket->status === 'used';
+    $isCancelled = $ticket->status === \App\Models\Ticket::STATUS_CANCELLED;
+    $isUsed = $ticket->status === \App\Models\Ticket::STATUS_USED;
     $eventImage = $ticket->event->image_url;
     if ($eventImage && !str_starts_with($eventImage, 'http://') && !str_starts_with($eventImage, 'https://') && !str_starts_with($eventImage, '/')) {
         $eventImage = asset($eventImage);

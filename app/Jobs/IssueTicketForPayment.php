@@ -4,11 +4,14 @@ namespace App\Jobs;
 
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
+use App\Services\Admin\AdminIncidentNotificationService;
 use App\Services\Payment\PaymentNotificationService;
 use App\Services\Ticket\TicketQrService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class IssueTicketForPayment implements ShouldQueue
 {
@@ -79,7 +82,7 @@ class IssueTicketForPayment implements ShouldQueue
                 'unit_price' => $locked->unit_price,
                 'total_amount' => $locked->total_amount,
                 'payment_provider' => $locked->payment_provider,
-                'status' => 'confirmed',
+                'status' => Ticket::STATUS_CONFIRMED,
                 'purchased_at' => now(),
             ]);
 
@@ -98,5 +101,32 @@ class IssueTicketForPayment implements ShouldQueue
         if ($ticket instanceof Ticket) {
             $notificationService->sendTicketConfirmed($ticket->fresh('user'), $payment->fresh());
         }
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        $payment = PaymentTransaction::query()
+            ->with(['user', 'event', 'ticket'])
+            ->find($this->paymentTransactionId);
+
+        Log::error('IssueTicketForPayment exhausted retries', [
+            'payment_transaction_id' => $this->paymentTransactionId,
+            'payment_status' => $payment?->status,
+            'ticket_id' => $payment?->ticket_id,
+            'event_id' => $payment?->event_id,
+            'user_id' => $payment?->user_id,
+            'error' => $exception->getMessage(),
+        ]);
+
+        if (! $payment) {
+            return;
+        }
+
+        $payment->forceFill([
+            'last_error' => 'Ticket issuance failed after retries: ' . $exception->getMessage(),
+        ])->save();
+
+        app(AdminIncidentNotificationService::class)
+            ->notifyFailedPayment($payment->fresh(['event', 'user']), 'Ticket issuance failed after retries. Manual intervention required.');
     }
 }

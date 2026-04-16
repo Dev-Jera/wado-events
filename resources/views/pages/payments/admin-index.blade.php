@@ -2,7 +2,13 @@
 
 @section('content')
     @php
-        $statuses = ['INITIATED', 'PENDING', 'CONFIRMED', 'FAILED', 'REFUNDED'];
+        $statuses = [
+            \App\Models\PaymentTransaction::STATUS_INITIATED,
+            \App\Models\PaymentTransaction::STATUS_PENDING,
+            \App\Models\PaymentTransaction::STATUS_CONFIRMED,
+            \App\Models\PaymentTransaction::STATUS_FAILED,
+            \App\Models\PaymentTransaction::STATUS_REFUNDED,
+        ];
     @endphp
 
     <section class="pm-admin-page">
@@ -75,7 +81,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($payment->status === 'CONFIRMED')
+                                    @if ($payment->status === \App\Models\PaymentTransaction::STATUS_CONFIRMED)
                                         <div style="display:grid;gap:6px;">
                                             <form method="POST" action="{{ route('payments.admin.resend', $payment) }}">
                                                 @csrf
@@ -89,7 +95,7 @@
                                                 </button>
                                             </form>
                                         </div>
-                                    @elseif (in_array($payment->status, ['PENDING', 'INITIATED']))
+                                    @elseif (in_array($payment->status, [\App\Models\PaymentTransaction::STATUS_PENDING, \App\Models\PaymentTransaction::STATUS_INITIATED], true))
                                         <div style="display:grid;gap:6px;">
                                             <form method="POST" action="{{ route('payments.admin.confirm', $payment) }}"
                                                   onsubmit="return confirm('Manually confirm payment #{{ $payment->id }} and issue ticket?')">

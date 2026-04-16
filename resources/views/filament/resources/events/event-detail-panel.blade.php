@@ -234,9 +234,9 @@
     ════════════════════════════════════════════════════════════ --}}
     <div x-show="tab === 'analytics'" x-cloak>
         @php
-            $confirmedCount = \App\Models\PaymentTransaction::where('event_id', $event->id)->where('status','CONFIRMED')->count();
-            $pendingCount   = \App\Models\PaymentTransaction::where('event_id', $event->id)->where('status','PENDING')->count();
-            $failedCount    = \App\Models\PaymentTransaction::where('event_id', $event->id)->where('status','FAILED')->count();
+            $confirmedCount = \App\Models\PaymentTransaction::where('event_id', $event->id)->where('status', \App\Models\PaymentTransaction::STATUS_CONFIRMED)->count();
+            $pendingCount   = \App\Models\PaymentTransaction::where('event_id', $event->id)->where('status', \App\Models\PaymentTransaction::STATUS_PENDING)->count();
+            $failedCount    = \App\Models\PaymentTransaction::where('event_id', $event->id)->where('status', \App\Models\PaymentTransaction::STATUS_FAILED)->count();
             $totalTxns      = $confirmedCount + $pendingCount + $failedCount;
         @endphp
 

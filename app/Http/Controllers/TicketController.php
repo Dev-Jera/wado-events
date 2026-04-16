@@ -70,11 +70,11 @@ class TicketController extends Controller
             return back()->with('error', 'Refund request failed: payment transaction not found for this ticket.');
         }
 
-        if ($payment->status === PaymentTransaction::STATUS_REFUNDED || $ticket->status === 'cancelled') {
+        if ($payment->status === PaymentTransaction::STATUS_REFUNDED || $ticket->status === Ticket::STATUS_CANCELLED) {
             return back()->with('error', 'This ticket is already refunded/cancelled.');
         }
 
-        if ($ticket->used_at || $ticket->status === 'used') {
+        if ($ticket->used_at || $ticket->status === Ticket::STATUS_USED) {
             return back()->with('error', 'Used tickets are not eligible for refund requests.');
         }
 

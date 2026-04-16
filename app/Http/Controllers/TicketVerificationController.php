@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TicketVerifyRequest;
 use App\Models\Event;
 use App\Models\Ticket;
 use App\Models\TicketScanLog;
@@ -20,7 +21,7 @@ class TicketVerificationController extends Controller
 
     public function index(Request $request)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('verify', Ticket::class);
 
         $events = Event::query()
             ->orderBy('starts_at')
@@ -75,7 +76,7 @@ class TicketVerificationController extends Controller
 
     public function export(Request $request)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('verify', Ticket::class);
 
         $data = $request->validate([
             'event_id' => ['required', 'integer', 'exists:events,id'],
@@ -87,7 +88,7 @@ class TicketVerificationController extends Controller
         $rows = Ticket::query()
             ->with(['user', 'event'])
             ->where('event_id', $selectedEventId)
-            ->where('status', 'confirmed')
+            ->where('status', Ticket::STATUS_CONFIRMED)
             ->whereNull('used_at')
             ->orderBy('event_id')
             ->get()
@@ -110,18 +111,11 @@ class TicketVerificationController extends Controller
         ]);
     }
 
-    public function verify(Request $request)
+    public function verify(TicketVerifyRequest $request)
     {
-        $this->ensureAdmin($request);
+        $this->authorize('verify', Ticket::class);
 
-        $data = $request->validate([
-            'selected_event_id' => ['required', 'integer', 'exists:events,id'],
-            'ticket_code' => ['nullable', 'string'],
-            'scanned_payload' => ['nullable', 'string'],
-            'lookup' => ['nullable', 'string', 'max:255'],
-            'mark_as_used' => ['nullable', 'boolean'],
-            'device_id' => ['nullable', 'string', 'max:120'],
-        ]);
+        $data = $request->validated();
 
         $selectedEventId = (int) $data['selected_event_id'];
 
@@ -197,9 +191,13 @@ class TicketVerificationController extends Controller
             ->first();
 
         if (! $ticket && $ticketCode !== '') {
+            $ticketCodeLike = '%' . str_replace('-', '%', $ticketCode) . '%';
+
             $ticket = Ticket::query()
                 ->with(['event', 'user', 'ticketCategory'])
                 ->where('event_id', $selectedEventId)
+                ->where('ticket_code', 'like', $ticketCodeLike)
+                ->limit(50)
                 ->get()
                 ->first(function (Ticket $candidate) use ($ticketCode): bool {
                     return $this->normalizeTicketCode((string) $candidate->ticket_code) === $ticketCode;
@@ -233,7 +231,7 @@ class TicketVerificationController extends Controller
                 ]);
         }
 
-        if ($ticket->status === 'cancelled') {
+        if ($ticket->status === Ticket::STATUS_CANCELLED) {
             $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket is cancelled', $rawPayload, $selectedEventId);
 
             return redirect()
@@ -247,7 +245,7 @@ class TicketVerificationController extends Controller
                 ]);
         }
 
-        if ($ticket->status === 'used' || $ticket->used_at) {
+        if ($ticket->status === Ticket::STATUS_USED || $ticket->used_at) {
             $this->logScan($request, $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
 
             return redirect()
@@ -265,7 +263,7 @@ class TicketVerificationController extends Controller
 
         if ($markAsUsed) {
             $ticket->forceFill([
-                'status' => 'used',
+                'status' => Ticket::STATUS_USED,
                 'used_at' => now(),
             ])->save();
         }
@@ -317,11 +315,6 @@ class TicketVerificationController extends Controller
             $scanLog->loadMissing(['ticket.event', 'staff']);
             $this->incidentNotifications->notifyFailedTicketScan($scanLog, $selectedEventId);
         }
-    }
-
-    protected function ensureAdmin(Request $request): void
-    {
-        abort_unless($request->user()?->isGateStaff(), 403);
     }
 
     protected function normalizeTicketCode(string $value): string

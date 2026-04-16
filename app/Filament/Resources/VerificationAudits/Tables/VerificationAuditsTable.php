@@ -34,7 +34,7 @@ class VerificationAuditsTable
                     ->wrap(),
                 TextColumn::make('status')
                     ->label('Ticket State')
-                    ->formatStateUsing(fn ($state, Ticket $record): string => ($record->used_at || $state === 'used') ? 'SCANNED_USED' : 'WAITING_FOR_SCAN')
+                    ->formatStateUsing(fn ($state, Ticket $record): string => ($record->used_at || $state === Ticket::STATUS_USED) ? 'SCANNED_USED' : 'WAITING_FOR_SCAN')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'SCANNED_USED' ? 'warning' : 'gray'),
                 TextColumn::make('paymentTransaction.status')
@@ -115,9 +115,9 @@ class VerificationAuditsTable
                 SelectFilter::make('status')
                     ->label('Ticket Status')
                     ->options([
-                        'confirmed' => 'CONFIRMED',
-                        'used' => 'USED',
-                        'cancelled' => 'CANCELLED',
+                        Ticket::STATUS_CONFIRMED => 'CONFIRMED',
+                        Ticket::STATUS_USED => 'USED',
+                        Ticket::STATUS_CANCELLED => 'CANCELLED',
                     ]),
             ]);
     }

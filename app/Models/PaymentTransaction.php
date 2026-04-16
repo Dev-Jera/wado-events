@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentTransactionStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +11,12 @@ class PaymentTransaction extends Model
 {
     use HasFactory;
 
-    public const STATUS_INITIATED = 'INITIATED';
-    public const STATUS_PENDING = 'PENDING';
-    public const STATUS_CONFIRMED = 'CONFIRMED';
-    public const STATUS_FAILED = 'FAILED';
-    public const STATUS_REFUNDED = 'REFUNDED';
-    public const STATUS_EXPIRED = 'EXPIRED';
+    public const STATUS_INITIATED = PaymentTransactionStatus::INITIATED->value;
+    public const STATUS_PENDING = PaymentTransactionStatus::PENDING->value;
+    public const STATUS_CONFIRMED = PaymentTransactionStatus::CONFIRMED->value;
+    public const STATUS_FAILED = PaymentTransactionStatus::FAILED->value;
+    public const STATUS_REFUNDED = PaymentTransactionStatus::REFUNDED->value;
+    public const STATUS_EXPIRED = PaymentTransactionStatus::EXPIRED->value;
 
     protected $fillable = [
         'user_id',
@@ -101,5 +102,10 @@ class PaymentTransaction extends Model
             self::STATUS_FAILED,
             self::STATUS_REFUNDED,
         ], true);
+    }
+
+    public function statusEnum(): PaymentTransactionStatus
+    {
+        return PaymentTransactionStatus::from((string) $this->status);
     }
 }

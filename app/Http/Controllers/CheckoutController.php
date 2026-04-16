@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CheckoutRequest;
 use App\Jobs\ExpirePendingPayment;
 use App\Models\Event;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
-use App\Models\User;
+use App\Services\Checkout\GuestCheckoutUserResolver;
 use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
 use App\Services\Ticket\TicketQrService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -23,13 +23,15 @@ class CheckoutController extends Controller
     public function __construct(
         protected TicketQrService $ticketQrService,
         protected MarzePayService $marzePayService,
-        protected PaymentLifecycleService $paymentLifecycleService
+        protected PaymentLifecycleService $paymentLifecycleService,
+        protected GuestCheckoutUserResolver $guestCheckoutUserResolver
     ) {
     }
 
     public function create(Request $request, Event $event)
     {
         $event->load('ticketCategories');
+        abort_if($this->isCheckoutClosed($event), 404);
 
         abort_if($event->ticketCategories->isEmpty(), 404);
 
@@ -65,9 +67,11 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function store(Request $request, Event $event)
+    public function store(CheckoutRequest $request, Event $event)
     {
         $event->load('ticketCategories');
+        abort_if($this->isCheckoutClosed($event), 404);
+
         $user = $request->user();
 
         $rateLimitKey = $this->purchaseRateLimitKey($request, $event);
@@ -80,20 +84,10 @@ class CheckoutController extends Controller
         }
         RateLimiter::hit($rateLimitKey, 600);
 
-        $data = $request->validate([
-            'ticket_category_id' => ['required', 'integer'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
-            'holder_name' => ['required', 'string', 'max:120'],
-            'email' => [$user ? 'nullable' : 'required', 'email', 'max:255'],
-            'payment_provider' => ['nullable', 'in:mtn,airtel'],
-            'phone_number' => ['nullable', 'string', 'max:40'],
-            'create_account' => ['nullable', 'boolean'],
-            'password' => ['nullable', 'string', 'min:8', 'required_if:create_account,1', 'confirmed'],
-            'idempotency_key' => ['required', 'string', 'max:64'],
-        ]);
+        $data = $request->validated();
 
         $createAccount = (bool) ($data['create_account'] ?? false);
-        $resolved = $this->resolveCheckoutUser($request, $data, $createAccount);
+        $resolved = $this->guestCheckoutUserResolver->resolve($request, $data, $createAccount);
         $user = $resolved['user'];
         $guestCheckout = (bool) ($resolved['guest_checkout'] ?? false);
 
@@ -105,22 +99,6 @@ class CheckoutController extends Controller
         $quantity = (int) $data['quantity'];
         $unitPrice = (float) $ticketCategory->price;
         $isFree = $unitPrice <= 0;
-
-        if (! $isFree && blank($data['payment_provider'] ?? null)) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'payment_provider' => 'Choose MTN or Airtel to continue.',
-                ]);
-        }
-
-        if (! $isFree && blank($data['phone_number'] ?? null)) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'phone_number' => 'Phone number is required for mobile money payments.',
-                ]);
-        }
 
         if ($isFree) {
             $ticket = DB::transaction(function () use ($data, $event, $quantity, $ticketCategory, $unitPrice, $user) {
@@ -146,7 +124,7 @@ class CheckoutController extends Controller
                     'unit_price' => $unitPrice,
                     'total_amount' => $unitPrice * $quantity,
                     'payment_provider' => 'free',
-                    'status' => 'confirmed',
+                    'status' => Ticket::STATUS_CONFIRMED,
                     'purchased_at' => now(),
                 ]);
 
@@ -220,7 +198,7 @@ class CheckoutController extends Controller
             ]);
         });
 
-        \Illuminate\Support\Facades\Log::error('CheckoutController: initiating Marz Pay request for payment_id=' . $payment->id . ' provider=' . ($data['payment_provider'] ?? ''));
+        \Illuminate\Support\Facades\Log::info('CheckoutController: initiating Marz Pay request for payment_id=' . $payment->id . ' provider=' . ($data['payment_provider'] ?? ''));
         $initiation = $this->marzePayService->initiateStkPush($payment);
         if (! ($initiation['ok'] ?? false)) {
             $this->paymentLifecycleService->markFailedAndRelease(
@@ -338,11 +316,10 @@ class CheckoutController extends Controller
     {
         $inventory = TicketCategory::query()
             ->where('event_id', $event->id)
-            ->selectRaw('COALESCE(SUM(ticket_count), 0) AS capacity_total, COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
+            ->selectRaw('COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
             ->first();
 
         $event->forceFill([
-            'capacity' => (int) ($inventory?->capacity_total ?? 0),
             'tickets_available' => (int) ($inventory?->remaining_total ?? 0),
         ])->save();
     }
@@ -368,80 +345,12 @@ class CheckoutController extends Controller
         return 'checkout:purchase:' . $event->id . ':' . $userPart;
     }
 
-    /**
-     * Resolve the customer used for checkout.
-     * Guest checkout creates a customer record without forcing sign-in.
-     * Optional account creation signs in the user immediately.
-     *
-     * @return array{user: User, guest_checkout: bool}
-     */
-    protected function resolveCheckoutUser(Request $request, array $data, bool $createAccount): array
+    protected function isCheckoutClosed(Event $event): bool
     {
-        if ($request->user()) {
-            return [
-                'user' => $request->user(),
-                'guest_checkout' => false,
-            ];
+        if (in_array((string) $event->status, ['cancelled', 'draft'], true)) {
+            return true;
         }
 
-        $email = strtolower(trim((string) ($data['email'] ?? '')));
-        $holderName = trim((string) ($data['holder_name'] ?? ''));
-        $phone = trim((string) ($data['phone_number'] ?? '')) ?: null;
-        $sessionGuestUserId = (int) $request->session()->get('checkout_guest_user_id', 0);
-
-        $existing = User::query()->where('email', $email)->first();
-        if ($existing) {
-            if ($sessionGuestUserId > 0 && $existing->id === $sessionGuestUserId) {
-                $existing->forceFill([
-                    'name' => $holderName,
-                    'phone' => $phone,
-                ])->save();
-
-                if ($createAccount) {
-                    $existing->forceFill([
-                        'password' => (string) $data['password'],
-                    ])->save();
-
-                    Auth::login($existing);
-                    $request->session()->regenerate();
-                    $request->session()->forget('checkout_guest_user_id');
-
-                    return [
-                        'user' => $existing,
-                        'guest_checkout' => false,
-                    ];
-                }
-
-                return [
-                    'user' => $existing,
-                    'guest_checkout' => true,
-                ];
-            }
-
-            throw ValidationException::withMessages([
-                'email' => 'An account with this email already exists. Log in to track tickets or use a different email for guest checkout.',
-            ]);
-        }
-
-        $user = User::query()->create([
-            'name' => $holderName,
-            'email' => $email,
-            'phone' => $phone,
-            'password' => $createAccount ? (string) $data['password'] : Str::random(40),
-            'role' => 'customer',
-        ]);
-
-        if ($createAccount) {
-            Auth::login($user);
-            $request->session()->regenerate();
-            $request->session()->forget('checkout_guest_user_id');
-        } else {
-            $request->session()->put('checkout_guest_user_id', $user->id);
-        }
-
-        return [
-            'user' => $user,
-            'guest_checkout' => ! $createAccount,
-        ];
+        return $event->ends_at?->isPast() ?? false;
     }
 }

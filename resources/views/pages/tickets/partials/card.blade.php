@@ -3,8 +3,8 @@
     if ($eventImage && !str_starts_with($eventImage, 'http://') && !str_starts_with($eventImage, 'https://') && !str_starts_with($eventImage, '/')) {
         $eventImage = asset($eventImage);
     }
-    $isCancelled = $ticket->status === 'cancelled';
-    $isUsed = $ticket->status === 'used';
+    $isCancelled = $ticket->status === \App\Models\Ticket::STATUS_CANCELLED;
+    $isUsed = $ticket->status === \App\Models\Ticket::STATUS_USED;
 @endphp
 
 <div class="tkd-card {{ $isCancelled ? 'tkd-card-cancelled' : '' }}">

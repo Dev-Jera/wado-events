@@ -52,8 +52,6 @@ class TicketQrService
 
     public function buildSignedPayload(Ticket $ticket): array
     {
-        $ticket->loadMissing(['user', 'event']);
-
         $payload = [
             'v' => 2,
             'code' => (string) $ticket->ticket_code,

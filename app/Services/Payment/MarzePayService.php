@@ -57,14 +57,22 @@ class MarzePayService
 
         $phoneNumber = (string) $payment->phone_number;
 
-        // Normalize phone number to international format: +256XXXXXXXXX
-        if (!str_starts_with($phoneNumber, '+')) {
-            // Remove leading 0 if present
-            if (str_starts_with($phoneNumber, '0')) {
-                $phoneNumber = substr($phoneNumber, 1);
-            }
-            // Add country code
-            $phoneNumber = '+256' . $phoneNumber;
+        // Normalize to +256XXXXXXXXX while handling 256XXXXXXXXX and formatted input.
+        $digits = preg_replace('/\D+/', '', $phoneNumber) ?? '';
+        if ($digits === '') {
+            return [
+                'ok' => false,
+                'message' => 'Invalid phone number provided.',
+                'payload' => null,
+                'reference' => null,
+                'provider_status' => null,
+            ];
+        }
+
+        if (str_starts_with($digits, '256')) {
+            $phoneNumber = '+' . $digits;
+        } else {
+            $phoneNumber = '+256' . ltrim($digits, '0');
         }
 
         $payload = [

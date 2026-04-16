@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\WalkInSaleRequest;
 use App\Jobs\ExpirePendingPayment;
 use App\Jobs\IssueTicketForPayment;
 use App\Models\Event;
 use App\Models\PaymentTransaction;
+use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\User;
 use App\Services\Payment\MarzePayService;
@@ -25,34 +27,41 @@ class GatePortalController extends Controller
 
     public function index(Request $request)
     {
-        $this->ensureGateStaff($request);
+        $this->authorize('accessGatePortal', Event::class);
 
         $eventId = (int) $request->integer('event_id');
 
         $events = Event::query()
-            ->with(['ticketCategories', 'tickets'])
+            ->with([
+                'ticketCategories:id,event_id,name,price,ticket_count,tickets_remaining,sort_order',
+            ])
+            ->withSum('ticketCategories as allocated_total', 'ticket_count')
+            ->withSum('ticketCategories as inventory_remaining_total', 'tickets_remaining')
+            ->withSum([
+                'tickets as issued_with_qr_total' => fn ($q) => $q->whereNotNull('qr_code_path'),
+            ], 'quantity')
+            ->withSum([
+                'tickets as scanned_total' => fn ($q) => $q->where(function ($sq): void {
+                    $sq->where('status', Ticket::STATUS_USED)
+                        ->orWhereNotNull('used_at');
+                }),
+            ], 'quantity')
+            ->withSum([
+                'tickets as confirmed_total' => fn ($q) => $q->where('status', Ticket::STATUS_CONFIRMED),
+            ], 'quantity')
+            ->withSum([
+                'tickets as cancelled_total' => fn ($q) => $q->where('status', Ticket::STATUS_CANCELLED),
+            ], 'quantity')
             ->orderBy('starts_at')
             ->get();
 
         $rows = $events->map(function (Event $event) {
-            $allocated = (int) $event->ticketCategories->sum('ticket_count');
-            $inventoryRemaining = (int) $event->ticketCategories->sum('tickets_remaining');
-
-            $qrGenerated = (int) $event->tickets
-                ->filter(fn ($ticket) => ! blank($ticket->qr_code_path))
-                ->sum('quantity');
-
-            $scanned = (int) $event->tickets
-                ->filter(fn ($ticket) => $ticket->status === 'used' || $ticket->used_at)
-                ->sum('quantity');
-
-            $confirmed = (int) $event->tickets
-                ->filter(fn ($ticket) => $ticket->status === 'confirmed')
-                ->sum('quantity');
-
-            $cancelled = (int) $event->tickets
-                ->filter(fn ($ticket) => $ticket->status === 'cancelled')
-                ->sum('quantity');
+            $allocated = (int) ($event->allocated_total ?? 0);
+            $inventoryRemaining = (int) ($event->inventory_remaining_total ?? 0);
+            $qrGenerated = (int) ($event->issued_with_qr_total ?? 0);
+            $scanned = (int) ($event->scanned_total ?? 0);
+            $confirmed = (int) ($event->confirmed_total ?? 0);
+            $cancelled = (int) ($event->cancelled_total ?? 0);
 
             return [
                 'event' => $event,
@@ -72,21 +81,33 @@ class GatePortalController extends Controller
         if ($selected) {
             $event = $selected['event'];
 
-            $categoryRows = $event->ticketCategories->map(function ($category) use ($event) {
-                $tickets = $event->tickets->where('ticket_category_id', $category->id);
+            $categoryRows = TicketCategory::query()
+                ->where('event_id', $event->id)
+                ->withSum([
+                    'tickets as issued_with_qr_total' => fn ($q) => $q->whereNotNull('qr_code_path'),
+                ], 'quantity')
+                ->withSum([
+                    'tickets as scanned_total' => fn ($q) => $q->where(function ($sq): void {
+                        $sq->where('status', Ticket::STATUS_USED)
+                            ->orWhereNotNull('used_at');
+                    }),
+                ], 'quantity')
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function (TicketCategory $category): array {
+                    $issuedWithQr = (int) ($category->issued_with_qr_total ?? 0);
+                    $scanned = (int) ($category->scanned_total ?? 0);
 
-                $issuedWithQr = (int) $tickets->filter(fn ($ticket) => ! blank($ticket->qr_code_path))->sum('quantity');
-                $scanned = (int) $tickets->filter(fn ($ticket) => $ticket->status === 'used' || $ticket->used_at)->sum('quantity');
-
-                return [
-                    'category' => $category,
-                    'allocated' => (int) $category->ticket_count,
-                    'inventory_remaining' => (int) $category->tickets_remaining,
-                    'issued_with_qr' => $issuedWithQr,
-                    'scanned' => $scanned,
-                    'at_gate_remaining' => max($issuedWithQr - $scanned, 0),
-                ];
-            })->values();
+                    return [
+                        'category' => $category,
+                        'allocated' => (int) $category->ticket_count,
+                        'inventory_remaining' => (int) $category->tickets_remaining,
+                        'issued_with_qr' => $issuedWithQr,
+                        'scanned' => $scanned,
+                        'at_gate_remaining' => max($issuedWithQr - $scanned, 0),
+                    ];
+                })
+                ->values();
         }
 
         return view('pages.gate.portal', [
@@ -98,20 +119,11 @@ class GatePortalController extends Controller
         ]);
     }
 
-    public function storeWalkInSale(Request $request)
+    public function storeWalkInSale(WalkInSaleRequest $request)
     {
-        $this->ensureGateStaff($request);
+        $this->authorize('accessGatePortal', Event::class);
 
-        $data = $request->validate([
-            'event_id' => ['required', 'integer', 'exists:events,id'],
-            'ticket_category_id' => ['required', 'integer', 'exists:ticket_categories,id'],
-            'holder_name' => ['required', 'string', 'max:120'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone_number' => ['nullable', 'string', 'max:40'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
-            'payment_channel' => ['required', 'in:mtn,airtel,cash,pos'],
-            'collector_reference' => ['nullable', 'string', 'max:120'],
-        ]);
+        $data = $request->validated();
 
         $event = Event::query()->with('ticketCategories')->findOrFail((int) $data['event_id']);
         $ticketCategory = $event->ticketCategories->firstWhere('id', (int) $data['ticket_category_id']);
@@ -284,11 +296,10 @@ class GatePortalController extends Controller
     {
         $inventory = TicketCategory::query()
             ->where('event_id', $event->id)
-            ->selectRaw('COALESCE(SUM(ticket_count), 0) AS capacity_total, COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
+            ->selectRaw('COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
             ->first();
 
         $event->forceFill([
-            'capacity' => (int) ($inventory?->capacity_total ?? 0),
             'tickets_available' => (int) ($inventory?->remaining_total ?? 0),
         ])->save();
     }
@@ -304,8 +315,4 @@ class GatePortalController extends Controller
             ->sum('total_amount');
     }
 
-    protected function ensureGateStaff(Request $request): void
-    {
-        abort_unless($request->user()?->isGateStaff(), 403);
-    }
 }
