@@ -200,37 +200,39 @@
     </section>
 
     <style>
-        .gate-page { min-height: 100vh; padding: 8rem 1rem 3rem; background: #f3f7fd; }
+        .gate-page { min-height: 100vh; padding: 8rem 1rem 3rem; background: #f3f7fd; font-family: var(--wado-admin-font, 'Quicksand', 'Nunito', 'Plus Jakarta Sans', 'Segoe UI', sans-serif); }
         .gate-shell { width: min(1280px, calc(100% - 2rem)); margin: 0 auto; }
+        .gate-shell,
+        .gate-shell *:not(svg):not(path):not(circle):not(rect):not(line):not(polyline):not(polygon) { font-family: inherit; }
         .gate-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
-        .gate-head p { margin: 0; color: #000000; font-size: .73rem; letter-spacing: .12em; font-weight: 700; }
+        .gate-head p { margin: 0; color: #000000; font-size: .76rem; letter-spacing: .01em; font-weight: 600; }
         .gate-head h1 { margin: .3rem 0 0; color: #15345d; }
         .gate-head-actions { display: flex; gap: .5rem; }
-        .gate-head-actions a, .gate-head-actions button { border: 0; text-decoration: none; border-radius: 9px; padding: .58rem .82rem; font-weight: 700; background: #0a4fbe; color: #fff; cursor: pointer; }
+        .gate-head-actions a, .gate-head-actions button { border: 0; text-decoration: none; border-radius: 9px; padding: .58rem .82rem; font-weight: 600; background: #0a4fbe; color: #fff; cursor: pointer; }
         .gate-note { margin-top: .8rem; background: #eef5ff; border: 1px solid #cadcf7; border-radius: 12px; padding: .7rem .8rem; color: #2c4e78; font-size: .84rem; }
-        .gate-alert { margin-top: .7rem; border-radius: 10px; padding: .62rem .74rem; font-size: .8rem; font-weight: 700; }
+        .gate-alert { margin-top: .7rem; border-radius: 10px; padding: .62rem .74rem; font-size: .8rem; font-weight: 600; }
         .gate-alert-success { background: #edf9f2; color: #136f45; border: 1px solid #bde8cb; }
         .gate-alert-error { background: #fff1f3; color: #9e2034; border: 1px solid #f3c5cc; }
         .gate-walkin-form { margin-top: .8rem; background: #fff; border: 1px solid #d7e4f6; border-radius: 14px; padding: .85rem .9rem; display: grid; gap: .7rem; }
-        .gate-walkin-form h2 { margin: 0; color: #15345d; font-size: 1rem; }
+        .gate-walkin-form h2 { margin: 0; color: #15345d; font-size: 1rem; font-weight: 700; }
         .gate-walkin-form p { margin: 0; color: #40658f; font-size: .75rem; }
         .walkin-grid { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: .55rem; }
         .walkin-grid label { display: grid; gap: .26rem; }
-        .walkin-grid span { font-size: .67rem; font-weight: 700; color: #2d527f; letter-spacing: .04em; text-transform: uppercase; }
+        .walkin-grid span { font-size: .71rem; font-weight: 600; color: #2d527f; letter-spacing: .01em; text-transform: none; }
         .walkin-grid select, .walkin-grid input { height: 38px; border: 1px solid #cfdced; border-radius: 9px; padding: 0 .62rem; font-size: .78rem; }
         .walkin-grid small { color: #9e2034; font-size: .68rem; }
         .walkin-actions { display: flex; justify-content: flex-end; }
-        .walkin-actions button { border: 0; border-radius: 9px; padding: .58rem .82rem; font-weight: 700; background: #0a4fbe; color: #fff; cursor: pointer; }
+        .walkin-actions button { border: 0; border-radius: 9px; padding: .58rem .82rem; font-weight: 600; background: #0a4fbe; color: #fff; cursor: pointer; }
         .gate-filter { margin-top: .7rem; }
-        .gate-filter label { display: grid; gap: .3rem; color: #294a73; font-weight: 700; }
+        .gate-filter label { display: grid; gap: .3rem; color: #294a73; font-weight: 600; }
         .gate-filter select { height: 42px; border: 1px solid #cfdced; border-radius: 10px; padding: 0 .72rem; }
         .gate-table-wrap { margin-top: .8rem; overflow: auto; border: 1px solid #d7e4f6; border-radius: 14px; background: #fff; }
         .gate-table { width: 100%; border-collapse: collapse; min-width: 980px; }
         .gate-table th, .gate-table td { border-bottom: 1px solid #e7eef8; padding: .62rem .66rem; text-align: left; color: #214064; font-size: .76rem; }
-        .gate-table th { background: #f5f9ff; color: #000000; font-size: .64rem; letter-spacing: .09em; text-transform: uppercase; }
+        .gate-table th { background: #f5f9ff; color: #000000; font-size: .68rem; letter-spacing: .01em; text-transform: none; font-weight: 600; }
         .gate-table td strong { display: block; }
         .gate-table td small { color: #000000; }
-        .badge { border-radius: 999px; padding: .18rem .46rem; border: 1px solid; font-weight: 700; font-size: .64rem; }
+        .badge { border-radius: 999px; padding: .18rem .46rem; border: 1px solid; font-weight: 600; font-size: .68rem; }
         .badge.ok { background: #edf9f2; color: #136f45; border-color: #bde8cb; }
         .badge.bad { background: #fff1f3; color: #9e2034; border-color: #f3c5cc; }
         .badge.warn { background: #fff6eb; color: #93540d; border-color: #ffd7a8; }

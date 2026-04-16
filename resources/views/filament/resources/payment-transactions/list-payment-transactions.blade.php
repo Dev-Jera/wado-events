@@ -99,7 +99,7 @@
         .wado-payments-list-shell .fi-tabs-item.fi-active .fi-tabs-item-label,
         .wado-payments-list-shell .fi-tabs-item.fi-active > .fi-icon {
             color: var(--pay-blue);
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .fi-sidebar-item.fi-active .fi-sidebar-item-label,
@@ -111,10 +111,10 @@
             background: #f8fbff;
             color: #5a7397;
             border-bottom-color: #dbe4f0;
-            font-weight: 700;
-            font-size: .66rem;
-            letter-spacing: .08em;
-            text-transform: uppercase;
+            font-weight: 600;
+            font-size: .7rem;
+            letter-spacing: .01em;
+            text-transform: none;
         }
 
         .wado-payments-list-shell .fi-ta-table tbody td {

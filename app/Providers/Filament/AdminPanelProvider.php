@@ -429,6 +429,7 @@ textarea.fi-fo-textarea:focus {
             ->navigationGroups([
                 NavigationGroup::make('Events'),
                 NavigationGroup::make('Operations'),
+                NavigationGroup::make('Logs'),
             ])
 
             // ── Middleware ─────────────────────────────────

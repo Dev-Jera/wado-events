@@ -86,6 +86,7 @@ class GuestCheckoutUserResolver
             $request->session()->forget('checkout_guest_user_id');
         } else {
             $request->session()->put('checkout_guest_user_id', $user->id);
+            $request->session()->regenerate();
         }
 
         return [

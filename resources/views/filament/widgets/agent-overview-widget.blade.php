@@ -55,18 +55,18 @@
 
         .ag-kicker {
             margin: 0;
-            font-size: 0.62rem;
-            letter-spacing: 0.11em;
-            text-transform: uppercase;
+            font-size: 0.66rem;
+            letter-spacing: 0.02em;
+            text-transform: none;
             color: rgba(255, 255, 255, 0.75);
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .ag-hero h3 {
             margin: 0.18rem 0 0;
             font-size: 1.02rem;
             line-height: 1.1;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .ag-hero p {
@@ -84,7 +84,7 @@
             border-radius: 10px;
             padding: 0.46rem 0.64rem;
             font-size: 0.69rem;
-            font-weight: 700;
+            font-weight: 600;
             white-space: nowrap;
         }
 
@@ -112,7 +112,7 @@
         .ag-card strong {
             color: #12253f;
             font-size: 1.25rem;
-            font-weight: 800;
+            font-weight: 700;
             line-height: 1;
         }
 

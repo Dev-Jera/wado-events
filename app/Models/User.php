@@ -109,7 +109,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function canViewOperationsDashboard(): bool
     {
-        return $this->isSuperAdmin();
+        return $this->isAdmin();
     }
 
     public function canAccessOperationsPanel(): bool

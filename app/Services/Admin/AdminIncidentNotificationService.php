@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Models\LoginAttempt;
 use App\Models\PaymentTransaction;
 use App\Models\TicketScanLog;
 use App\Models\User;
@@ -74,6 +75,29 @@ class AdminIncidentNotificationService
                     ->label('Open payments')
                     ->url($this->paymentsUrl(), shouldOpenInNewTab: false),
             ]);
+
+        $notification->sendToDatabase($recipients);
+    }
+
+    public function notifySuspiciousLoginActivity(LoginAttempt $attempt, int $failureCount): void
+    {
+        $recipients = $this->adminRecipients();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        $message = sprintf(
+            '%d failed login attempts from IP %s in the last 10 minutes. Last email tried: %s.',
+            $failureCount,
+            $attempt->ip_address,
+            $attempt->email
+        );
+
+        $notification = Notification::make()
+            ->danger()
+            ->title('Suspicious login activity detected')
+            ->body($message);
 
         $notification->sendToDatabase($recipients);
     }

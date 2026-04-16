@@ -44,7 +44,12 @@ class TicketQrService
             Storage::disk('public')->delete($legacyPngPath);
         }
 
-        $path = 'qr-codes/ticket-' . $ticket->id . '.svg';
+        $legacySvgPath = 'qr-codes/ticket-' . $ticket->id . '.svg';
+        if (Storage::disk('public')->exists($legacySvgPath)) {
+            Storage::disk('public')->delete($legacySvgPath);
+        }
+
+        $path = 'qr-codes/' . Str::lower((string) $ticket->ticket_code) . '.svg';
         Storage::disk('public')->put($path, $result->getString());
 
         return $path;
@@ -113,16 +118,17 @@ class TicketQrService
 
     protected function resolveSigningSecret(): string
     {
-        $appKey = (string) config('app.key', '');
+        $ticketSigningKey = (string) config('app.ticket_signing_key', '');
+        $secret = $ticketSigningKey !== '' ? $ticketSigningKey : (string) config('app.key', '');
 
-        if (str_starts_with($appKey, 'base64:')) {
-            $decoded = base64_decode(substr($appKey, 7), true);
+        if (str_starts_with($secret, 'base64:')) {
+            $decoded = base64_decode(substr($secret, 7), true);
 
             if ($decoded !== false) {
                 return $decoded;
             }
         }
 
-        return $appKey;
+        return $secret;
     }
 }

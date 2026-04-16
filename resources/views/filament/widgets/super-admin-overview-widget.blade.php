@@ -154,9 +154,9 @@
 
         .pc-kicker {
             margin: 0;
-            font-size: 0.68rem;
-            letter-spacing: 0.1em;
-            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 0.02em;
+            font-weight: 600;
             color: rgba(255, 255, 255, 0.78);
         }
 
@@ -164,8 +164,8 @@
             margin: 0.22rem 0 0;
             font-size: clamp(1.35rem, 2.4vw, 1.95rem);
             line-height: 1.05;
-            font-weight: 800;
-            letter-spacing: -0.01em;
+            font-weight: 700;
+            letter-spacing: 0;
         }
 
         .pc-sub {
@@ -190,17 +190,17 @@
         }
 
         .pc-hero-chip span {
-            font-size: 0.66rem;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            font-size: 0.68rem;
+            letter-spacing: 0.01em;
+            text-transform: none;
             color: rgba(255, 255, 255, 0.74);
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .pc-hero-chip strong {
             font-size: 0.98rem;
             line-height: 1.1;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .pc-stat-grid {
@@ -229,7 +229,7 @@
             color: #12233d;
             font-size: 1.22rem;
             line-height: 1;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .pc-stat-card small {
@@ -264,14 +264,14 @@
             margin: 0;
             font-size: 0.83rem;
             color: #12233d;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .pc-panel-head a {
             text-decoration: none;
             color: #1b4fb0;
             font-size: 0.7rem;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .pc-inline-note {
@@ -301,10 +301,10 @@
         .pc-table th {
             background: #f7faff;
             color: #5f7597;
-            font-size: 0.62rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-weight: 700;
+            font-size: 0.66rem;
+            text-transform: none;
+            letter-spacing: 0.01em;
+            font-weight: 600;
         }
 
         .pc-table .num { text-align: right; }
@@ -320,8 +320,8 @@
             border-radius: 999px;
             border: 1px solid;
             padding: 0.16rem 0.44rem;
-            font-size: 0.62rem;
-            font-weight: 700;
+            font-size: 0.66rem;
+            font-weight: 600;
             line-height: 1;
         }
 
@@ -360,7 +360,7 @@
         .pc-event-head span {
             color: #1b4fb0;
             font-size: 0.69rem;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .pc-progress {
@@ -428,7 +428,7 @@
         .pc-chart-col small {
             color: #6b7e9d;
             font-size: 0.62rem;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .empty {

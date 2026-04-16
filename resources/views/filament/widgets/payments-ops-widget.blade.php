@@ -86,18 +86,18 @@
 
         .pay-kicker {
             margin: 0;
-            font-size: 0.64rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font-size: 0.68rem;
+            letter-spacing: 0.02em;
+            text-transform: none;
             color: #7184a2;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .pay-scope h3 {
             margin: 0;
             font-size: 1.05rem;
             line-height: 1.1;
-            font-weight: 800;
+            font-weight: 700;
             color: var(--pay-text);
         }
 
@@ -122,10 +122,10 @@
         }
 
         .pay-field span {
-            font-size: 0.64rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            text-transform: none;
             color: #6d7f9e;
         }
 
@@ -152,10 +152,10 @@
         }
 
         .pay-meta-card span {
-            font-size: 0.63rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            font-size: 0.67rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            text-transform: none;
             color: #6d7f9e;
         }
 
@@ -163,7 +163,7 @@
             font-size: 0.92rem;
             line-height: 1.1;
             color: var(--pay-text);
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .pay-sync-btn {
@@ -172,7 +172,7 @@
             background: var(--pay-blue);
             color: #ffffff;
             font-size: 0.76rem;
-            font-weight: 700;
+            font-weight: 600;
             padding: 0 1rem;
             font-family: inherit;
             cursor: pointer;
@@ -208,14 +208,14 @@
             margin: 0;
             font-size: 0.8rem;
             color: #223a5e;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .pay-stat-card strong {
             font-size: 1.3rem;
             line-height: 1;
             color: var(--pay-text);
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .pay-stat-card p {

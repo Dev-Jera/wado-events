@@ -50,18 +50,18 @@
 
         .qa-overline {
             margin: 0;
-            font-size: 0.62rem;
-            letter-spacing: 0.11em;
-            text-transform: uppercase;
+            font-size: 0.66rem;
+            letter-spacing: 0.02em;
+            text-transform: none;
             color: #607390;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .qa-copy h3 {
             margin: 0.16rem 0 0;
             color: #132a4c;
             font-size: 0.94rem;
-            font-weight: 800;
+            font-weight: 700;
             line-height: 1.1;
         }
 
@@ -89,7 +89,7 @@
             border: 1px solid transparent;
             padding: 0.48rem 0.7rem;
             font-size: 0.72rem;
-            font-weight: 700;
+            font-weight: 600;
             transition: transform 0.12s ease, filter 0.12s ease;
             white-space: nowrap;
         }

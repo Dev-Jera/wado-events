@@ -16,6 +16,7 @@
         .gp-wrap {
             display: grid;
             gap: .75rem;
+            font-family: var(--wado-admin-font, 'Quicksand', 'Nunito', 'Plus Jakarta Sans', 'Segoe UI', sans-serif);
         }
 
         .gp-head {
@@ -28,7 +29,7 @@
             margin: 0;
             color: #0f172a;
             font-size: 1rem;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .gp-frame {
