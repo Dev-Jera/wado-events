@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class CategoryResource extends Resource
@@ -35,6 +36,24 @@ class CategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return CategoriesTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user?->isEventOwner()) {
+            $query
+                ->whereHas('events', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id))
+                ->withCount([
+                    'events as events_count' => fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id),
+                ]);
+
+            return $query;
+        }
+
+        return $query->withCount('events');
     }
 
     public static function getRelations(): array

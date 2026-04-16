@@ -12,6 +12,8 @@ class ListRefunds extends ListRecords
 {
     protected static string $resource = RefundResource::class;
 
+    protected string $view = 'filament.resources.refunds.list-refunds';
+
     public function getTabs(): array
     {
         $base = $this->scopedRefundsQuery();

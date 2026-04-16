@@ -206,8 +206,7 @@
         .gate-head p { margin: 0; color: #000000; font-size: .73rem; letter-spacing: .12em; font-weight: 700; }
         .gate-head h1 { margin: .3rem 0 0; color: #15345d; }
         .gate-head-actions { display: flex; gap: .5rem; }
-        .gate-head-actions a, .gate-head-actions button { border: 0; text-decoration: none; border-radius: 9px; padding: .58rem .82rem; font-weight: 700; background: #1b66d5; color: #fff; cursor: pointer; }
-        .gate-head-actions a { background: #0d8b5a; }
+        .gate-head-actions a, .gate-head-actions button { border: 0; text-decoration: none; border-radius: 9px; padding: .58rem .82rem; font-weight: 700; background: #0a4fbe; color: #fff; cursor: pointer; }
         .gate-note { margin-top: .8rem; background: #eef5ff; border: 1px solid #cadcf7; border-radius: 12px; padding: .7rem .8rem; color: #2c4e78; font-size: .84rem; }
         .gate-alert { margin-top: .7rem; border-radius: 10px; padding: .62rem .74rem; font-size: .8rem; font-weight: 700; }
         .gate-alert-success { background: #edf9f2; color: #136f45; border: 1px solid #bde8cb; }
@@ -221,7 +220,7 @@
         .walkin-grid select, .walkin-grid input { height: 38px; border: 1px solid #cfdced; border-radius: 9px; padding: 0 .62rem; font-size: .78rem; }
         .walkin-grid small { color: #9e2034; font-size: .68rem; }
         .walkin-actions { display: flex; justify-content: flex-end; }
-        .walkin-actions button { border: 0; border-radius: 9px; padding: .58rem .82rem; font-weight: 700; background: #0d8b5a; color: #fff; cursor: pointer; }
+        .walkin-actions button { border: 0; border-radius: 9px; padding: .58rem .82rem; font-weight: 700; background: #0a4fbe; color: #fff; cursor: pointer; }
         .gate-filter { margin-top: .7rem; }
         .gate-filter label { display: grid; gap: .3rem; color: #294a73; font-weight: 700; }
         .gate-filter select { height: 42px; border: 1px solid #cfdced; border-radius: 10px; padding: 0 .72rem; }

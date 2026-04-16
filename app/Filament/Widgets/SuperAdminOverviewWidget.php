@@ -22,6 +22,7 @@ class SuperAdminOverviewWidget extends Widget
 
     protected function getViewData(): array
     {
+        $user = auth()->user();
         $now       = Carbon::now();
         $thisMonth = $now->month;
         $thisYear  = $now->year;
@@ -66,8 +67,22 @@ class SuperAdminOverviewWidget extends Widget
             ? round((($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100)
             : 0;
 
-        $totalGateAgents = User::whereIn('role', ['agent', 'gate', 'gate_agent'])->count();
+        $totalGateAgents = User::where('role', 'gate_agent')->count();
         $inactiveAgents  = 0;
+        $liveEvents      = (clone $eventsBase)
+            ->where('starts_at', '<=', $now)
+            ->where(function (Builder $query) use ($now): void {
+                $query->whereNull('ends_at')->orWhere('ends_at', '>=', $now);
+            })
+            ->count();
+
+        $isEventOwner      = (bool) $user?->isEventOwner();
+        $dashboardTitle    = $isEventOwner ? 'Event Owner Dashboard' : 'Super Admin Dashboard';
+        $dashboardSubtitle = $isEventOwner
+            ? 'Track sales health, payment risk, and event momentum in one place.'
+            : 'Monitor platform revenue, gate activity, and payment reliability.';
+        $opsMetricLabel    = $isEventOwner ? 'Live events' : 'Gate agents';
+        $opsMetricValue    = $isEventOwner ? $liveEvents : $totalGateAgents;
 
         // ── Events overview ──────────────────────────────────────────────────
         $events = (clone $eventsBase)
@@ -138,7 +153,8 @@ class SuperAdminOverviewWidget extends Widget
             'totalEvents', 'newEventsThisMonth',
             'ticketsSoldThisMonth', 'ticketsSoldLastMonth', 'ticketsSoldTotal', 'ticketsPctChange',
             'revenueThisMonth', 'revenueLastMonth', 'revenueTotal', 'revenuePctChange',
-            'totalGateAgents', 'inactiveAgents',
+            'totalGateAgents', 'inactiveAgents', 'liveEvents',
+            'isEventOwner', 'dashboardTitle', 'dashboardSubtitle', 'opsMetricLabel', 'opsMetricValue',
             'events', 'chartData', 'maxBarValue', 'recentPayments'
         );
     }

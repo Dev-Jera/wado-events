@@ -127,40 +127,63 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const markAsStyled = (el) => {
+        if (el instanceof HTMLElement) {
+            el.dataset.wadoStyled = '1';
+        }
+    };
+
+    const isStyled = (el) => el instanceof HTMLElement && el.dataset.wadoStyled === '1';
+
     function fixFilamentWidths() {
         const formWrap = document.querySelector('.wado-form-wrap');
         if (!formWrap) return;
 
         const grids = formWrap.querySelectorAll('.fi-grid, .fi-sc, .fi-sc-tabs, .fi-section, .fi-section-content');
         grids.forEach(el => {
+            if (isStyled(el)) {
+                return;
+            }
+
             el.style.setProperty('display', 'block', 'important');
             el.style.setProperty('width', '100%', 'important');
             el.style.setProperty('max-width', '100%', 'important');
+            markAsStyled(el);
         });
 
         const columns = formWrap.querySelectorAll('.fi-grid-col');
         columns.forEach(col => {
+            if (isStyled(col)) {
+                return;
+            }
+
             col.style.setProperty('display', 'block', 'important');
             col.style.setProperty('width', '100%', 'important');
             col.style.setProperty('max-width', '100%', 'important');
             col.style.setProperty('flex', 'none', 'important');
+            markAsStyled(col);
         });
 
         const form = formWrap.querySelector('form');
-        if (form) {
+        if (form && !isStyled(form)) {
             form.style.setProperty('width', '100%', 'important');
             form.style.setProperty('display', 'block', 'important');
+            markAsStyled(form);
         }
     }
 
     fixFilamentWidths();
     setTimeout(fixFilamentWidths, 150);
 
+    const formWrap = document.querySelector('.wado-form-wrap');
+    if (!formWrap) {
+        return;
+    }
+
     const observer = new MutationObserver(fixFilamentWidths);
-    observer.observe(document.querySelector('.wado-form-wrap'), { 
+    observer.observe(formWrap, {
         childList: true, 
         subtree: true,
-        attributes: true 
     });
 });
 </script>

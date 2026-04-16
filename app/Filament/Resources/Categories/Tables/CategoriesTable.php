@@ -25,7 +25,6 @@ class CategoriesTable
                     ->limit(60)
                     ->wrap(),
                 TextColumn::make('events_count')
-                    ->counts('events')
                     ->label('Events')
                     ->sortable(),
                 TextColumn::make('access_mode')

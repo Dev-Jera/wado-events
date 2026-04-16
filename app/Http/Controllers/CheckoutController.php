@@ -9,6 +9,7 @@ use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Services\Checkout\GuestCheckoutUserResolver;
+use App\Services\Event\InventorySyncService;
 use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
 use App\Services\Ticket\TicketQrService;
@@ -24,7 +25,8 @@ class CheckoutController extends Controller
         protected TicketQrService $ticketQrService,
         protected MarzePayService $marzePayService,
         protected PaymentLifecycleService $paymentLifecycleService,
-        protected GuestCheckoutUserResolver $guestCheckoutUserResolver
+        protected GuestCheckoutUserResolver $guestCheckoutUserResolver,
+        protected InventorySyncService $inventorySyncService
     ) {
     }
 
@@ -112,7 +114,7 @@ class CheckoutController extends Controller
                 }
 
                 $lockedCategory->decrement('tickets_remaining', $quantity);
-                $this->syncEventInventory($lockedEvent);
+                $this->inventorySyncService->syncEventInventory($lockedEvent);
 
                 $ticket = Ticket::create([
                     'user_id' => $user->id,
@@ -179,7 +181,7 @@ class CheckoutController extends Controller
             }
 
             $lockedCategory->decrement('tickets_remaining', $quantity);
-            $this->syncEventInventory($lockedEvent);
+            $this->inventorySyncService->syncEventInventory($lockedEvent);
 
             return PaymentTransaction::query()->create([
                 'user_id' => $user->id,
@@ -310,18 +312,6 @@ class CheckoutController extends Controller
                 'type' => $noticeType,
                 'message' => $noticeMessage,
             ]);
-    }
-
-    protected function syncEventInventory(Event $event): void
-    {
-        $inventory = TicketCategory::query()
-            ->where('event_id', $event->id)
-            ->selectRaw('COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
-            ->first();
-
-        $event->forceFill([
-            'tickets_available' => (int) ($inventory?->remaining_total ?? 0),
-        ])->save();
     }
 
     protected function storeCheckoutPrefill(Request $request, Event $event, array $payload): void

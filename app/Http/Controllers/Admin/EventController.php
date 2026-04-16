@@ -41,7 +41,10 @@ class EventController extends Controller
 
     public function store(StoreEventRequest $request)
     {
-        $admin = User::query()->where('role', 'admin')->first();
+        $admin = User::query()
+            ->whereIn('role', ['super_admin', 'admin'])
+            ->orderByRaw("role = 'super_admin' desc")
+            ->first();
         $data = $request->validated();
         $artists = collect($data['artists'] ?? [])->filter(fn (array $artist) => filled($artist['name'] ?? null));
         $ticketCategories = collect($data['ticket_categories']);

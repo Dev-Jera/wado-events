@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\TicketScanLog;
 use App\Services\Admin\AdminIncidentNotificationService;
 use App\Services\Ticket\TicketQrService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class TicketVerificationController extends Controller
@@ -23,11 +24,19 @@ class TicketVerificationController extends Controller
     {
         $this->authorize('verify', Ticket::class);
 
-        $events = Event::query()
+        $user = $request->user();
+
+        $events = $this->accessibleEventsQuery($user)
             ->orderBy('starts_at')
             ->get(['id', 'title', 'starts_at']);
 
         $selectedEventId = (int) $request->integer('event_id');
+
+        if ($selectedEventId > 0 && ! $events->contains('id', $selectedEventId)) {
+            return redirect()
+                ->route('tickets.verify.index')
+                ->with('error', 'You are not assigned to that event.');
+        }
 
         $verificationRows = collect();
         if ($selectedEventId > 0) {
@@ -83,6 +92,11 @@ class TicketVerificationController extends Controller
         ]);
 
         $selectedEventId = (int) $data['event_id'];
+
+        if (! $request->user()?->canAccessGateEvent($selectedEventId)) {
+            abort(403);
+        }
+
         $event = Event::query()->findOrFail($selectedEventId);
 
         $rows = Ticket::query()
@@ -118,6 +132,12 @@ class TicketVerificationController extends Controller
         $data = $request->validated();
 
         $selectedEventId = (int) $data['selected_event_id'];
+
+        if (! $request->user()?->canAccessGateEvent($selectedEventId)) {
+            return redirect()
+                ->route('tickets.verify.index')
+                ->with('error', 'You are not assigned to that event.');
+        }
 
         $eventIdForRedirect = ['event_id' => $selectedEventId];
 
@@ -259,21 +279,17 @@ class TicketVerificationController extends Controller
                 ]);
         }
 
-        $markAsUsed = $request->boolean('mark_as_used', true);
-
-        if ($markAsUsed) {
-            $ticket->forceFill([
-                'status' => Ticket::STATUS_USED,
-                'used_at' => now(),
-            ])->save();
-        }
+        $ticket->forceFill([
+            'status' => Ticket::STATUS_USED,
+            'used_at' => now(),
+        ])->save();
 
         $this->logScan(
             $request,
             $ticket,
             $ticketCode,
             'valid',
-            $markAsUsed ? 'Ticket verified and marked used' : 'Ticket verified',
+            'Ticket verified and marked used',
             $rawPayload,
             $selectedEventId
         );
@@ -283,7 +299,7 @@ class TicketVerificationController extends Controller
             ->withInput()
             ->with('verification', [
                 'ok' => true,
-                'message' => $markAsUsed ? 'Ticket verified and marked as used.' : 'Ticket is valid.',
+                'message' => 'Ticket verified and marked as used.',
                 'ticket' => $ticket,
                 'payload' => $payload,
             ]);
@@ -324,5 +340,24 @@ class TicketVerificationController extends Controller
         $value = preg_replace('/\s+/', '', $value) ?? $value;
 
         return $value;
+    }
+
+    protected function accessibleEventsQuery(?\App\Models\User $user): Builder
+    {
+        $query = Event::query();
+
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        if ($user->isGateAgent()) {
+            return $query->whereHas('gateAgents', fn (Builder $assigned) => $assigned->where('users.id', $user->id));
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 }

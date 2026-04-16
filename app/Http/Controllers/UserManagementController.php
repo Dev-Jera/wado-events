@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
 {
+    private const ALLOWED_ROLES = ['super_admin', 'customer', 'gate_agent'];
+
     public function index(Request $request)
     {
         $this->ensureAdmin($request);
@@ -27,13 +29,13 @@ class UserManagementController extends Controller
 
         $totalUsers = User::query()->count();
         $customersCount = User::query()->where('role', 'customer')->count();
-        $adminsCount = User::query()->whereIn('role', ['admin', 'super_admin'])->count();
+        $adminsCount = User::query()->whereIn('role', ['super_admin', 'admin'])->count();
 
         return view('pages.admin.users.index', [
             'users' => $users,
             'search' => $search,
-            'roleOptions' => ['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'],
-            'createRoleOptions' => ['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'],
+            'roleOptions' => self::ALLOWED_ROLES,
+            'createRoleOptions' => self::ALLOWED_ROLES,
             'isSuperAdmin' => (bool) $request->user()?->isSuperAdmin(),
             'totalUsers' => $totalUsers,
             'customersCount' => $customersCount,
@@ -49,7 +51,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['nullable', 'string', 'max:30'],
-            'role' => ['required', 'string', Rule::in(['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'])],
+            'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
             'password' => ['nullable', 'string', 'min:8'],
             'profile_image' => ['nullable', 'image', 'max:3072'],
         ]);
@@ -76,7 +78,7 @@ class UserManagementController extends Controller
         $this->ensureSuperAdmin($request);
 
         $data = $request->validate([
-            'role' => ['required', 'string', Rule::in(['customer', 'agent', 'gate', 'gate_agent', 'verification_officer', 'event_owner', 'admin'])],
+            'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
         ]);
 
         $user->forceFill([

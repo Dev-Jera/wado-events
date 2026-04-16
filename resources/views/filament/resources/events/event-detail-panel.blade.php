@@ -336,10 +336,15 @@
 <style>
 [x-cloak] { display: none !important; }
 
-.edp { font-family: 'Plus Jakarta Sans', sans-serif; }
+.edp {
+    --ev-brand-blue: #0a4fbe;
+    --ev-brand-blue-dark: #083f98;
+    --ev-brand-blue-soft: #e8f0ff;
+    font-family: 'Quicksand', 'Nunito', 'Plus Jakarta Sans', sans-serif;
+}
 
 /* Header */
-.edp-header { background: #0d1b3e; padding: 1rem 1.1rem .85rem; }
+.edp-header { background: var(--ev-brand-blue); padding: 1rem 1.1rem .85rem; }
 .edp-category-label { display: inline-block; font-size: .58rem; font-weight: 700; letter-spacing: .1em; color: rgba(255,255,255,.5); text-transform: uppercase; margin-bottom: .3rem; }
 .edp-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; margin-bottom: .3rem; }
 .edp-title { font-size: 1rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.25; }
@@ -352,7 +357,7 @@
 .edp-tabs { display: flex; border-bottom: 1px solid #e2e8f0; padding: 0 1.1rem; background: #fff; }
 .edp-tab { font-family: inherit; font-size: .72rem; font-weight: 600; padding: .6rem .8rem; border: none; background: none; color: #94a3b8; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; white-space: nowrap; }
 .edp-tab:hover { color: #334155; }
-.edp-tab--active { color: #c8102e; border-bottom-color: #c8102e; }
+.edp-tab--active { color: var(--ev-brand-blue); border-bottom-color: var(--ev-brand-blue); }
 
 /* Stats strip — all white, revenue cell gets red value */
 .edp-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: #e2e8f0; border-bottom: 1px solid #e2e8f0; }
@@ -377,7 +382,7 @@
 .edp-cat-price { font-size: .65rem; color: #64748b; }
 .edp-cat-bar-wrap { display: flex; align-items: center; gap: .5rem; }
 .edp-cat-bar { flex: 1; height: 5px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
-.edp-cat-bar-fill { height: 100%; background: #c8102e; border-radius: 5px; transition: width .4s; }
+.edp-cat-bar-fill { height: 100%; background: var(--ev-brand-blue); border-radius: 5px; transition: width .4s; }
 .edp-cat-count { font-size: .62rem; color: #64748b; white-space: nowrap; }
 
 /* Person row */
@@ -388,17 +393,17 @@
 .edp-person-info { flex: 1; display: flex; flex-direction: column; gap: .05rem; overflow: hidden; }
 .edp-person-name { font-size: .75rem; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .edp-person-sub { font-size: .62rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.edp-pill { font-size: .62rem; font-weight: 600; color: #c8102e; background: #fee2e2; padding: .12rem .45rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+.edp-pill { font-size: .62rem; font-weight: 600; color: var(--ev-brand-blue); background: var(--ev-brand-blue-soft); padding: .12rem .45rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
 
 /* Transaction row */
 .edp-txn { display: flex; align-items: center; gap: .6rem; padding: .5rem 0; border-bottom: 1px solid #f8fafc; }
 .edp-txn:last-child { border-bottom: none; }
 
 /* Ticket card */
-.edp-ticket-card { display: flex; justify-content: space-between; align-items: center; padding: .6rem .8rem; border: 1px solid #e2e8f0; border-left: 3px solid #c8102e; border-radius: 8px; margin-bottom: .45rem; background: #fff; }
+.edp-ticket-card { display: flex; justify-content: space-between; align-items: center; padding: .6rem .8rem; border: 1px solid #e2e8f0; border-left: 3px solid var(--ev-brand-blue); border-radius: 8px; margin-bottom: .45rem; background: #fff; }
 
 /* View all */
-.edp-view-all { display: block; margin-top: .75rem; font-size: .7rem; font-weight: 600; color: #c8102e; text-decoration: none; text-align: center; }
+.edp-view-all { display: block; margin-top: .75rem; font-size: .7rem; font-weight: 600; color: var(--ev-brand-blue); text-decoration: none; text-align: center; }
 .edp-view-all:hover { opacity: .75; }
 
 /* Empty */
@@ -414,5 +419,5 @@
 /* Footer */
 .edp-footer { display: flex; gap: .6rem; padding: .85rem 1.1rem; border-top: 1px solid #e2e8f0; background: #fff; }
 .edp-footer-btn { display: inline-flex; align-items: center; gap: .35rem; font-family: inherit; font-size: .72rem; font-weight: 600; padding: .5rem 1rem; border-radius: 7px; text-decoration: none; flex: 1; justify-content: center; border: 1.5px solid #cbd5e1; color: #334155; background: #fff; transition: border-color .15s, color .15s; }
-.edp-footer-btn:hover { border-color: #0d1b3e; color: #0d1b3e; }
+.edp-footer-btn:hover { border-color: var(--ev-brand-blue); color: var(--ev-brand-blue); }
 </style>

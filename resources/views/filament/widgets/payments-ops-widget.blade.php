@@ -1,287 +1,258 @@
 <x-filament-widgets::widget>
-    <div class="wado-payments-ops">
-        <section class="wado-payments-hero">
-            <div>
-                <h2>Payments</h2>
-                <p>Monitor payment status, failed transactions and ticket issuance across all events.</p>
+    <div class="pay-ops">
+        <section class="pay-toolbar">
+            <div class="pay-scope">
+                <p class="pay-kicker">PAYMENTS OVERVIEW</p>
+                <h3>{{ $selectedEvent?->title ?? 'All events' }}</h3>
+                <p>{{ $selectedEvent ? 'All summary metrics and transaction rows below are filtered to this event.' : 'Choose an event to focus the page, or keep all events selected for a global operations view.' }}</p>
             </div>
 
-            <div class="wado-payments-hero__meta">
-                <button type="button" wire:click="$refresh" class="wado-sync-btn">Sync now</button>
-                <article>
-                    <span>LAST SYNC</span>
+            <form method="GET" action="{{ route('filament.admin.resources.payment-transactions.index') }}" class="pay-toolbar-actions">
+                <label class="pay-field">
+                    <span>Event</span>
+                    <select name="event_id" onchange="this.form.submit()">
+                        <option value="">All events</option>
+                        @foreach ($events as $event)
+                            <option value="{{ $event->id }}" @selected($selectedEventId === (int) $event->id)>{{ $event->title }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <article class="pay-meta-card">
+                    <span>Last sync</span>
                     <strong>{{ $lastSync }}</strong>
                 </article>
-                <article>
-                    <span>TOTAL COLLECTED</span>
-                    <strong>UGX {{ number_format($totalCollected / 1000000, 2) }}M</strong>
-                </article>
-            </div>
+
+                <button type="button" wire:click="$refresh" class="pay-sync-btn">Sync now</button>
+            </form>
         </section>
 
-        <div class="wado-payments-ops__stats">
-            <article class="wado-payments-card wado-payments-card--primary">
-                <h3>Pending payments</h3>
-                <p class="wado-payments-card__value">{{ number_format($pendingPayments) }}</p>
-                <p class="wado-payments-card__hint">Awaiting provider confirmation callbacks.</p>
+        <section class="pay-stats-row">
+            <article class="pay-stat-card pay-stat-card-primary">
+                <h4>Pending payments</h4>
+                <strong>{{ number_format($pendingPayments) }}</strong>
+                <p>Awaiting provider confirmation callbacks.</p>
             </article>
 
-            <article class="wado-payments-card">
-                <h3>Failed payments</h3>
-                <p class="wado-payments-card__value">{{ number_format($failedPayments) }}</p>
-                <p class="wado-payments-card__hint">Needs customer retry or support follow-up.</p>
+            <article class="pay-stat-card">
+                <h4>Failed payments</h4>
+                <strong>{{ number_format($failedPayments) }}</strong>
+                <p>Needs customer retry or support follow-up.</p>
             </article>
 
-            <article class="wado-payments-card">
-                <h3>Confirmed, no ticket</h3>
-                <p class="wado-payments-card__value">{{ number_format($confirmedNoTicket) }}</p>
-                <p class="wado-payments-card__hint">{{ number_format($ticketsPendingIssue) }} tickets still pending issuance.</p>
+            <article class="pay-stat-card">
+                <h4>Confirmed, no ticket</h4>
+                <strong>{{ number_format($confirmedNoTicket) }}</strong>
+                <p>{{ number_format($ticketsPendingIssue) }} tickets still pending issuance.</p>
             </article>
 
-            <article class="wado-payments-card">
-                <h3>Confirmed today</h3>
-                <p class="wado-payments-card__value">{{ number_format($confirmedToday) }}</p>
-                <p class="wado-payments-card__hint">Across {{ number_format($eventsWithOpenPayments) }} events with open payment issues.</p>
+            <article class="pay-stat-card">
+                <h4>Confirmed today</h4>
+                <strong>{{ number_format($confirmedToday) }}</strong>
+                <p>{{ number_format($eventsWithOpenPayments) }} {{ \Illuminate\Support\Str::plural('event', $eventsWithOpenPayments) }} with open payment issues.</p>
             </article>
-        </div>
-
-        <section class="wado-payments-ops__guide">
-            <h3>What to do</h3>
-            <div class="wado-payments-ops__guide-grid">
-                <article>
-                    <span>PENDING</span>
-                    <h4>Long-stuck</h4>
-                    <p>Verify provider reference and check webhook delivery logs first.</p>
-                </article>
-                <article>
-                    <span>FAILED</span>
-                    <h4>Action needed</h4>
-                    <p>Contact the attendee and ask for a fresh payment attempt.</p>
-                </article>
-                <article>
-                    <span>CONFIRMED, NO TICKET</span>
-                    <h4>Use resend</h4>
-                    <p>Use the <strong>Resend</strong> button on each row to retry ticket issuance.</p>
-                </article>
-            </div>
         </section>
     </div>
 
     <style>
-        .wado-payments-ops {
+        .pay-ops {
+            --pay-blue: #0a4fbe;
+            --pay-blue-dark: #083f98;
+            --pay-blue-soft: #eef4ff;
+            --pay-border: #dbe4f0;
+            --pay-text: #132744;
+            --pay-muted: #667a98;
             display: grid;
-            gap: 0.9rem;
-            --wado-navy-900: #0b1f4d;
-            --wado-navy-800: #102a66;
-            --wado-navy-700: #173980;
-            --wado-black-900: #111827;
-            --wado-black-700: #374151;
-            --wado-white: #ffffff;
+            gap: 0.85rem;
+            font-family: var(--wado-admin-font, 'Quicksand', 'Nunito', sans-serif);
         }
 
-        .wado-payments-hero {
-            border-radius: 12px;
-            border: 1px solid #dbe4f0;
-            background: var(--wado-white);
-            padding: 1rem 1.05rem;
+        .pay-toolbar {
             display: flex;
             justify-content: space-between;
+            align-items: start;
             gap: 1rem;
-            align-items: stretch;
-        }
-
-        .wado-payments-hero h2 {
-            margin: 0;
-            font-size: 2rem;
-            line-height: 1;
-            color: var(--wado-black-900);
-            font-weight: 800;
-        }
-
-        .wado-payments-hero p {
-            margin: 0.45rem 0 0;
-            max-width: 480px;
-            color: var(--wado-black-700);
-            font-size: 0.92rem;
-            line-height: 1.35;
-        }
-
-        .wado-payments-hero__meta {
-            display: grid;
-            grid-template-columns: auto repeat(2, minmax(120px, 1fr));
-            gap: 0.6rem;
-            align-items: stretch;
-        }
-
-        .wado-sync-btn {
-            border: 1px solid #0b1f4d;
-            border-radius: 10px;
+            padding: 0.95rem 1rem;
+            border: 1px solid var(--pay-border);
+            border-radius: 14px;
             background: #ffffff;
-            color: #111827;
-            font-size: 0.86rem;
-            font-weight: 700;
-            padding: 0 0.95rem;
-            cursor: pointer;
-            min-height: 100%;
         }
 
-        .wado-sync-btn:hover {
-            background: #f8fbff;
-        }
-
-        .wado-payments-hero__meta article {
-            border: 1px solid #dbe4f0;
-            border-radius: 10px;
-            background: var(--wado-white);
-            padding: 0.7rem 0.8rem;
+        .pay-scope {
             display: grid;
-            gap: 0.35rem;
+            gap: 0.18rem;
+            max-width: 44rem;
         }
 
-        .wado-payments-hero__meta span {
-            color: var(--wado-black-700);
-            font-size: 0.72rem;
+        .pay-kicker {
+            margin: 0;
+            font-size: 0.64rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #7184a2;
             font-weight: 700;
-            letter-spacing: 0.04em;
         }
 
-        .wado-payments-hero__meta strong {
-            color: var(--wado-black-900);
-            font-size: 1.3rem;
+        .pay-scope h3 {
+            margin: 0;
+            font-size: 1.05rem;
             line-height: 1.1;
             font-weight: 800;
+            color: var(--pay-text);
         }
 
-        .wado-payments-ops__stats {
+        .pay-scope p {
+            margin: 0;
+            font-size: 0.76rem;
+            color: var(--pay-muted);
+            line-height: 1.4;
+        }
+
+        .pay-toolbar-actions {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(140px, auto) auto;
+            gap: 0.6rem;
+            align-items: stretch;
+            min-width: min(100%, 540px);
+        }
+
+        .pay-field {
+            display: grid;
+            gap: 0.26rem;
+        }
+
+        .pay-field span {
+            font-size: 0.64rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #6d7f9e;
+        }
+
+        .pay-field select {
+            height: 44px;
+            border: 1px solid var(--pay-border);
+            border-radius: 12px;
+            padding: 0 0.85rem;
+            background: #ffffff;
+            color: var(--pay-text);
+            font-size: 0.76rem;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .pay-meta-card {
+            border: 1px solid var(--pay-border);
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 0.62rem 0.8rem;
+            display: grid;
+            gap: 0.18rem;
+            align-content: center;
+        }
+
+        .pay-meta-card span {
+            font-size: 0.63rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #6d7f9e;
+        }
+
+        .pay-meta-card strong {
+            font-size: 0.92rem;
+            line-height: 1.1;
+            color: var(--pay-text);
+            font-weight: 800;
+        }
+
+        .pay-sync-btn {
+            border: 1px solid var(--pay-blue);
+            border-radius: 12px;
+            background: var(--pay-blue);
+            color: #ffffff;
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 0 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        .pay-sync-btn:hover {
+            background: var(--pay-blue-dark);
+            border-color: var(--pay-blue-dark);
+        }
+
+        .pay-stats-row {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 0.75rem;
         }
 
-        .wado-payments-card {
-            border: 1px solid #dbe4f0;
-            border-radius: 12px;
-            background: var(--wado-white);
-            padding: 0.95rem 1rem;
+        .pay-stat-card {
+            border: 1px solid var(--pay-border);
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 0.85rem 0.95rem;
+            display: grid;
+            gap: 0.2rem;
         }
 
-        .wado-payments-card--primary {
-            background: var(--wado-navy-900);
-            color: var(--wado-white);
-            border-color: var(--wado-navy-900);
+        .pay-stat-card-primary {
+            background: var(--pay-blue);
+            border-color: var(--pay-blue);
         }
 
-        .wado-payments-card h3 {
+        .pay-stat-card h4 {
             margin: 0;
-            font-size: 0.86rem;
-            color: var(--wado-black-700);
+            font-size: 0.8rem;
+            color: #223a5e;
             font-weight: 700;
         }
 
-        .wado-payments-card--primary h3,
-        .wado-payments-card--primary .wado-payments-card__value,
-        .wado-payments-card--primary .wado-payments-card__hint {
-            color: var(--wado-white);
-        }
-
-        .wado-payments-card__value {
-            margin: 0.35rem 0 0.2rem;
-            font-size: 1.65rem;
-            font-weight: 800;
+        .pay-stat-card strong {
+            font-size: 1.3rem;
             line-height: 1;
-            color: var(--wado-black-900);
+            color: var(--pay-text);
+            font-weight: 800;
         }
 
-        .wado-payments-card__hint {
+        .pay-stat-card p {
             margin: 0;
-            font-size: 0.79rem;
-            color: var(--wado-black-700);
+            font-size: 0.74rem;
+            color: #5f7392;
             line-height: 1.35;
         }
 
-        .wado-payments-ops__guide {
-            border: 1px solid #dbe4f0;
-            border-radius: 12px;
-            background: var(--wado-white);
-            padding: 0.95rem 1rem;
+        .pay-stat-card-primary h4,
+        .pay-stat-card-primary strong,
+        .pay-stat-card-primary p {
+            color: #ffffff;
         }
 
-        .wado-payments-ops__guide h3 {
-            margin: 0 0 0.45rem;
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: var(--wado-black-900);
-        }
-
-        .wado-payments-ops__guide-grid {
-            display: grid;
-            gap: 0.75rem;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .wado-payments-ops__guide-grid article {
-            border: 1px solid #dbe4f0;
-            border-radius: 10px;
-            background: #ffffff;
-            padding: 0.75rem 0.8rem;
-            color: var(--wado-black-900);
-        }
-
-        .wado-payments-ops__guide-grid span {
-            display: inline-block;
-            border: 1px solid #dbe4f0;
-            border-radius: 999px;
-            padding: 0.12rem 0.5rem;
-            font-size: 0.67rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-            margin-bottom: 0.45rem;
-            color: var(--wado-black-700);
-        }
-
-        .wado-payments-ops__guide-grid h4 {
-            margin: 0 0 0.35rem;
-            color: var(--wado-black-900);
-            font-size: 0.9rem;
-            font-weight: 800;
-        }
-
-        .wado-payments-ops__guide-grid p {
-            margin: 0;
-            color: var(--wado-black-700);
-            font-size: 0.86rem;
-            line-height: 1.4;
-        }
-
-        .wado-payments-ops__guide-grid strong {
-            color: var(--wado-black-900);
-        }
-
-        @media (max-width: 1200px) {
-            .wado-payments-hero {
+        @media (max-width: 1180px) {
+            .pay-toolbar {
                 flex-direction: column;
             }
 
-            .wado-payments-hero__meta {
+            .pay-toolbar-actions {
+                width: 100%;
+                grid-template-columns: 1fr 1fr auto;
+                min-width: 0;
+            }
+
+            .pay-stats-row {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .wado-sync-btn {
-                grid-column: 1 / -1;
-                min-height: 42px;
-            }
-
-            .wado-payments-ops__stats {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .wado-payments-ops__guide-grid {
-                grid-template-columns: 1fr;
             }
         }
 
-        @media (max-width: 700px) {
-            .wado-payments-ops__stats {
+        @media (max-width: 760px) {
+            .pay-toolbar-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .pay-stats-row {
                 grid-template-columns: 1fr;
             }
         }

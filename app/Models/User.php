@@ -4,14 +4,17 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -68,9 +71,15 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(EventBookmark::class);
     }
 
+    public function gateAssignedEvents(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_gate_agent', 'user_id', 'event_id')
+            ->withTimestamps();
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'super_admin'], true);
     }
 
     public function isSuperAdmin(): bool
@@ -80,17 +89,17 @@ class User extends Authenticatable implements FilamentUser
 
     public function isGateAgent(): bool
     {
-        return in_array($this->role, ['agent', 'gate', 'gate_agent'], true);
+        return in_array($this->role, ['gate_agent', 'agent', 'gate', 'verification_officer'], true);
     }
 
     public function isGateStaff(): bool
     {
-        return $this->isSuperAdmin() || $this->isAdmin() || $this->isGateAgent() || $this->isVerificationOfficer();
+        return $this->isSuperAdmin() || $this->isGateAgent();
     }
 
     public function isVerificationOfficer(): bool
     {
-        return $this->role === 'verification_officer';
+        return $this->isGateAgent();
     }
 
     public function isEventOwner(): bool
@@ -100,7 +109,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canViewOperationsDashboard(): bool
     {
-        return $this->isSuperAdmin() || $this->isAdmin() || $this->isVerificationOfficer() || $this->isEventOwner();
+        return $this->isSuperAdmin();
     }
 
     public function canAccessOperationsPanel(): bool
@@ -108,8 +117,34 @@ class User extends Authenticatable implements FilamentUser
         return $this->canViewOperationsDashboard() || $this->isGateStaff();
     }
 
+    public function canAccessGateEvent(int $eventId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (! $this->isGateAgent()) {
+            return false;
+        }
+
+        return $this->gateAssignedEvents()->where('events.id', $eventId)->exists();
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->canAccessOperationsPanel();
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if (! $this->profile_image_path) {
+            return null;
+        }
+
+        if (! Storage::disk('public')->exists($this->profile_image_path)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->profile_image_path);
     }
 }

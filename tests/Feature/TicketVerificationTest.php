@@ -15,7 +15,132 @@ class TicketVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_fake_qr_signature_is_rejected_and_logged(): void
+    {
+        $context = $this->makeVerificationContext();
+        $staff = $context['staff'];
+        $event = $context['event'];
+        $ticket = $context['ticket'];
+
+        $response = $this
+            ->actingAs($staff)
+            ->post(route('tickets.verify.store'), [
+                'selected_event_id' => $event->id,
+                'scanned_payload' => json_encode([
+                    'code' => $ticket->ticket_code,
+                    'sig' => 'invalid-signature',
+                ], JSON_UNESCAPED_SLASHES),
+            ]);
+
+        $response->assertRedirect(route('tickets.verify.index', ['event_id' => $event->id]));
+
+        $this->assertDatabaseHas('ticket_scan_logs', [
+            'ticket_id' => null,
+            'ticket_code' => $ticket->ticket_code,
+            'result' => 'fake',
+        ]);
+    }
+
+    public function test_ticket_from_wrong_event_is_rejected(): void
+    {
+        $context = $this->makeVerificationContext();
+        $staff = $context['staff'];
+        $ticket = $context['ticket'];
+
+        $otherEvent = Event::query()->create([
+            'user_id' => $staff->id,
+            'category_id' => $context['category']->id,
+            'title' => 'Other Event ' . Str::random(6),
+            'slug' => 'other-event-' . Str::lower(Str::random(8)),
+            'venue' => 'Other Arena',
+            'city' => 'Kampala',
+            'country' => 'Uganda',
+            'description' => 'Other event',
+            'starts_at' => now()->addDay(),
+            'ends_at' => now()->addDays(2),
+            'ticket_price' => 20000,
+            'capacity' => 200,
+            'tickets_available' => 200,
+            'status' => 'published',
+        ]);
+
+        $response = $this
+            ->actingAs($staff)
+            ->post(route('tickets.verify.store'), [
+                'selected_event_id' => $otherEvent->id,
+                'ticket_code' => $ticket->ticket_code,
+                'mark_as_used' => true,
+            ]);
+
+        $response->assertRedirect(route('tickets.verify.index', ['event_id' => $otherEvent->id]));
+        $this->assertDatabaseHas('ticket_scan_logs', [
+            'ticket_id' => $ticket->id,
+            'ticket_code' => $ticket->ticket_code,
+            'result' => 'rejected',
+        ]);
+    }
+
+    public function test_already_used_ticket_is_rejected(): void
+    {
+        $context = $this->makeVerificationContext();
+        $staff = $context['staff'];
+        $event = $context['event'];
+        $ticket = $context['ticket'];
+
+        $ticket->forceFill([
+            'status' => Ticket::STATUS_USED,
+            'used_at' => now()->subMinute(),
+        ])->save();
+
+        $response = $this
+            ->actingAs($staff)
+            ->post(route('tickets.verify.store'), [
+                'selected_event_id' => $event->id,
+                'ticket_code' => $ticket->ticket_code,
+            ]);
+
+        $response->assertRedirect(route('tickets.verify.index', ['event_id' => $event->id]));
+        $this->assertDatabaseHas('ticket_scan_logs', [
+            'ticket_id' => $ticket->id,
+            'ticket_code' => $ticket->ticket_code,
+            'result' => 'already-used',
+        ]);
+    }
+
     public function test_gate_staff_can_verify_ticket_and_mark_it_used(): void
+    {
+        $context = $this->makeVerificationContext();
+        $staff = $context['staff'];
+        $event = $context['event'];
+        $ticket = $context['ticket'];
+
+        $response = $this
+            ->actingAs($staff)
+            ->post(route('tickets.verify.store'), [
+                'selected_event_id' => $event->id,
+                'ticket_code' => $ticket->ticket_code,
+                'mark_as_used' => true,
+            ]);
+
+        $response->assertRedirect(route('tickets.verify.index', ['event_id' => $event->id]));
+
+        $this->assertDatabaseHas('tickets', [
+            'id' => $ticket->id,
+            'status' => Ticket::STATUS_USED,
+        ]);
+
+        $this->assertDatabaseHas('ticket_scan_logs', [
+            'ticket_id' => $ticket->id,
+            'staff_user_id' => $staff->id,
+            'ticket_code' => $ticket->ticket_code,
+            'result' => 'valid',
+        ]);
+    }
+
+    /**
+     * @return array{staff: User, customer: User, category: Category, event: Event, ticket_category: TicketCategory, ticket: Ticket}
+     */
+    protected function makeVerificationContext(): array
     {
         $staff = User::factory()->create([
             'role' => 'gate',
@@ -71,26 +196,13 @@ class TicketVerificationTest extends TestCase
             'purchased_at' => now(),
         ]);
 
-        $response = $this
-            ->actingAs($staff)
-            ->post(route('tickets.verify.store'), [
-                'selected_event_id' => $event->id,
-                'ticket_code' => $ticket->ticket_code,
-                'mark_as_used' => true,
-            ]);
-
-        $response->assertRedirect(route('tickets.verify.index', ['event_id' => $event->id]));
-
-        $this->assertDatabaseHas('tickets', [
-            'id' => $ticket->id,
-            'status' => Ticket::STATUS_USED,
-        ]);
-
-        $this->assertDatabaseHas('ticket_scan_logs', [
-            'ticket_id' => $ticket->id,
-            'staff_user_id' => $staff->id,
-            'ticket_code' => $ticket->ticket_code,
-            'result' => 'valid',
-        ]);
+        return [
+            'staff' => $staff,
+            'customer' => $customer,
+            'category' => $category,
+            'event' => $event,
+            'ticket_category' => $ticketCategory,
+            'ticket' => $ticket,
+        ];
     }
 }

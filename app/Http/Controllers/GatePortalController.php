@@ -10,6 +10,7 @@ use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\User;
+use App\Services\Event\InventorySyncService;
 use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
 use Illuminate\Http\Request;
@@ -21,7 +22,8 @@ class GatePortalController extends Controller
 {
     public function __construct(
         protected MarzePayService $marzePayService,
-        protected PaymentLifecycleService $paymentLifecycleService
+        protected PaymentLifecycleService $paymentLifecycleService,
+        protected InventorySyncService $inventorySyncService
     ) {
     }
 
@@ -30,6 +32,8 @@ class GatePortalController extends Controller
         $this->authorize('accessGatePortal', Event::class);
 
         $eventId = (int) $request->integer('event_id');
+
+        $user = $request->user();
 
         $events = Event::query()
             ->with([
@@ -52,8 +56,17 @@ class GatePortalController extends Controller
             ->withSum([
                 'tickets as cancelled_total' => fn ($q) => $q->where('status', Ticket::STATUS_CANCELLED),
             ], 'quantity')
+            ->when($user?->isGateAgent() && ! $user?->isSuperAdmin(), function ($query) use ($user): void {
+                $query->whereHas('gateAgents', fn ($assigned) => $assigned->where('users.id', $user->id));
+            })
             ->orderBy('starts_at')
             ->get();
+
+        if ($eventId > 0 && ! $events->contains('id', $eventId)) {
+            return redirect()
+                ->route('gate.portal')
+                ->with('error', 'You are not assigned to that event.');
+        }
 
         $rows = $events->map(function (Event $event) {
             $allocated = (int) ($event->allocated_total ?? 0);
@@ -125,6 +138,12 @@ class GatePortalController extends Controller
 
         $data = $request->validated();
 
+        if (! $request->user()?->canAccessGateEvent((int) $data['event_id'])) {
+            throw ValidationException::withMessages([
+                'event_id' => 'You are not assigned to this event.',
+            ]);
+        }
+
         $event = Event::query()->with('ticketCategories')->findOrFail((int) $data['event_id']);
         $ticketCategory = $event->ticketCategories->firstWhere('id', (int) $data['ticket_category_id']);
         abort_unless($ticketCategory instanceof TicketCategory, 404);
@@ -188,7 +207,7 @@ class GatePortalController extends Controller
             }
 
             $lockedCategory->decrement('tickets_remaining', $quantity);
-            $this->syncEventInventory($lockedEvent);
+            $this->inventorySyncService->syncEventInventory($lockedEvent);
 
             $unitPrice = (float) $lockedCategory->price;
             $isInstantChannel = in_array($channel, ['cash', 'pos'], true);
@@ -290,18 +309,6 @@ class GatePortalController extends Controller
             'password' => Str::random(40),
             'role' => 'customer',
         ]);
-    }
-
-    protected function syncEventInventory(Event $event): void
-    {
-        $inventory = TicketCategory::query()
-            ->where('event_id', $event->id)
-            ->selectRaw('COALESCE(SUM(tickets_remaining), 0) AS remaining_total')
-            ->first();
-
-        $event->forceFill([
-            'tickets_available' => (int) ($inventory?->remaining_total ?? 0),
-        ])->save();
     }
 
     protected function getAgentCashCollectedToday(int $userId): float

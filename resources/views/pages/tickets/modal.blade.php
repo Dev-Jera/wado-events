@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket Preview</title>
     <style>
-        :root { --site-font: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --site-font: 'Quicksand', 'Nunito', 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { margin: 0; background: #fff; }
         .tkd-wrap{font-family:var(--site-font);max-width:100%;margin:0;padding:0;}
         .tkd-card{border-radius:0;overflow:hidden;border:0;box-shadow:none;}

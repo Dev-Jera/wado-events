@@ -229,12 +229,12 @@
 
 {{-- ── Styles ───────────────────────────────────────────────────── --}}
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
 
 [x-cloak] { display: none !important; }
 
 .ep {
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+    font-family: 'Quicksand', 'Nunito', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
     display: flex;
     flex-direction: column;
     gap: 0;

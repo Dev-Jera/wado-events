@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Models\Event;
 use App\Models\User;
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
@@ -16,6 +17,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -40,6 +42,19 @@ class UserResource extends Resource
             FileUpload::make('profile_image_path')
                 ->label('Profile image')
                 ->image()
+                ->acceptedFileTypes(['image/jpeg', 'image/pjpeg', 'image/jfif', 'image/png', 'image/webp'])
+                ->maxSize(4096)
+                ->fetchFileInformation(false)
+                ->formatStateUsing(function ($state): ?string {
+                    if (! is_string($state) || $state === '') {
+                        return null;
+                    }
+
+                    $extension = Str::lower(pathinfo($state, PATHINFO_EXTENSION));
+
+                    return in_array($extension, ['jpg', 'jpeg', 'jfif', 'png', 'webp'], true) ? $state : null;
+                })
+                ->helperText('Use JPG, JFIF, PNG, or WEBP up to 4MB.')
                 ->disk('public')
                 ->directory('users/profile-images')
                 ->visibility('public')
@@ -61,7 +76,19 @@ class UserResource extends Resource
 
             Select::make('role')
                 ->required()
+                ->live()
                 ->options(fn (): array => static::getAssignableRoles()),
+
+            Select::make('event_ids')
+                ->label('Assigned gate events')
+                ->multiple()
+                ->searchable()
+                ->preload()
+                ->helperText('Gate officers will only access the selected events in scanner and gate portal.')
+                ->options(fn (): array => Event::query()->orderBy('starts_at')->pluck('title', 'id')->all())
+                ->visible(fn ($get): bool => $get('role') === 'gate_agent')
+                ->formatStateUsing(fn (?User $record): array => $record?->gateAssignedEvents()->pluck('events.id')->all() ?? [])
+                ->dehydrated(false),
 
             TextInput::make('password')
                 ->password()
@@ -93,7 +120,14 @@ class UserResource extends Resource
                     ->searchable(),
                 TextColumn::make('role')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => strtoupper($state))
+                    ->formatStateUsing(function (string $state): string {
+                        return match ($state) {
+                            'super_admin' => 'SUPER ADMIN',
+                            'gate_agent' => 'GATE OFFICER',
+                            'customer' => 'CUSTOMER',
+                            default => strtoupper($state),
+                        };
+                    })
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Created')
@@ -140,19 +174,10 @@ class UserResource extends Resource
 
     protected static function getAssignableRoles(): array
     {
-        $roles = [
+        return [
+            'super_admin' => 'SUPER ADMIN',
             'customer' => 'CUSTOMER',
-            'agent' => 'AGENT',
-            'gate' => 'GATE',
-            'gate_agent' => 'GATE_AGENT',
-            'verification_officer' => 'VERIFICATION_OFFICER',
-            'event_owner' => 'EVENT_OWNER',
+            'gate_agent' => 'GATE OFFICER',
         ];
-
-        if (auth()->user()?->isSuperAdmin()) {
-            $roles['admin'] = 'ADMIN';
-        }
-
-        return $roles;
     }
 }

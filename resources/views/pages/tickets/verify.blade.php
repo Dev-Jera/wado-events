@@ -1,8 +1,6 @@
 @extends('layouts.app')
 
-@php($embedded = request()->boolean('embedded'))
-
-@if ($embedded)
+@if (request()->boolean('embedded'))
     @section('fullbleed', '1')
 @endif
 
@@ -20,7 +18,7 @@
         <div class="vp-shell">
 
             {{-- ── PAGE HEADER ── --}}
-            @unless($embedded)
+            @unless(request()->boolean('embedded'))
             <header class="vp-header">
                 <div class="vp-header-badge">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
@@ -130,19 +128,6 @@
                                     <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                     <input id="ticket-code-input" type="text" name="ticket_code" class="vp-input has-icon" value="{{ old('ticket_code') }}" placeholder="WADO-1-7-ABC123" required>
                                 </div>
-                            </div>
-
-                            <div class="checks-row">
-                                <label class="vp-check">
-                                    <input type="checkbox" name="mark_as_used" value="1" checked>
-                                    <span class="check-box"></span>
-                                    Mark as used after verification
-                                </label>
-                                <label class="vp-check">
-                                    <input id="auto-submit" type="checkbox" value="1" checked>
-                                    <span class="check-box"></span>
-                                    Auto-submit after scan
-                                </label>
                             </div>
 
                             <button id="verify-submit" type="submit" class="btn btn-primary btn-full">
@@ -361,15 +346,16 @@
     <style>
         /* ── tokens ── */
         :root {
-            --red:       #D42B2B;
-            --red-dark:  #B01E1E;
-            --red-light: #FFF0F0;
-            --red-mid:   #FCDCDC;
-            --blue:      #1A4FBF;
-            --blue-dark: #133999;
-            --blue-light:#EEF3FF;
-            --blue-mid:  #D0DCFA;
-            --blue-tint: #F0F4FF;
+            --wado-admin-font: 'M PLUS Rounded 1c', 'Quicksand', 'Nunito', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+            --blue:      #0A4FBE;
+            --blue-dark: #083F98;
+            --blue-light:#E8F0FF;
+            --blue-mid:  #C9D9F8;
+            --blue-tint: #F2F7FF;
+            --red:       #0A4FBE;
+            --red-dark:  #083F98;
+            --red-light: #E8F0FF;
+            --red-mid:   #C9D9F8;
             --white:     #FFFFFF;
             --off:       #EDF1FA;
             --border:    #D4DCF0;
@@ -380,9 +366,31 @@
         }
 
         /* ── layout ── */
-        .vp { min-height:100vh; background:var(--off); padding:7rem 1rem 3rem; }
+        .vp {
+            min-height:100vh;
+            background:var(--off);
+            padding:7rem 1rem 3rem;
+            font-family: var(--wado-admin-font);
+        }
 
-        @if ($embedded)
+        .vp,
+        .vp *:not(svg):not(path):not(rect):not(circle):not(line):not(polyline):not(polygon),
+        .vp button,
+        .vp input,
+        .vp select,
+        .vp textarea,
+        .vp table,
+        .vp th,
+        .vp td,
+        .vp label,
+        .vp span,
+        .vp strong,
+        .vp small,
+        .vp a {
+            font-family: var(--wado-admin-font);
+        }
+
+        @if (request()->boolean('embedded'))
         .vp { padding: 1rem; }
         @endif
         .vp-shell { width:min(1100px, 100%); margin:0 auto; display:flex; flex-direction:column; gap:1.25rem; }
@@ -473,21 +481,6 @@
         .input-icon { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
         .vp-input.has-icon { padding-left:2.4rem; }
 
-        /* ── checkboxes ── */
-        .checks-row { display:flex; flex-direction:column; gap:.5rem; background:var(--blue-tint); border-radius:8px; padding:.65rem .75rem; border:1px solid var(--border); }
-        .vp-check { display:flex; align-items:center; gap:.55rem; font-size:.84rem; font-weight:500; color:var(--text); cursor:pointer; }
-        .vp-check input[type=checkbox] { display:none; }
-        .check-box {
-            width:18px; height:18px; border:2px solid var(--border); border-radius:4px;
-            background:var(--white); flex-shrink:0; position:relative; transition:.15s;
-        }
-        .vp-check input[type=checkbox]:checked + .check-box { background:var(--blue); border-color:var(--blue); }
-        .vp-check input[type=checkbox]:checked + .check-box::after {
-            content:''; position:absolute; left:4px; top:1px;
-            width:6px; height:10px; border:2px solid #fff; border-top:none; border-left:none;
-            transform:rotate(45deg);
-        }
-
         /* ── offline ── */
         .offline-row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; margin-bottom:.75rem; }
         .file-label {
@@ -571,7 +564,6 @@
         const codeInput      = document.getElementById('ticket-code-input');
         const payloadInput   = document.getElementById('scanned-payload');
         const deviceInput    = document.getElementById('device-id');
-        const autoSubmit     = document.getElementById('auto-submit');
         const submitBtn      = document.getElementById('verify-submit');
         const offlineFile    = document.getElementById('offline-file');
         const offlineSearch  = document.getElementById('offline-search');
@@ -628,7 +620,7 @@
             if (payloadInput) payloadInput.value = payload ? JSON.stringify(payload) : raw;
             setStatus('Detected: ' + code);
             setFeedback('QR detected — ' + code, 'success');
-            if (autoSubmit?.checked && submitBtn) {
+            if (submitBtn) {
                 setFeedback('QR detected. Submitting…', 'info');
                 submitBtn.click();
             }

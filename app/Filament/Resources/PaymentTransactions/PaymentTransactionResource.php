@@ -42,9 +42,14 @@ class PaymentTransactionResource extends Resource
     {
         $query = parent::getEloquentQuery();
         $user = auth()->user();
+        $selectedEventId = request()->integer('event_id');
 
         if ($user?->isEventOwner()) {
             $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+        }
+
+        if ($selectedEventId > 0) {
+            $query->where('event_id', $selectedEventId);
         }
 
         return $query;

@@ -33,7 +33,7 @@ class PaymentNotificationService
             );
         }
 
-        Mail::to($recipient)->send(new TicketConfirmed(
+        Mail::to($recipient)->queue(new TicketConfirmed(
             $ticket->fresh(['event', 'user', 'ticketCategory']),
             $payment,
             $ticketUrl,

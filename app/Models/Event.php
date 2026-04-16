@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -68,6 +69,12 @@ class Event extends Model
     public function bookmarks(): HasMany
     {
         return $this->hasMany(EventBookmark::class);
+    }
+
+    public function gateAgents(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'event_gate_agent', 'event_id', 'user_id')
+            ->withTimestamps();
     }
 
     /**

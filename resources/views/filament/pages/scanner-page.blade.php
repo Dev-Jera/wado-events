@@ -17,6 +17,7 @@
         .sp-wrap {
             display: grid;
             gap: .75rem;
+            font-family: var(--wado-admin-font, 'Quicksand', 'Nunito', 'Plus Jakarta Sans', 'Segoe UI', sans-serif);
         }
 
         .sp-head {
@@ -34,7 +35,7 @@
         }
 
         .sp-head a {
-            color: #1d4ed8;
+            color: #0a4fbe;
             font-size: .78rem;
             font-weight: 700;
             text-decoration: none;

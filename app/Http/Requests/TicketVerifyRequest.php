@@ -18,7 +18,6 @@ class TicketVerifyRequest extends FormRequest
             'ticket_code' => ['nullable', 'string'],
             'scanned_payload' => ['nullable', 'string'],
             'lookup' => ['nullable', 'string', 'max:255'],
-            'mark_as_used' => ['nullable', 'boolean'],
             'device_id' => ['nullable', 'string', 'max:120'],
         ];
     }

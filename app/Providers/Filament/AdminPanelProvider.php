@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\AgentOverviewWidget;
 use App\Filament\Widgets\QuickActionsWidget;
 use App\Filament\Widgets\SuperAdminOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
@@ -46,47 +47,97 @@ class AdminPanelProvider extends PanelProvider
             // ── Dark navy sidebar ───────────────────────────
             ->renderHook('panels::head.end', fn () => '
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap");
+
+/* Rounded dashboard font */
+:root {
+    --wado-admin-font: "Quicksand", "Nunito", "Plus Jakarta Sans", "Segoe UI", sans-serif;
+    --font-family: var(--wado-admin-font) !important;
+    --default-font-family: var(--wado-admin-font) !important;
+}
+
+html.fi {
+    --font-family: var(--wado-admin-font) !important;
+    --default-font-family: var(--wado-admin-font) !important;
+}
+
+.fi-body,
+.fi-layout,
+.fi-main,
+.fi-main-ctn,
+.fi-sidebar,
+.fi-sidebar-nav,
+.fi-header,
+.fi-ta,
+.fi-section,
+.fi-wi,
+.fi-btn,
+.fi-input,
+.fi-fo-field-wrp,
+.fi-modal,
+.fi-dropdown {
+    font-family: var(--wado-admin-font) !important;
+}
+
+/* App shell */
+.fi-body,
+.fi-main,
+.fi-main-ctn,
+.fi-layout {
+    background: #eef2f8 !important;
+}
+
 /* Sidebar background */
 .fi-sidebar,
 .fi-sidebar-nav,
 nav.fi-sidebar-nav {
-    background-color: #0d1b3e !important;
+    background: #f7f9fd !important;
+    border-right: 1px solid #dfe7f3 !important;
 }
 
 /* Sidebar header / brand area */
 .fi-sidebar-header {
-    background-color: #0d1b3e !important;
-    border-bottom-color: rgba(255,255,255,.08) !important;
+    background: #f7f9fd !important;
+    border-bottom: 1px solid #e7edf7 !important;
 }
 
 /* Nav group labels */
 .fi-sidebar-group-label {
-    color: rgba(255,255,255,.4) !important;
+    color: #7f90ab !important;
     font-size: .62rem !important;
     letter-spacing: .08em !important;
+    font-weight: 700 !important;
 }
 
 /* Nav items — default */
 .fi-sidebar-item-button {
-    color: #fff !important;
-    border-radius: 8px !important;
+    color: #2a3f63 !important;
+    border-radius: 10px !important;
+    min-height: 2.2rem !important;
+    padding-inline: .62rem !important;
+}
+.fi-sidebar-item-button svg,
+.fi-sidebar-item-button span,
+.fi-sidebar-item-label {
+    color: #2a3f63 !important;
 }
 .fi-sidebar-item-button:hover {
-    background-color: rgba(255,255,255,.1) !important;
-    color: #93c5fd !important;
+    background: #edf3ff !important;
+    color: #1f4faa !important;
 }
 .fi-sidebar-item-button:hover svg,
 .fi-sidebar-item-button:hover span,
 .fi-sidebar-item-button:hover .fi-sidebar-item-label {
-    color: #93c5fd !important;
+    color: #1f4faa !important;
 }
 
 /* Nav items — active */
 .fi-sidebar-item-button.fi-active,
 .fi-sidebar-item-button[aria-current],
 .fi-sidebar-item-button[aria-current="page"] {
-    background-color: #e2e8f0 !important;
-    color: #0f172a !important;
+    background: #e8f0ff !important;
+    color: #1e4ea8 !important;
+    box-shadow: inset 0 0 0 1px #cfdcf8 !important;
 }
 .fi-sidebar-item-button.fi-active svg,
 .fi-sidebar-item-button.fi-active span,
@@ -94,7 +145,7 @@ nav.fi-sidebar-nav {
 .fi-sidebar-item-button[aria-current] svg,
 .fi-sidebar-item-button[aria-current] span,
 .fi-sidebar-item-button[aria-current] .fi-sidebar-item-label {
-    color: #0f172a !important;
+    color: #1e4ea8 !important;
 }
 
 /* Active state fallback selectors across Filament variants */
@@ -104,44 +155,59 @@ nav.fi-sidebar-nav {
 .fi-sidebar .fi-sidebar-item[aria-current="page"] .fi-sidebar-item-label,
 .fi-sidebar .fi-sidebar-item.fi-active svg,
 .fi-sidebar .fi-sidebar-item[aria-current="page"] svg {
-    color: #0f172a !important;
+    color: #1e4ea8 !important;
 }
 
-/* Nav item icons — always white */
-.fi-sidebar-item-button svg,
-.fi-sidebar-item-button span,
-.fi-sidebar-item-label {
-    color: #fff !important;
-}
-
-/* Sidebar footer / user menu area */
+/* Sidebar footer */
 .fi-sidebar-footer {
-    background-color: #0a1530 !important;
-    border-top-color: rgba(255,255,255,.08) !important;
-}
-.fi-sidebar-footer,
-.fi-sidebar-footer * {
-    color: #fff !important;
+    background: #f7f9fd !important;
+    border-top: 1px solid #e7edf7 !important;
 }
 
 .wado-sidebar-logout {
-    width: auto;
+    width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: .35rem .62rem;
-    border-radius: 6px;
-    border: 1px solid #c8102e;
-    background: #c8102e;
-    color: #fff;
+    gap: .35rem;
+    padding: .5rem .7rem;
+    border-radius: 10px;
+    border: 1px solid #d7e1ef;
+    background: #ffffff;
+    color: #30486f;
     font-size: .69rem;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
-    transition: opacity .15s;
+    transition: background .15s, border-color .15s;
 }
 .wado-sidebar-logout:hover {
-    opacity: .9;
+    background: #edf3ff;
+    border-color: #c5d7f6;
+}
+
+.wado-sidebar-foot {
+    border: 1px solid #dbe4f0;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: .65rem;
+    display: grid;
+    gap: .45rem;
+}
+.wado-sidebar-user {
+    display: grid;
+    gap: .1rem;
+}
+.wado-sidebar-user strong {
+    color: #1b2e4d;
+    font-size: .69rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.wado-sidebar-user span {
+    color: #7b8da8;
+    font-size: .63rem;
+    font-weight: 600;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -313,15 +379,20 @@ textarea.fi-fo-textarea:focus {
 }
 
 /* ── Buttons ── */
-.fi-btn-primary {
-    background: #0d1b3e !important;
-    border-color: #0d1b3e !important;
+.fi-btn-primary,
+.fi-btn-color-primary,
+.fi-ac-btn-action {
+    background: #0a4fbe !important;
+    border-color: #0a4fbe !important;
+    color: #ffffff !important;
     border-radius: 8px !important;
     font-weight: 700 !important;
 }
-.fi-btn-primary:hover {
-    background: #c8102e !important;
-    border-color: #c8102e !important;
+.fi-btn-primary:hover,
+.fi-btn-color-primary:hover,
+.fi-ac-btn-action:hover {
+    background: #083f98 !important;
+    border-color: #083f98 !important;
 }
 .fi-btn-secondary, .fi-btn-gray { border-radius: 8px !important; }
 </style>
@@ -329,10 +400,16 @@ textarea.fi-fo-textarea:focus {
 
             ->renderHook('panels::sidebar.footer', fn () => '
 <div class="px-3 pb-3">
-    <form method="POST" action="' . route('filament.admin.auth.logout') . '">
-        ' . csrf_field() . '
-        <button type="submit" class="wado-sidebar-logout">Log out</button>
-    </form>
+    <div class="wado-sidebar-foot">
+        <div class="wado-sidebar-user">
+            <strong>' . e(auth()->user()?->name ?? 'Operator') . '</strong>
+            <span>' . e(str_replace('_', ' ', (string) (auth()->user()?->role ?? 'team'))) . '</span>
+        </div>
+        <form method="POST" action="' . route('filament.admin.auth.logout') . '">
+            ' . csrf_field() . '
+            <button type="submit" class="wado-sidebar-logout">Log out</button>
+        </form>
+    </div>
 </div>
 ')
 
@@ -342,9 +419,9 @@ textarea.fi-fo-textarea:focus {
             ->pages([Dashboard::class])
 
             // ── Widgets ────────────────────────────────────
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 QuickActionsWidget::class,
+                AgentOverviewWidget::class,
                 SuperAdminOverviewWidget::class,
             ])
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Event;
 use App\Models\PaymentTransaction;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,8 @@ class PaymentsOpsWidget extends Widget
     protected function getViewData(): array
     {
         $base = $this->scopedPaymentsQuery();
+        $selectedEventId = request()->integer('event_id');
+        $user = auth()->user();
 
         $latestUpdate = (clone $base)->latest('updated_at')->value('updated_at');
 
@@ -31,11 +34,19 @@ class PaymentsOpsWidget extends Widget
         $confirmedToday = (clone $base)->where('status', PaymentTransaction::STATUS_CONFIRMED)
             ->whereDate('created_at', today())
             ->count();
-        $totalCollected = (float) (clone $base)->where('status', PaymentTransaction::STATUS_CONFIRMED)->sum('total_amount');
         $eventsWithOpenPayments = (clone $base)->whereIn('status', [
             PaymentTransaction::STATUS_PENDING,
             PaymentTransaction::STATUS_FAILED,
         ])->distinct('event_id')->count('event_id');
+
+        $events = Event::query()
+            ->when($user?->isEventOwner(), fn (Builder $query) => $query->where('user_id', $user->id))
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        $selectedEvent = $selectedEventId > 0
+            ? $events->firstWhere('id', $selectedEventId)
+            : null;
 
         $lastSync = $latestUpdate ? now()->diffForHumans($latestUpdate, true) . ' ago' : 'just now';
 
@@ -45,9 +56,11 @@ class PaymentsOpsWidget extends Widget
             'confirmedNoTicket',
             'ticketsPendingIssue',
             'confirmedToday',
-            'totalCollected',
             'lastSync',
             'eventsWithOpenPayments',
+            'events',
+            'selectedEventId',
+            'selectedEvent',
         );
     }
 
@@ -62,9 +75,14 @@ class PaymentsOpsWidget extends Widget
     {
         $query = PaymentTransaction::query();
         $user = auth()->user();
+        $selectedEventId = request()->integer('event_id');
 
         if ($user?->isEventOwner()) {
             $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+        }
+
+        if ($selectedEventId > 0) {
+            $query->where('event_id', $selectedEventId);
         }
 
         return $query;

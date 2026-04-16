@@ -24,7 +24,37 @@
     </div>
 
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+    /* Page-only brand tone for /dashboard/events */
+    .fi-page {
+        --ev-brand-blue: #0a4fbe;
+        --ev-brand-blue-dark: #083f98;
+        --ev-brand-blue-soft: #e8f0ff;
+
+        /* Override Filament primary color scale on this page only */
+        --primary-50: oklch(0.97 0.02 255);
+        --primary-100: oklch(0.94 0.04 255);
+        --primary-200: oklch(0.89 0.07 255);
+        --primary-300: oklch(0.82 0.11 255);
+        --primary-400: oklch(0.74 0.15 255);
+        --primary-500: oklch(0.62 0.20 259);
+        --primary-600: oklch(0.56 0.22 261);
+        --primary-700: oklch(0.50 0.20 262);
+        --primary-800: oklch(0.42 0.16 263);
+        --primary-900: oklch(0.36 0.12 264);
+        --primary-950: oklch(0.27 0.09 266);
+    }
+
+    /* Pull events page content upward */
+    .fi-page .fi-page-header-main-ctn {
+        padding-block: .25rem !important;
+    }
+
+    .fi-page .fi-header {
+        margin-top: -.35rem !important;
+        margin-bottom: .35rem !important;
+    }
 
     /* ── Two-column split layout ──────────────────────────────── */
     .ev-layout {
@@ -32,7 +62,7 @@
         grid-template-columns: 1fr 380px;
         gap: 1rem;
         align-items: start;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Quicksand', 'Nunito', 'Plus Jakarta Sans', sans-serif;
     }
     @media (max-width: 1100px) {
         .ev-layout { grid-template-columns: 1fr; }
@@ -64,12 +94,41 @@
         padding: 3rem 2rem;
         color: #94a3b8;
         font-size: .8rem;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Quicksand', 'Nunito', 'Plus Jakarta Sans', sans-serif;
     }
 
     /* Highlight the selected row ─────────────────────────────── */
     .ev-table-col .fi-ta-row.ev-selected-row > td {
-        background: #eff6ff !important;
+        background: var(--ev-brand-blue-soft) !important;
+    }
+
+    .fi-page .fi-btn-color-primary,
+    .fi-page .fi-btn-primary {
+        background-color: var(--ev-brand-blue) !important;
+        border-color: var(--ev-brand-blue) !important;
+        color: #ffffff !important;
+    }
+
+    .fi-page .fi-btn-color-primary:hover,
+    .fi-page .fi-btn-primary:hover {
+        background-color: var(--ev-brand-blue-dark) !important;
+        border-color: var(--ev-brand-blue-dark) !important;
+    }
+
+    /* Ensure header create action matches the same blue tone */
+    .fi-page .fi-header .fi-btn,
+    .fi-page .fi-header .fi-btn-color-primary,
+    .fi-page .fi-header .fi-ac-btn-action {
+        background-color: var(--ev-brand-blue) !important;
+        border-color: var(--ev-brand-blue) !important;
+        color: #ffffff !important;
+    }
+
+    .fi-page .fi-header .fi-btn:hover,
+    .fi-page .fi-header .fi-btn-color-primary:hover,
+    .fi-page .fi-header .fi-ac-btn-action:hover {
+        background-color: var(--ev-brand-blue-dark) !important;
+        border-color: var(--ev-brand-blue-dark) !important;
     }
     </style>
 

@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
-                'role' => 'admin',
+                'role' => 'super_admin',
             ],
         );
 
@@ -62,7 +62,7 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
-                'role' => 'event_owner',
+                'role' => 'customer',
             ],
         );
 

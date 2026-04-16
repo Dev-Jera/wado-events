@@ -81,7 +81,7 @@ class AdminIncidentNotificationService
     protected function adminRecipients(): Collection
     {
         return User::query()
-            ->whereIn('role', ['admin', 'super_admin'])
+            ->where('role', 'super_admin')
             ->get();
     }
 

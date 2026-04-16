@@ -1,102 +1,125 @@
 <x-filament-widgets::widget>
-    <x-filament::section>
-        <div class="qa-bar">
-            <div class="qa-brand">
-                <span class="qa-brand-label">Quick actions</span>
-                <h3 class="qa-title">{{ $consoleTitle }}</h3>
-                <p class="qa-subtitle">{{ $consoleHint }}</p>
-            </div>
-            <div class="qa-actions">
-                @if($canCreateEvent)
-                <a href="{{ $createEventUrl }}" class="qa-btn qa-btn--primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    + New event
-                </a>
-                @endif
-                @if($canUseGateTools)
-                <a href="{{ $scannerUrl }}" class="qa-btn qa-btn--secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
-                    Gate Scanner
-                </a>
-                @endif
-                @if($canViewPayments)
-                <a href="{{ $paymentsUrl }}" class="qa-btn qa-btn--secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    Payments
-                </a>
-                @endif
-                @if($canUseGateTools)
-                <a href="{{ $gatePortalUrl }}" class="qa-btn qa-btn--ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Gate Portal
-                </a>
-                @endif
-            </div>
+    <div class="qa-shell">
+        <div class="qa-copy">
+            <p class="qa-overline">WORKSPACE</p>
+            <h3>{{ $consoleTitle }}</h3>
+            <p>{{ $consoleHint }}</p>
         </div>
 
-        <style>
-            .qa-bar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-            .qa-brand-label {
-                font-size: .7rem;
-                font-weight: 700;
-                letter-spacing: .1em;
-                text-transform: uppercase;
-                color: var(--gray-400, #94a3b8);
-            }
-            .qa-title {
-                margin: .18rem 0 0;
-                font-size: .95rem;
-                color: #e2e8f0;
-                font-weight: 800;
-            }
-            .qa-subtitle {
-                margin: .18rem 0 0;
-                font-size: .72rem;
-                color: #94a3b8;
-            }
-            .qa-actions {
-                display: flex;
-                gap: .5rem;
-                flex-wrap: wrap;
-            }
-            .qa-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: .4rem;
-                padding: .45rem .9rem;
-                border-radius: 8px;
-                font-size: .78rem;
-                font-weight: 700;
-                text-decoration: none;
-                transition: opacity .15s, transform .1s;
-                white-space: nowrap;
-            }
-            .qa-btn svg {
-                width: 15px;
-                height: 15px;
-                flex-shrink: 0;
-            }
-            .qa-btn:hover { opacity: .85; transform: translateY(-1px); }
-            .qa-btn--primary {
-                background: #f8b26a;
-                color: #1a0e00;
-            }
-            .qa-btn--secondary {
-                background: color-mix(in srgb, #f8b26a 12%, transparent);
-                color: #f8b26a;
-                border: 1px solid color-mix(in srgb, #f8b26a 30%, transparent);
-            }
-            .qa-btn--ghost {
-                background: transparent;
-                color: var(--gray-400, #94a3b8);
-                border: 1px solid var(--gray-700, #334155);
-            }
-        </style>
-    </x-filament::section>
+        <div class="qa-actions">
+            @if($canCreateEvent)
+                <a href="{{ $createEventUrl }}" class="qa-btn qa-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    Create Event
+                </a>
+            @endif
+            @if($canUseGateTools)
+                <a href="{{ $scannerUrl }}" class="qa-btn qa-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><path d="M15 15h6v6"/></svg>
+                    Scanner
+                </a>
+            @endif
+            @if($canUseGateTools)
+                <a href="{{ $gatePortalUrl }}" class="qa-btn qa-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+                    Gate Portal
+                </a>
+            @endif
+            @if($canViewPayments)
+                <a href="{{ $paymentsUrl }}" class="qa-btn qa-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                    Payments
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <style>
+        .qa-shell {
+            border: 1px solid #dbe4f0;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 0.8rem 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            font-family: var(--wado-admin-font, 'Quicksand', 'Nunito', sans-serif);
+        }
+
+        .qa-overline {
+            margin: 0;
+            font-size: 0.62rem;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+            color: #607390;
+            font-weight: 700;
+        }
+
+        .qa-copy h3 {
+            margin: 0.16rem 0 0;
+            color: #132a4c;
+            font-size: 0.94rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .qa-copy p {
+            margin: 0.22rem 0 0;
+            color: #627792;
+            font-size: 0.72rem;
+            line-height: 1.35;
+            max-width: 58ch;
+        }
+
+        .qa-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .qa-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.38rem;
+            text-decoration: none;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            padding: 0.48rem 0.7rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            transition: transform 0.12s ease, filter 0.12s ease;
+            white-space: nowrap;
+        }
+
+        .qa-btn svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .qa-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.02);
+        }
+
+        .qa-primary {
+            background: linear-gradient(135deg, #1e4ea9 0%, #326ed1 100%);
+            color: #ffffff;
+        }
+
+        .qa-secondary {
+            background: #edf3ff;
+            border-color: #cfdcf8;
+            color: #1b4fae;
+        }
+
+        .qa-ghost {
+            background: #ffffff;
+            border-color: #d4deec;
+            color: #324c73;
+        }
+    </style>
 </x-filament-widgets::widget>

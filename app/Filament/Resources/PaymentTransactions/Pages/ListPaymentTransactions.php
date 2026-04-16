@@ -39,45 +39,44 @@ class ListPaymentTransactions extends ListRecords
                 ->badge((clone $base)->where('status', PaymentTransaction::STATUS_CONFIRMED)->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', PaymentTransaction::STATUS_CONFIRMED)),
 
-            'pending' => Tab::make('Pending')
-                ->badge((clone $base)->where('status', PaymentTransaction::STATUS_PENDING)->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', PaymentTransaction::STATUS_PENDING)),
-
-            'failed' => Tab::make('Failed')
-                ->badge((clone $base)->where('status', PaymentTransaction::STATUS_FAILED)->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', PaymentTransaction::STATUS_FAILED)),
-
-            'refund_queue' => Tab::make('Refund queue')
+            'attention' => Tab::make('Needs attention')
                 ->badge(
                     (clone $base)
-                        ->whereIn('status', [
-                            PaymentTransaction::STATUS_CONFIRMED,
-                            PaymentTransaction::STATUS_PENDING,
-                            PaymentTransaction::STATUS_INITIATED,
-                        ])
                         ->where(function (Builder $query): void {
-                            $query->whereNull('ticket_id')
-                                ->orWhereHas('ticket', fn (Builder $ticketQuery) => $ticketQuery->whereNull('used_at'));
+                            $query->whereIn('status', [
+                                PaymentTransaction::STATUS_INITIATED,
+                                PaymentTransaction::STATUS_PENDING,
+                                PaymentTransaction::STATUS_FAILED,
+                            ])->orWhere(function (Builder $innerQuery): void {
+                                $innerQuery->where('status', PaymentTransaction::STATUS_CONFIRMED)
+                                    ->whereNull('ticket_id');
+                            });
                         })
                         ->count()
                 )
                 ->modifyQueryUsing(fn (Builder $query) => $query
-                    ->whereIn('status', [
-                        PaymentTransaction::STATUS_CONFIRMED,
-                        PaymentTransaction::STATUS_PENDING,
-                        PaymentTransaction::STATUS_INITIATED,
-                    ])
                     ->where(function (Builder $innerQuery): void {
-                        $innerQuery->whereNull('ticket_id')
-                            ->orWhereHas('ticket', fn (Builder $ticketQuery) => $ticketQuery->whereNull('used_at'));
+                        $innerQuery->whereIn('status', [
+                            PaymentTransaction::STATUS_INITIATED,
+                            PaymentTransaction::STATUS_PENDING,
+                            PaymentTransaction::STATUS_FAILED,
+                        ])->orWhere(function (Builder $nestedQuery): void {
+                            $nestedQuery->where('status', PaymentTransaction::STATUS_CONFIRMED)
+                                ->whereNull('ticket_id');
+                        });
                     })),
 
-            'refunded' => Tab::make('Refunded')
+            'refunded' => Tab::make('Refunds')
                 ->badge((clone $base)->where('status', PaymentTransaction::STATUS_REFUNDED)->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', PaymentTransaction::STATUS_REFUNDED)),
 
-            'no_ticket' => Tab::make('No ticket')
-                ->badge((clone $base)->where('status', PaymentTransaction::STATUS_CONFIRMED)->whereNull('ticket_id')->count())
+            'delivery_gap' => Tab::make('No ticket')
+                ->badge(
+                    (clone $base)
+                        ->where('status', PaymentTransaction::STATUS_CONFIRMED)
+                        ->whereNull('ticket_id')
+                        ->count()
+                )
                 ->modifyQueryUsing(fn (Builder $query) => $query
                     ->where('status', PaymentTransaction::STATUS_CONFIRMED)
                     ->whereNull('ticket_id')),
@@ -88,9 +87,14 @@ class ListPaymentTransactions extends ListRecords
     {
         $query = PaymentTransaction::query();
         $user = auth()->user();
+        $selectedEventId = request()->integer('event_id');
 
         if ($user?->isEventOwner()) {
             $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+        }
+
+        if ($selectedEventId > 0) {
+            $query->where('event_id', $selectedEventId);
         }
 
         return $query;
