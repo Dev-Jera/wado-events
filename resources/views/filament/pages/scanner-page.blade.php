@@ -2,12 +2,12 @@
     <div class="sp-wrap">
         <div class="sp-head">
             <h2>Scanner</h2>
-            <a href="{{ route('tickets.verify.index') }}" target="_blank" rel="noopener">Open full page</a>
+            <a href="{{ route('tickets.verify.index', ['scanner_only' => 1, 'back' => url('/dashboard/scanner-page')]) }}" target="_blank" rel="noopener">Open full page</a>
         </div>
 
         <iframe
             class="sp-frame"
-            src="{{ route('tickets.verify.index', ['embedded' => 1]) }}"
+            src="{{ route('tickets.verify.index', ['embedded' => 1, 'back' => url('/dashboard/scanner-page')]) }}"
             title="Ticket Scanner"
             loading="lazy"
         ></iframe>

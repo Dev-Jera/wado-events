@@ -1,0 +1,25 @@
+{
+  "name": "Wado Scanner",
+  "short_name": "WadoScan",
+  "description": "Wado gate scanner and ticket verification",
+  "start_url": "/ticket-verification?scanner_only=1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0a4fbe",
+  "icons": [
+    {
+      "src": "/images/wado-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/wado-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

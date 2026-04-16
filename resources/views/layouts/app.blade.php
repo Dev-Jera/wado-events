@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Wado Events</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a4fbe">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +25,8 @@
         body {
             margin: 0;
             font-family: var(--site-font);
-            background: #060606;
+            /* base fallback — home page overrides with its own gradient */
+            background: #110608;
             color: #f4f4f4;
         }
 
@@ -72,9 +75,10 @@
         .site-footer {
             padding: 1.25rem 1rem 1.5rem;
             text-align: center;
-            color: #b6b6b6;
+            color: rgba(180, 200, 240, .55);
             font-size: 0.92rem;
-            background: #0e0e0f;
+            background: rgba(255,255,255,.04);
+            border-top: 1px solid rgba(255,255,255,.07);
         }
     </style>
 </head>
@@ -102,5 +106,13 @@
             @include('components.footer')
         </footer>
     @endunless
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
+            });
+        }
+    </script>
 </body>
 </html>

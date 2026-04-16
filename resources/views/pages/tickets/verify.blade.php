@@ -4,6 +4,10 @@
     @section('fullbleed', '1')
 @endif
 
+@if (request()->boolean('scanner_only'))
+    @section('fullbleed', '1')
+@endif
+
 @section('content')
     @php
         $verification = session('verification');
@@ -12,13 +16,21 @@
         $events = collect($events ?? []);
         $verificationRows = collect($verificationRows ?? []);
         $selectedEventId = (int) old('selected_event_id', $selectedEventId ?? 0);
+        $scannerOnly = request()->boolean('scanner_only');
+        $isEmbedded = request()->boolean('embedded');
+        $returnToScannerUrl = request('back') ?: url('/dashboard/scanner-page');
+        $initialScannerFeedback = $verification['message']
+            ?? ($selectedEventId > 0 ? 'Event selected. Start camera to scan.' : 'Choose an event first, then start the camera.');
+        $initialScannerTone = $verification
+            ? (($verification['ok'] ?? false) ? 'success' : 'error')
+            : ($selectedEventId > 0 ? 'neutral' : 'warning');
     @endphp
 
-    <section class="vp">
+    <section class="vp {{ $scannerOnly ? 'vp-scanner-only' : '' }}">
         <div class="vp-shell">
 
             {{-- ── PAGE HEADER ── --}}
-            @unless(request()->boolean('embedded'))
+            @if(!request()->boolean('embedded') && ! $scannerOnly)
             <header class="vp-header">
                 <div class="vp-header-badge">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
@@ -28,15 +40,15 @@
                     <p>Scan QR codes, verify by code, or use offline export when internet is unavailable.</p>
                 </div>
             </header>
-            @endunless
+            @endif
 
-            <div class="vp-grid">
+            <div class="vp-grid {{ $scannerOnly ? 'vp-grid-scanner-only' : '' }}">
 
                 {{-- ── LEFT COLUMN ── --}}
                 <div class="vp-left">
 
                     {{-- Scanner card --}}
-                    <div class="vp-card scanner-card">
+                    <div class="vp-card scanner-card {{ $scannerOnly ? 'scanner-card-only' : '' }}">
                         <div class="vp-card-head">
                             <div class="vp-card-title">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="7" height="7" x="7" y="7" rx="1"/></svg>
@@ -45,8 +57,8 @@
                             <span id="scanner-status" class="vp-badge badge-idle">Idle</span>
                         </div>
 
-                        <div id="scanner-feedback" class="scanner-feedback fb-warning">
-                            Choose an event first, then start the camera.
+                        <div id="scanner-feedback" class="scanner-feedback fb-{{ $initialScannerTone }}">
+                            {{ $initialScannerFeedback }}
                         </div>
 
                         <div id="qr-reader" class="qr-viewport"></div>
@@ -60,10 +72,14 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="6" height="16" x="4" y="4" rx="1"/><rect width="6" height="16" x="14" y="4" rx="1"/></svg>
                                 Stop camera
                             </button>
+                            @if($scannerOnly)
+                                <a href="{{ $returnToScannerUrl }}" class="btn btn-outline">Back to normal view</a>
+                            @endif
                         </div>
                     </div>
 
                     {{-- Offline tools --}}
+                    @unless($scannerOnly)
                     <div class="vp-card">
                         <div class="vp-card-head">
                             <div class="vp-card-title">
@@ -90,11 +106,12 @@
                         </div>
                         <div id="offline-table-wrap"></div>
                     </div>
+                    @endunless
 
                 </div>
 
                 {{-- ── RIGHT COLUMN ── --}}
-                <div class="vp-right">
+                <div class="vp-right {{ $scannerOnly ? 'vp-right-hidden' : '' }}">
 
                     {{-- Verify form --}}
                     <div class="vp-card">
@@ -192,6 +209,7 @@
             </div>
 
             {{-- QR payload + lookup results (full-width) --}}
+            @unless($scannerOnly)
             @if ($payload)
                 <div class="vp-card vp-card-full">
                     <div class="vp-card-head">
@@ -339,6 +357,7 @@
                     </div>
                 @endif
             </div>
+            @endunless
 
         </div>
     </section>
@@ -395,6 +414,97 @@
         .vp { padding: 1rem; }
         @endif
         .vp-shell { width:min(1100px, 100%); margin:0 auto; display:flex; flex-direction:column; gap:1.25rem; }
+        .vp-grid-scanner-only { grid-template-columns: 1fr; }
+        .scanner-card-only { max-width: 980px; margin: 0 auto; }
+        .vp-right-hidden { display: none !important; }
+
+        .vp-scanner-only {
+            min-height: 100dvh;
+            padding: 0;
+            background: #000;
+        }
+
+        .vp-scanner-only .vp-shell {
+            width: 100%;
+            min-height: 100dvh;
+            margin: 0;
+            max-width: none;
+            gap: 0;
+        }
+
+        .vp-scanner-only .vp-grid,
+        .vp-scanner-only .vp-left {
+            display: block;
+            min-height: 100dvh;
+            height: 100dvh;
+        }
+
+        .vp-scanner-only .scanner-card {
+            position: relative;
+            border: 0;
+            border-radius: 0;
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
+            min-height: 100dvh;
+            height: 100dvh;
+            background: #000;
+        }
+
+        .vp-scanner-only .vp-card-head {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 6;
+            margin: 0;
+            border-radius: 0;
+            padding: .65rem .8rem;
+            border-bottom: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,.7), rgba(0,0,0,0));
+        }
+
+        .vp-scanner-only .vp-card-title,
+        .vp-scanner-only .vp-badge {
+            color: #fff;
+            border-color: rgba(255,255,255,.35);
+            background: rgba(0,0,0,.35);
+        }
+
+        .vp-scanner-only .scanner-feedback {
+            position: absolute;
+            top: 3.1rem;
+            left: .8rem;
+            right: .8rem;
+            z-index: 6;
+            margin: 0;
+            background: rgba(0,0,0,.55);
+            color: #fff;
+            border-color: rgba(255,255,255,.3);
+            backdrop-filter: blur(2px);
+        }
+
+        .vp-scanner-only .qr-viewport {
+            width: 100%;
+            min-height: 100dvh;
+            height: 100dvh;
+            border: 0;
+            border-radius: 0;
+            background: #000;
+        }
+
+        .vp-scanner-only .scanner-actions {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            margin: 0;
+            background: rgba(0,0,0,.45);
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 12px;
+            padding: .45rem;
+        }
 
         /* ── header ── */
         .vp-header {
@@ -408,7 +518,6 @@
         }
         .vp-header h1 { margin:0; font-size:1.25rem; font-weight:700; letter-spacing:0; }
         .vp-header p  { margin:.2rem 0 0; font-size:.82rem; opacity:.8; }
-
         /* ── 2-col grid ── */
         .vp-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
         .vp-left, .vp-right { display:flex; flex-direction:column; gap:1.25rem; }
@@ -556,6 +665,9 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
     (function () {
+        const scannerOnly = @json($scannerOnly);
+        const isEmbedded = @json($isEmbedded);
+        const fullScannerBaseUrl = @json(route('tickets.verify.index', ['scanner_only' => 1, 'back' => $returnToScannerUrl]));
         const readerTargetId = 'qr-reader';
         const statusEl       = document.getElementById('scanner-status');
         const feedbackEl     = document.getElementById('scanner-feedback');
@@ -633,6 +745,18 @@
                 setStatus('Blocked'); setFeedback('Choose the gate event before starting the scanner.', 'error');
                 syncScannerButtons(); eventSelect.focus(); return;
             }
+
+            if (isEmbedded && !scannerOnly) {
+                const targetUrl = fullScannerBaseUrl + '&event_id=' + encodeURIComponent(String(eventSelect.value || ''));
+                if (window.top && window.top !== window) {
+                    window.top.location.href = targetUrl;
+                } else {
+                    window.location.href = targetUrl;
+                }
+
+                return;
+            }
+
             try {
                 setStatus('Starting…'); setFeedback('Starting camera. Allow access if prompted.', 'info');
                 const cameraId = await pickCamera();
