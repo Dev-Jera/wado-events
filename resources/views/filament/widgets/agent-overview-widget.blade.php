@@ -129,6 +129,16 @@
         }
 
         @media (max-width: 560px) {
+            .ag-hero {
+                padding: 0.8rem;
+            }
+
+            .ag-open-link {
+                justify-content: center;
+                text-align: center;
+                width: 100%;
+            }
+
             .ag-grid {
                 grid-template-columns: 1fr;
             }

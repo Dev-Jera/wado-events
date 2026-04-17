@@ -57,8 +57,10 @@ class StaticEventCatalog
             ],
         ])->map(function (array $event) {
             return (object) [
+                'id' => null,
                 ...$event,
                 'category_label' => $event['category_name'],
+                'live_status' => Carbon::parse($event['starts_at'])->isFuture() ? 'upcoming' : 'live',
                 'url' => route('events.index'),
             ];
         });

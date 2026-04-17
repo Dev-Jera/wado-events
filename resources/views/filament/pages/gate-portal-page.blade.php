@@ -39,5 +39,16 @@
             border-radius: 12px;
             background: #fff;
         }
+
+        @media (max-width: 640px) {
+            .gp-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .gp-frame {
+                min-height: 86vh;
+            }
+        }
     </style>
 </x-filament-panels::page>

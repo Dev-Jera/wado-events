@@ -121,5 +121,23 @@
             border-color: #d4deec;
             color: #324c73;
         }
+
+        @media (max-width: 640px) {
+            .qa-shell {
+                align-items: stretch;
+                padding: 0.8rem;
+            }
+
+            .qa-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+
+            .qa-btn {
+                justify-content: center;
+                width: 100%;
+            }
+        }
     </style>
 </x-filament-widgets::widget>

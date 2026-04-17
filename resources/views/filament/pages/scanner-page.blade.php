@@ -49,5 +49,22 @@
             border-radius: 12px;
             background: #fff;
         }
+
+        @media (max-width: 640px) {
+            .sp-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .sp-head a {
+                display: inline-flex;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .sp-frame {
+                min-height: 86vh;
+            }
+        }
     </style>
 </x-filament-panels::page>

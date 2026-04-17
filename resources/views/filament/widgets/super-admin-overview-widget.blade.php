@@ -447,10 +447,50 @@
         @media (max-width: 760px) {
             .pc-hero { grid-template-columns: 1fr; }
             .pc-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pc-panel-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .pc-event-meta {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .pc-chart-wrap {
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding-bottom: 1rem;
+            }
+            .pc-chart-col {
+                min-width: 44px;
+            }
         }
 
         @media (max-width: 520px) {
             .pc-stat-grid { grid-template-columns: 1fr; }
+            .pc-hero {
+                padding: 0.85rem;
+            }
+            .pc-hero-side {
+                grid-template-columns: 1fr;
+            }
+            .pc-hero-chip {
+                padding: 0.6rem 0.7rem;
+            }
+            .pc-table {
+                min-width: 480px;
+            }
+            .pc-table th,
+            .pc-table td {
+                padding: 0.5rem 0.58rem;
+            }
+            .pc-panel-head {
+                padding: 0.7rem;
+            }
+            .pc-event-list,
+            .pc-chart-wrap {
+                padding-left: 0.7rem;
+                padding-right: 0.7rem;
+            }
         }
     </style>
 </x-filament-widgets::widget>
