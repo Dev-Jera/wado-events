@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
     Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
+    Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->name('tickets.verify.scan-json');
     Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
 
     Route::get('/admin/payments', [PaymentController::class, 'adminIndex'])->name('payments.admin.index');

@@ -83,6 +83,93 @@ class TicketVerificationController extends Controller
         ]);
     }
 
+    public function scanJson(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('verify', Ticket::class);
+
+        $data = $request->validate([
+            'selected_event_id' => ['required', 'integer'],
+            'ticket_code'       => ['nullable', 'string', 'max:120'],
+            'scanned_payload'   => ['nullable', 'string', 'max:2000'],
+            'device_id'         => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $selectedEventId = (int) $data['selected_event_id'];
+
+        if (! $request->user()?->canAccessGateEvent($selectedEventId)) {
+            return response()->json(['ok' => false, 'message' => 'Not assigned to this event.'], 403);
+        }
+
+        $rawPayload  = trim((string) ($data['scanned_payload'] ?? ''));
+        $payload     = $rawPayload !== '' ? $this->ticketQrService->parsePayload($rawPayload) : null;
+
+        // Signature check
+        if ($payload && ! $this->ticketQrService->verifyPayloadSignature($payload)) {
+            $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'fake', 'Invalid QR signature', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'message' => 'Invalid QR signature. Possible fake ticket.']);
+        }
+
+        // Event mismatch in payload
+        if ($payload && isset($payload['event_id']) && (int) $payload['event_id'] !== $selectedEventId) {
+            $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'rejected', 'QR belongs to another event', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'message' => 'This QR belongs to a different event.']);
+        }
+
+        $ticketCode = $this->normalizeTicketCode((string) ($payload['code'] ?? ($data['ticket_code'] ?? '')));
+
+        if ($ticketCode === '') {
+            return response()->json(['ok' => false, 'message' => 'No ticket code found. Try scanning again.']);
+        }
+
+        // Find ticket
+        $ticket = Ticket::query()->with(['event', 'user', 'ticketCategory'])->where('ticket_code', $ticketCode)->first();
+
+        if (! $ticket) {
+            $like   = '%' . str_replace('-', '%', $ticketCode) . '%';
+            $ticket = Ticket::query()
+                ->with(['event', 'user', 'ticketCategory'])
+                ->where('event_id', $selectedEventId)
+                ->where('ticket_code', 'like', $like)
+                ->limit(50)->get()
+                ->first(fn (Ticket $t) => $this->normalizeTicketCode((string) $t->ticket_code) === $ticketCode);
+        }
+
+        if (! $ticket) {
+            $this->logScan($request, null, $ticketCode, 'rejected', 'Ticket not found', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'message' => 'Ticket not found.']);
+        }
+
+        if ((int) $ticket->event_id !== $selectedEventId) {
+            $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket belongs to another event', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'message' => 'Ticket belongs to a different event.']);
+        }
+
+        $holderName = $ticket->holder_name ?: $ticket->user?->name ?: 'Guest';
+
+        if ($ticket->status === Ticket::STATUS_CANCELLED) {
+            $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket is cancelled', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'message' => 'Ticket is cancelled.', 'holder' => $holderName]);
+        }
+
+        if ($ticket->status === Ticket::STATUS_USED || $ticket->used_at) {
+            $this->logScan($request, $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'message' => 'Already used. Entry denied.', 'holder' => $holderName]);
+        }
+
+        $ticket->forceFill(['status' => Ticket::STATUS_USED, 'used_at' => now()])->save();
+
+        $this->logScan($request, $ticket, $ticketCode, 'valid', 'Ticket verified and marked used', $rawPayload, $selectedEventId);
+
+        return response()->json([
+            'ok'       => true,
+            'message'  => 'Valid — welcome in!',
+            'holder'   => $holderName,
+            'event'    => $ticket->event?->title ?? '',
+            'category' => $ticket->ticketCategory?->name ?? '',
+            'code'     => $ticket->ticket_code,
+        ]);
+    }
+
     public function export(Request $request)
     {
         $this->authorize('verify', Ticket::class);

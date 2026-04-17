@@ -299,36 +299,35 @@
 <style>
 /* ── Root ───────────────────────────────────────────────────────────── */
 :root {
-    --maroon:       #a0202e;
-    --maroon-hover: #821828;
-    --maroon-glow:  rgba(160, 32, 46, .45);
-    --maroon-glass: rgba(160, 32, 46, .22);
+    --maroon:       #c0283c;
+    --maroon-hover: #a01e2e;
+    --maroon-glow:  rgba(192, 40, 60, .4);
+    --maroon-glass: rgba(192, 40, 60, .2);
     --green:        #22c55e;
     --green-dk:     #16a34a;
 
-    /* glass tokens */
-    --glass-bg:      rgba(255, 255, 255, .07);
-    --glass-bg-md:   rgba(255, 255, 255, .11);
-    --glass-bg-hi:   rgba(255, 255, 255, .16);
-    --glass-border:  rgba(255, 255, 255, .16);
+    /* glass — more opaque so cards feel solid and bright */
+    --glass-bg:      rgba(255, 255, 255, .10);
+    --glass-bg-md:   rgba(255, 255, 255, .15);
+    --glass-bg-hi:   rgba(255, 255, 255, .22);
+    --glass-border:  rgba(255, 255, 255, .22);
     --glass-blur:    blur(20px);
     --glass-blur-sm: blur(12px);
 
     /* text */
     --txt:   #fff;
-    --muted: rgba(255, 230, 232, .55);
+    --muted: rgba(255, 215, 220, .70);
 }
 
 html, body { margin: 0; padding: 0; }
 .icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
-/* ── Full-page background — warm dark with maroon glow sources ── */
+/* ── Page background — lighter warm dark, minimal gradient ── */
 body {
     background:
-        radial-gradient(ellipse 80% 55% at 10% 15%, rgba(140, 20, 35, .30) 0%, transparent 55%),
-        radial-gradient(ellipse 65% 45% at 90% 75%, rgba(100, 10, 22, .25) 0%, transparent 55%),
-        radial-gradient(ellipse 55% 40% at 55% 105%, rgba(130, 18, 30, .18) 0%, transparent 60%),
-        linear-gradient(160deg, #110608 0%, #180a0c 40%, #140709 70%, #0e0507 100%);
+        radial-gradient(ellipse 60% 40% at 0% 0%,   rgba(192, 40, 60, .15) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 35% at 100% 90%, rgba(192, 40, 60, .10) 0%, transparent 50%),
+        #2a1015;
     background-attachment: fixed;
 }
 
@@ -385,9 +384,9 @@ body {
 }
 .hp-hero-heading {
     margin: 0 0 .9rem;
-    font-size: clamp(2rem, 5.2vw, 3.4rem);
-    line-height: 1.07;
-    letter-spacing: -.03em;
+    font-size: clamp(1.7rem, 6vw, 3.4rem);
+    line-height: 1.1;
+    letter-spacing: -.025em;
     font-weight: 800;
     color: #fff;
 }
@@ -493,14 +492,14 @@ body {
     padding: 3.5rem 1rem 4rem;
     position: relative;
 }
-/* sections transparent so the fixed body gradient bleeds through */
+/* sections — solid warm dark so they read clearly */
 .hp-featured {
-    background: transparent;
-    border-top:    1px solid rgba(255,255,255,.06);
-    border-bottom: 1px solid rgba(255,255,255,.06);
+    background: #321318;
+    border-top:    1px solid rgba(255,255,255,.08);
+    border-bottom: 1px solid rgba(255,255,255,.08);
 }
 .hp-all {
-    background: transparent;
+    background: #2a1015;
 }
 
 .hp-shell { width: min(1220px, 100%); margin: 0 auto; }
@@ -876,19 +875,88 @@ body {
 body.modal-open { overflow:hidden; }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
-@media (max-width: 1100px) { .hp-grid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 1100px) {
+    .hp-grid { grid-template-columns: repeat(3,1fr); }
+}
+
 @media (max-width: 860px) {
-    .hp-hero { padding: 8rem 1.25rem 3.5rem; }
+    .hp-hero { padding: 8rem 1.25rem 3.5rem; min-height: 520px; }
     .hp-arrow { display: none; }
     .hp-grid { grid-template-columns: repeat(2,1fr); gap: .8rem; }
     .event-modal-card { grid-template-columns:1fr; grid-template-rows:220px 1fr; max-height:92vh; }
     .event-modal-meta-grid { grid-template-columns:1fr; }
 }
-@media (max-width: 560px) {
-    .hp-hero { padding: 7rem 1rem 3rem; }
-    .hp-grid { grid-template-columns: 1fr; }
-    .hp-fcard { flex: 0 0 85vw; }
-    .hp-cats { gap: .36rem; }
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+    /* hero */
+    .hp-hero {
+        padding: 6.5rem 1rem 2.5rem;
+        min-height: auto;
+        text-align: center;
+    }
+    .hp-hero-heading { font-size: 1.75rem; letter-spacing: -.02em; }
+    .hp-hero-sub { font-size: .85rem; margin-bottom: 1.4rem; }
+
+    /* search bar — stack button below on very small screens */
+    .hp-search-bar {
+        flex-wrap: wrap;
+        padding: .55rem .55rem .55rem 1rem;
+        border-radius: 16px;
+        gap: .4rem;
+    }
+    .hp-search-input { width: 100%; order: 2; }
+    .hp-search-icon  { order: 1; }
+    .hp-search-btn   {
+        order: 3;
+        width: 100%;
+        border-radius: 10px;
+        padding: .6rem 1rem;
+    }
+
+    /* category chips — single scrollable row, no wrap */
+    .hp-cats {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: .4rem;
+        padding-bottom: .4rem;
+        margin-top: 1.2rem;
+        /* hide scrollbar */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .hp-cats::-webkit-scrollbar { display: none; }
+    .hp-cat {
+        flex-shrink: 0;
+        font-size: .76rem;
+        padding: .38rem .75rem;
+    }
+    .hp-cat-count { display: none; }
+
+    /* sections */
+    .hp-featured,
+    .hp-all { padding: 2rem .75rem 2.5rem; }
+    .hp-sec-head { margin-bottom: 1rem; }
+    .hp-sec-title { font-size: 1.2rem; }
+
+    /* featured strip */
+    .hp-fcard { flex: 0 0 80vw; }
+
+    /* grid — single column */
+    .hp-grid { grid-template-columns: 1fr; gap: .75rem; }
+
+    /* modal */
+    .event-modal { padding: 0; align-items: flex-end; }
+    .event-modal-card {
+        width: 100%;
+        max-height: 95vh;
+        border-radius: 20px 20px 0 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: 200px 1fr;
+    }
+    .event-modal-card::before { display: none; }
+    .event-modal-content { padding: 1rem; }
 }
 </style>
 

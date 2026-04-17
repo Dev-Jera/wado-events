@@ -362,6 +362,20 @@
         </div>
     </section>
 
+    {{-- ── FULLSCREEN SCAN RESULT OVERLAY (scanner_only mode) ── --}}
+    <div id="scan-overlay" class="sco sco-hidden" role="alert" aria-live="assertive">
+        <div class="sco-body">
+            <div class="sco-icon-wrap" id="sco-icon-wrap">
+                {{-- filled by JS --}}
+            </div>
+            <p class="sco-holder" id="sco-holder"></p>
+            <p class="sco-event"  id="sco-event"></p>
+            <p class="sco-msg"    id="sco-msg"></p>
+            <p class="sco-code"   id="sco-code"></p>
+        </div>
+        <div class="sco-progress"><div class="sco-progress-fill" id="sco-progress-fill"></div></div>
+    </div>
+
     <style>
 
         /* ── tokens ── */
@@ -660,14 +674,77 @@
             .offline-row { grid-template-columns: 1fr; }
             .result-grid { grid-template-columns: 1fr; }
         }
+
+        /* ── Fullscreen scan result overlay ── */
+        .sco {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 2rem 1.5rem 0;
+            transition: opacity .18s ease;
+        }
+        .sco-hidden { opacity: 0; pointer-events: none; }
+        .sco-visible { opacity: 1; pointer-events: auto; }
+
+        .sco-ok  { background: #16a34a; }
+        .sco-bad { background: #c0283c; }
+
+        .sco-body {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: .75rem; text-align: center;
+        }
+
+        .sco-icon-wrap {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: rgba(255,255,255,.2);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: .5rem;
+        }
+        .sco-icon-wrap svg { width: 52px; height: 52px; stroke: #fff; }
+
+        .sco-holder {
+            margin: 0; font-size: clamp(1.6rem, 8vw, 2.6rem);
+            font-weight: 800; color: #fff; line-height: 1.1;
+            letter-spacing: -.02em;
+        }
+        .sco-event {
+            margin: 0; font-size: clamp(.9rem, 4vw, 1.15rem);
+            color: rgba(255,255,255,.82); font-weight: 600; line-height: 1.3;
+        }
+        .sco-msg {
+            margin: .25rem 0 0; font-size: clamp(.85rem, 3.5vw, 1rem);
+            color: rgba(255,255,255,.7); font-weight: 500;
+        }
+        .sco-code {
+            margin: 0; font-family: monospace;
+            font-size: clamp(.7rem, 3vw, .88rem);
+            color: rgba(255,255,255,.5); letter-spacing: .05em;
+        }
+
+        /* countdown progress bar at very bottom */
+        .sco-progress {
+            width: 100%; height: 5px;
+            background: rgba(255,255,255,.2);
+            position: absolute; bottom: 0; left: 0;
+        }
+        .sco-progress-fill {
+            height: 100%; background: rgba(255,255,255,.7);
+            width: 100%;
+            transition: width linear;
+        }
     </style>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
     (function () {
-        const scannerOnly = @json($scannerOnly);
-        const isEmbedded = @json($isEmbedded);
+        const scannerOnly      = @json($scannerOnly);
+        const isEmbedded       = @json($isEmbedded);
+        const scanJsonUrl      = @json(route('tickets.verify.scan-json'));
+        const csrfToken        = document.querySelector('meta[name=csrf-token]')?.content
+                                 || document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]?.replace(/%3D/g,'=') || '';
         const fullScannerBaseUrl = @json(route('tickets.verify.index', ['scanner_only' => 1, 'back' => $returnToScannerUrl]));
+
         const readerTargetId = 'qr-reader';
         const statusEl       = document.getElementById('scanner-status');
         const feedbackEl     = document.getElementById('scanner-feedback');
@@ -682,34 +759,123 @@
         const offlineSearch  = document.getElementById('offline-search');
         const offlineTableWrap = document.getElementById('offline-table-wrap');
 
+        // overlay elements
+        const overlay        = document.getElementById('scan-overlay');
+        const scoIconWrap    = document.getElementById('sco-icon-wrap');
+        const scoHolder      = document.getElementById('sco-holder');
+        const scoEvent       = document.getElementById('sco-event');
+        const scoMsg         = document.getElementById('sco-msg');
+        const scoCode        = document.getElementById('sco-code');
+        const scoProgressFill= document.getElementById('sco-progress-fill');
+
         if (!startBtn || !stopBtn || !codeInput || !statusEl || !feedbackEl || !eventSelect || typeof Html5Qrcode === 'undefined') return;
 
-        let scanner = null, running = false, lastCode = '', scanWatchdog = null, selectedCameraLabel = '';
+        let scanner = null, running = false, lastCode = '', scanLocked = false,
+            scanWatchdog = null, selectedCameraLabel = '', overlayTimer = null;
 
-        const setStatus = (text) => { statusEl.textContent = text; };
+        // ── Device ID ──────────────────────────────────────────────────
+        const getDeviceId = () => {
+            const key = 'ticket_verify_device_id';
+            let v = localStorage.getItem(key);
+            if (!v) { v = 'scanner-' + Math.random().toString(36).slice(2, 10); localStorage.setItem(key, v); }
+            return v;
+        };
+        if (deviceInput) deviceInput.value = getDeviceId();
 
+        // ── Audio feedback ─────────────────────────────────────────────
+        const playSound = (ok) => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ok) {
+                    [[880, 0, .12], [1320, .13, .15]].forEach(([freq, when, dur]) => {
+                        const o = ctx.createOscillator(), g = ctx.createGain();
+                        o.connect(g); g.connect(ctx.destination);
+                        o.type = 'sine'; o.frequency.value = freq;
+                        g.gain.setValueAtTime(.28, ctx.currentTime + when);
+                        g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + when + dur);
+                        o.start(ctx.currentTime + when);
+                        o.stop(ctx.currentTime + when + dur + .05);
+                    });
+                } else {
+                    const o = ctx.createOscillator(), g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.type = 'sawtooth';
+                    o.frequency.setValueAtTime(220, ctx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + .35);
+                    g.gain.setValueAtTime(.35, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .35);
+                    o.start(ctx.currentTime); o.stop(ctx.currentTime + .4);
+                }
+            } catch (_) {}
+        };
+
+        // ── Fullscreen result overlay (scanner_only mode) ──────────────
+        const OVERLAY_DURATION = 2500; // ms before auto-dismiss
+
+        const showOverlay = (result) => {
+            if (!overlay) return;
+            clearTimeout(overlayTimer);
+
+            const ok = result.ok;
+            overlay.className = 'sco sco-visible ' + (ok ? 'sco-ok' : 'sco-bad');
+
+            scoIconWrap.innerHTML = ok
+                ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                       <path d="M20 6L9 17l-5-5"/>
+                   </svg>`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                   </svg>`;
+
+            scoHolder.textContent  = result.holder || (ok ? 'Welcome in!' : 'Access Denied');
+            scoEvent.textContent   = [result.event, result.category].filter(Boolean).join(' · ');
+            scoMsg.textContent     = result.message || '';
+            scoCode.textContent    = result.code ? ('CODE: ' + result.code) : '';
+
+            // countdown bar
+            if (scoProgressFill) {
+                scoProgressFill.style.transition = 'none';
+                scoProgressFill.style.width = '100%';
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    scoProgressFill.style.transition = `width ${OVERLAY_DURATION}ms linear`;
+                    scoProgressFill.style.width = '0%';
+                }));
+            }
+
+            playSound(ok);
+
+            overlayTimer = setTimeout(hideOverlay, OVERLAY_DURATION);
+        };
+
+        const hideOverlay = () => {
+            clearTimeout(overlayTimer);
+            if (overlay) overlay.className = 'sco sco-hidden';
+            scanLocked = false;
+            lastCode   = '';   // allow re-scanning same code after dismiss
+        };
+
+        if (overlay) overlay.addEventListener('click', hideOverlay);
+
+        // ── Helpers ────────────────────────────────────────────────────
+        const setStatus   = (text) => { statusEl.textContent = text; };
         const setFeedback = (text, tone = 'neutral') => {
             feedbackEl.textContent = text;
             feedbackEl.className = 'scanner-feedback fb-' + tone;
         };
-
         const hasSelectedEvent = () => String(eventSelect.value || '').trim() !== '';
-
         const syncScannerButtons = () => {
             if (running) { startBtn.disabled = true; stopBtn.disabled = false; return; }
             startBtn.disabled = !hasSelectedEvent();
             stopBtn.disabled = true;
         };
-
         const resetWatchdog = () => {
             if (scanWatchdog) clearTimeout(scanWatchdog);
             if (!running) return;
             scanWatchdog = setTimeout(() => {
-                setStatus('Scanning… no QR yet');
-                setFeedback('No readable QR detected. Increase brightness, center the code, and hold steady.', 'warning');
+                setStatus('Scanning…');
+                setFeedback('No QR detected yet — center the code and hold steady.', 'warning');
             }, 4000);
         };
-
         const pickCamera = async () => {
             const cameras = await Html5Qrcode.getCameras();
             if (!Array.isArray(cameras) || !cameras.length) throw new Error('No camera found');
@@ -717,58 +883,91 @@
             selectedCameraLabel = preferred.label || 'camera';
             return preferred.id;
         };
-
         const parsePayload = (raw) => {
             try { const p = JSON.parse(raw); if (p && typeof p === 'object' && p.code) return p; } catch (_) {}
             return null;
         };
 
+        // ── Core: handle a decoded QR ──────────────────────────────────
         const applyCode = (decodedText) => {
-            const raw = (decodedText || '').trim();
+            const raw     = (decodedText || '').trim();
             const payload = parsePayload(raw);
-            const code = (payload ? String(payload.code || '') : raw).trim().toUpperCase();
-            if (!code || code === lastCode) return;
+            const code    = (payload ? String(payload.code || '') : raw).trim().toUpperCase();
+            if (!code || code === lastCode || scanLocked) return;
             lastCode = code;
-            codeInput.value = code;
-            if (payloadInput) payloadInput.value = payload ? JSON.stringify(payload) : raw;
-            setStatus('Detected: ' + code);
-            setFeedback('QR detected — ' + code, 'success');
-            if (submitBtn) {
+
+            if (scannerOnly) {
+                // ── AJAX path: no page reload ──
+                scanLocked = true;
+                setFeedback('Checking…', 'info');
+                fetch(scanJsonUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        selected_event_id: eventSelect.value,
+                        ticket_code:       code,
+                        scanned_payload:   payload ? JSON.stringify(payload) : raw,
+                        device_id:         getDeviceId(),
+                    }),
+                })
+                .then(r => r.json())
+                .then(result => {
+                    showOverlay(result);
+                    setFeedback(result.ok ? '✓ Valid — next ticket' : '✗ ' + result.message,
+                                result.ok ? 'success' : 'error');
+                })
+                .catch(() => {
+                    showOverlay({ ok: false, message: 'Network error. Check connection.' });
+                    setFeedback('Network error.', 'error');
+                    scanLocked = false;
+                });
+            } else {
+                // ── Normal path: fill form + submit ──
+                if (codeInput)    codeInput.value    = code;
+                if (payloadInput) payloadInput.value = payload ? JSON.stringify(payload) : raw;
+                setStatus('Detected: ' + code);
                 setFeedback('QR detected. Submitting…', 'info');
-                submitBtn.click();
+                if (submitBtn) submitBtn.click();
             }
         };
 
+        // ── Scanner start / stop ───────────────────────────────────────
         const startScanner = async () => {
             if (running) return;
             if (!hasSelectedEvent()) {
-                setStatus('Blocked'); setFeedback('Choose the gate event before starting the scanner.', 'error');
+                setStatus('Blocked');
+                setFeedback('Choose the gate event before starting the scanner.', 'error');
                 syncScannerButtons(); eventSelect.focus(); return;
             }
-
             if (isEmbedded && !scannerOnly) {
-                const targetUrl = fullScannerBaseUrl + '&event_id=' + encodeURIComponent(String(eventSelect.value || ''));
-                if (window.top && window.top !== window) {
-                    window.top.location.href = targetUrl;
-                } else {
-                    window.location.href = targetUrl;
-                }
-
+                const url = fullScannerBaseUrl + '&event_id=' + encodeURIComponent(String(eventSelect.value || ''));
+                (window.top && window.top !== window ? window.top : window).location.href = url;
                 return;
             }
-
             try {
-                setStatus('Starting…'); setFeedback('Starting camera. Allow access if prompted.', 'info');
+                setStatus('Starting…'); setFeedback('Starting camera — allow access if prompted.', 'info');
                 const cameraId = await pickCamera();
                 scanner = new Html5Qrcode(readerTargetId);
-                await scanner.start(cameraId, { fps:15, qrbox:{width:240,height:240}, aspectRatio:1, rememberLastUsedCamera:true, showTorchButtonIfSupported:true, showZoomSliderIfSupported:true }, (decoded) => { resetWatchdog(); applyCode(decoded); }, () => {});
+                await scanner.start(
+                    cameraId,
+                    { fps: 15, qrbox: { width: 240, height: 240 }, aspectRatio: 1,
+                      rememberLastUsedCamera: true, showTorchButtonIfSupported: true,
+                      showZoomSliderIfSupported: true },
+                    (decoded) => { resetWatchdog(); applyCode(decoded); },
+                    () => {}
+                );
                 running = true;
                 statusEl.textContent = 'Scanning';
-                statusEl.className = 'vp-badge badge-scan';
-                setFeedback('Live on ' + selectedCameraLabel + '. Hold the QR inside the scan area.', 'info');
+                statusEl.className   = 'vp-badge badge-scan';
+                setFeedback('Live — hold QR inside the scan area.', 'info');
                 syncScannerButtons(); resetWatchdog();
             } catch (err) {
-                setStatus('Error'); setFeedback('Camera could not start. Check permissions and try again.', 'error');
+                setStatus('Error');
+                setFeedback('Camera could not start. Check permissions and try again.', 'error');
                 scanner = null; syncScannerButtons();
             }
         };
@@ -780,7 +979,10 @@
                 scanner = null; running = false;
                 if (scanWatchdog) { clearTimeout(scanWatchdog); scanWatchdog = null; }
                 statusEl.textContent = 'Idle'; statusEl.className = 'vp-badge badge-idle';
-                setFeedback(hasSelectedEvent() ? 'Scanner stopped. Start again when ready.' : 'Choose an event first, then start the camera.', hasSelectedEvent() ? 'neutral' : 'warning');
+                setFeedback(
+                    hasSelectedEvent() ? 'Stopped. Start again when ready.' : 'Choose an event first.',
+                    hasSelectedEvent() ? 'neutral' : 'warning'
+                );
                 syncScannerButtons();
             }
         };
@@ -790,36 +992,33 @@
         eventSelect.addEventListener('change', () => {
             if (running) { setFeedback('Event changed — stop and restart the scanner.', 'warning'); return; }
             setStatus(hasSelectedEvent() ? 'Ready' : 'Idle');
-            setFeedback(hasSelectedEvent() ? 'Event selected. Start the camera.' : 'Choose an event first, then start the camera.', hasSelectedEvent() ? 'neutral' : 'warning');
+            setFeedback(
+                hasSelectedEvent() ? 'Event selected. Start the camera.' : 'Choose an event first.',
+                hasSelectedEvent() ? 'neutral' : 'warning'
+            );
             syncScannerButtons();
         });
         window.addEventListener('beforeunload', stopScanner);
 
-        const getDeviceId = () => {
-            const key = 'ticket_verify_device_id';
-            let v = localStorage.getItem(key);
-            if (!v) { v = 'scanner-' + Math.random().toString(36).slice(2, 10); localStorage.setItem(key, v); }
-            return v;
-        };
-        if (deviceInput) deviceInput.value = getDeviceId();
-
-        if (!hasSelectedEvent()) { setStatus('Waiting for event'); setFeedback('Choose an event first, then start the camera.', 'warning'); }
-        else { setStatus('Ready'); setFeedback('Event selected. Start the camera to begin scanning.', 'neutral'); }
+        // initial state
+        if (!hasSelectedEvent()) {
+            setStatus('Waiting'); setFeedback('Choose an event first, then start the camera.', 'warning');
+        } else {
+            setStatus('Ready'); setFeedback('Event selected. Start the camera to begin scanning.', 'neutral');
+        }
         syncScannerButtons();
 
-        /* offline */
+        // ── Offline tools ──────────────────────────────────────────────
         let offlineRows = [];
         const renderOffline = () => {
             if (!offlineTableWrap) return;
             const q = (offlineSearch?.value || '').trim().toLowerCase();
             const rows = offlineRows.filter(r => !q || [r.code, r.name, r.event, r.phone, r.email].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0, 50);
             if (!rows.length) { offlineTableWrap.innerHTML = '<p style="color:var(--muted);margin:.5rem 0 0;font-size:.83rem;">No offline matches.</p>'; return; }
-            offlineTableWrap.innerHTML = `
-                <div class="table-wrap" style="margin-top:.65rem;">
-                <table class="vp-table">
-                    <thead><tr><th>Code</th><th>Name</th><th>Phone/Email</th><th>Event</th><th>Purchased</th></tr></thead>
-                    <tbody>${rows.map(r => `<tr><td class="mono">${r.code||''}</td><td>${r.name||''}</td><td>${r.phone||r.email||''}</td><td>${r.event||''}</td><td>${r.purchased_at||''}</td></tr>`).join('')}</tbody>
-                </table></div>`;
+            offlineTableWrap.innerHTML = `<div class="table-wrap" style="margin-top:.65rem;"><table class="vp-table">
+                <thead><tr><th>Code</th><th>Name</th><th>Phone/Email</th><th>Event</th><th>Purchased</th></tr></thead>
+                <tbody>${rows.map(r => `<tr><td class="mono">${r.code||''}</td><td>${r.name||''}</td><td>${r.phone||r.email||''}</td><td>${r.event||''}</td><td>${r.purchased_at||''}</td></tr>`).join('')}</tbody>
+            </table></div>`;
         };
         offlineSearch?.addEventListener('input', renderOffline);
         offlineFile?.addEventListener('change', async (e) => {
