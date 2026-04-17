@@ -127,7 +127,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return false;
         }
 
-        return $this->gateAssignedEvents()->where('events.id', $eventId)->exists();
+        return Event::query()
+            ->whereKey($eventId)
+            ->where(function ($query): void {
+                $query->where('user_id', $this->id)
+                    ->orWhereHas('gateAgents', fn ($assigned) => $assigned->where('users.id', $this->id));
+            })
+            ->exists();
     }
 
     public function canAccessPanel(Panel $panel): bool

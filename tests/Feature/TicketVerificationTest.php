@@ -196,6 +196,9 @@ class TicketVerificationTest extends TestCase
             'purchased_at' => now(),
         ]);
 
+        // Assign gate staff to the event so canAccessGateEvent() passes
+        $staff->gateAssignedEvents()->attach($event->id);
+
         return [
             'staff' => $staff,
             'customer' => $customer,

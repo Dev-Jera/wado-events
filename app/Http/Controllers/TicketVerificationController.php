@@ -222,7 +222,7 @@ class TicketVerificationController extends Controller
 
         if (! $request->user()?->canAccessGateEvent($selectedEventId)) {
             return redirect()
-                ->route('tickets.verify.index')
+                ->route('tickets.verify.index', ['event_id' => $selectedEventId])
                 ->with('error', 'You are not assigned to that event.');
         }
 
@@ -442,7 +442,10 @@ class TicketVerificationController extends Controller
         }
 
         if ($user->isGateAgent()) {
-            return $query->whereHas('gateAgents', fn (Builder $assigned) => $assigned->where('users.id', $user->id));
+            return $query->where(function (Builder $accessible) use ($user): void {
+                $accessible->where('user_id', $user->id)
+                    ->orWhereHas('gateAgents', fn (Builder $assigned) => $assigned->where('users.id', $user->id));
+            });
         }
 
         return $query->whereRaw('1 = 0');
