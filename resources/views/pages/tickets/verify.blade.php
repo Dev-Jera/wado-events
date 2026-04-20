@@ -622,7 +622,11 @@
             object-fit: cover !important;
             display: block !important;
         }
-        #qr-reader canvas { display: none !important; }
+        #qr-reader canvas {
+            display: block !important;
+            opacity: 0.001 !important;
+            pointer-events: none !important;
+        }
         #qr-reader__scan_region { position: relative !important; }
 
         /* Scanner-only: video must fill the entire screen */
@@ -630,6 +634,7 @@
             width: 100% !important;
             height: 100% !important;
             position: relative !important;
+            overflow: hidden !important;
         }
         .vp-scanner-only #qr-reader video {
             position: absolute !important;
@@ -646,6 +651,13 @@
             height: 100% !important;
             z-index: 2 !important;
             overflow: hidden !important;
+        }
+        .vp-scanner-only #qr-reader canvas {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 3 !important;
         }
         /* Hide the library's default scan-border image overlay */
         .vp-scanner-only #qr-reader__scan_region > img { display: none !important; }
@@ -1157,11 +1169,14 @@
                 await scanner.start(
                     cameraId,
                     {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 },
+                        fps: 15,
+                        qrbox: (w, h) => {
+                            const s = Math.floor(Math.min(w, h) * 0.82);
+                            return { width: s, height: s };
+                        },
                         rememberLastUsedCamera: true,
                         showTorchButtonIfSupported: true,
-                        showZoomSliderIfSupported: false,
+                        showZoomSliderIfSupported: true,
                     },
                     (decoded) => { resetWatchdog(); applyCode(decoded); },
                     () => {}
