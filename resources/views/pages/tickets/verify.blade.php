@@ -671,6 +671,7 @@
         /* ── responsive ── */
         @media (max-width: 820px) {
             .vp-grid { grid-template-columns: 1fr; }
+            .vp-right { order: -1; }
             .offline-row { grid-template-columns: 1fr; }
             .result-grid { grid-template-columns: 1fr; }
         }
@@ -877,11 +878,9 @@
             }, 4000);
         };
         const pickCamera = async () => {
-            const cameras = await Html5Qrcode.getCameras();
-            if (!Array.isArray(cameras) || !cameras.length) throw new Error('No camera found');
-            const preferred = cameras.find(c => /back|rear|environment/i.test(c.label || '')) || cameras[0];
-            selectedCameraLabel = preferred.label || 'camera';
-            return preferred.id;
+            // Use environment-facing camera directly — more reliable on mobile
+            // than enumerating devices and guessing by label.
+            return { facingMode: 'environment' };
         };
         const parsePayload = (raw) => {
             try { const p = JSON.parse(raw); if (p && typeof p === 'object' && p.code) return p; } catch (_) {}
@@ -954,9 +953,13 @@
                 scanner = new Html5Qrcode(readerTargetId);
                 await scanner.start(
                     cameraId,
-                    { fps: 15, qrbox: { width: 240, height: 240 }, aspectRatio: 1,
-                      rememberLastUsedCamera: true, showTorchButtonIfSupported: true,
-                      showZoomSliderIfSupported: true },
+                    {
+                        fps: 25,
+                        qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.72); return { width: s, height: s }; },
+                        rememberLastUsedCamera: true,
+                        showTorchButtonIfSupported: true,
+                        showZoomSliderIfSupported: true,
+                    },
                     (decoded) => { resetWatchdog(); applyCode(decoded); },
                     () => {}
                 );
