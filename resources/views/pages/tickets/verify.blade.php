@@ -528,14 +528,25 @@
         .vp-scanner-only .scanner-actions {
             position: absolute;
             bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
+            left: .75rem;
+            right: .75rem;
             z-index: 6;
             margin: 0;
-            background: rgba(0,0,0,.45);
+            background: rgba(0,0,0,.55);
             border: 1px solid rgba(255,255,255,.2);
             border-radius: 12px;
-            padding: .45rem;
+            padding: .5rem;
+            display: flex;
+            gap: .4rem;
+            flex-wrap: nowrap;
+        }
+        .vp-scanner-only .scanner-actions .btn {
+            flex: 1;
+            justify-content: center;
+            min-width: 0;
+            font-size: .78rem;
+            padding: 0 .5rem;
+            white-space: nowrap;
         }
 
         /* ── header ── */
@@ -971,9 +982,18 @@
             }, 4000);
         };
         const pickCamera = async () => {
-            // Use environment-facing camera directly — more reliable on mobile
-            // than enumerating devices and guessing by label.
-            return { facingMode: 'environment' };
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                if (Array.isArray(cameras) && cameras.length) {
+                    // Prefer back/rear camera; fall back to last in list (usually rear on mobile)
+                    const back = cameras.find(c => /back|rear|environment/i.test(c.label || ''))
+                        || cameras[cameras.length - 1];
+                    selectedCameraLabel = back.label || 'camera';
+                    return back.id;
+                }
+            } catch (_) {}
+            // Fallback: let the browser pick the environment-facing camera
+            return { facingMode: { ideal: 'environment' } };
         };
         const parsePayload = (raw) => {
             try { const p = JSON.parse(raw); if (p && typeof p === 'object' && p.code) return p; } catch (_) {}
@@ -1078,8 +1098,13 @@
                     try { document.documentElement.requestFullscreen?.(); } catch (_) {}
                 }
             } catch (err) {
+                const msg = (err?.message || String(err)).toLowerCase();
+                let hint = 'Check camera permissions and try again.';
+                if (msg.includes('permission') || msg.includes('denied')) hint = 'Camera permission denied. Allow camera access in browser settings.';
+                else if (msg.includes('notfound') || msg.includes('no camera')) hint = 'No camera found on this device.';
+                else if (msg.includes('inuse') || msg.includes('already')) hint = 'Camera is in use by another app. Close it and retry.';
                 setStatus('Error');
-                setFeedback('Camera could not start. Check permissions and try again.', 'error');
+                setFeedback('Camera failed: ' + hint, 'error');
                 scanner = null; syncScannerButtons();
             }
         };
