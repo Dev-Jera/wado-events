@@ -622,14 +622,13 @@
             object-fit: cover !important;
             display: block !important;
         }
-        #qr-reader canvas { display: block !important; }
+        #qr-reader canvas { display: none !important; }
         #qr-reader__scan_region { position: relative !important; }
 
         /* Scanner-only: video must fill the entire screen */
         .vp-scanner-only #qr-reader {
             width: 100% !important;
-            height: 100vh !important;
-            height: 100svh !important;
+            height: 100% !important;
             position: relative !important;
         }
         .vp-scanner-only #qr-reader video {
@@ -640,13 +639,13 @@
             object-fit: cover !important;
             z-index: 1 !important;
         }
-        .vp-scanner-only #qr-reader canvas,
         .vp-scanner-only #qr-reader__scan_region {
             position: absolute !important;
             inset: 0 !important;
             width: 100% !important;
             height: 100% !important;
             z-index: 2 !important;
+            overflow: hidden !important;
         }
         /* Hide the library's default scan-border image overlay */
         .vp-scanner-only #qr-reader__scan_region > img { display: none !important; }
@@ -1155,27 +1154,14 @@
                 const cameraId = await pickCamera();
                 setFeedback('Camera found — loading video…', 'info');
                 scanner = new Html5Qrcode(readerTargetId);
-                const cameraSource = typeof cameraId === 'string'
-                    ? { deviceId: { exact: cameraId } }
-                    : cameraId;
                 await scanner.start(
-                    cameraSource,
+                    cameraId,
                     {
-                        fps: 15,
-                        aspectRatio: 16 / 9,
-                        qrbox: (w, h) => {
-                            const s = Math.max(220, Math.min(360, Math.floor(Math.min(w, h) * 0.68)));
-                            return { width: s, height: s };
-                        },
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
                         rememberLastUsedCamera: true,
                         showTorchButtonIfSupported: true,
-                        showZoomSliderIfSupported: true,
-                        videoConstraints: {
-                            ...(typeof cameraId === 'string' ? { deviceId: { exact: cameraId } } : {}),
-                            facingMode: { ideal: 'environment' },
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                        },
+                        showZoomSliderIfSupported: false,
                     },
                     (decoded) => { resetWatchdog(); applyCode(decoded); },
                     () => {}
@@ -1186,10 +1172,6 @@
                 setFeedback('Live — hold QR inside the scan area.', 'info');
                 syncScannerButtons(); resetWatchdog();
 
-                // Go fullscreen on mobile to remove browser chrome
-                if (scannerOnly) {
-                    try { document.documentElement.requestFullscreen?.(); } catch (_) {}
-                }
             } catch (err) {
                 const msg = (err?.message || String(err)).toLowerCase();
                 let hint = 'Check camera permissions and try again.';
