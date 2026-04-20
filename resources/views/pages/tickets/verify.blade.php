@@ -451,14 +451,16 @@
         .vp-right-hidden { display: none !important; }
 
         .vp-scanner-only {
-            min-height: 100dvh;
+            min-height: 100vh;
+            min-height: 100svh;
             padding: 0;
             background: #000;
         }
 
         .vp-scanner-only .vp-shell {
             width: 100%;
-            min-height: 100dvh;
+            min-height: 100vh;
+            min-height: 100svh;
             margin: 0;
             max-width: none;
             gap: 0;
@@ -467,8 +469,10 @@
         .vp-scanner-only .vp-grid,
         .vp-scanner-only .vp-left {
             display: block;
-            min-height: 100dvh;
-            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100svh;
+            height: 100vh;
+            height: 100svh;
         }
 
         .vp-scanner-only .scanner-card {
@@ -478,8 +482,10 @@
             margin: 0;
             padding: 0;
             box-shadow: none;
-            min-height: 100dvh;
-            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100svh;
+            height: 100vh;
+            height: 100svh;
             background: #000;
         }
 
@@ -518,8 +524,10 @@
 
         .vp-scanner-only .qr-viewport {
             width: 100%;
-            min-height: 100dvh;
-            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100svh;
+            height: 100vh;
+            height: 100svh;
             border: 0;
             border-radius: 0;
             background: #000;
@@ -620,7 +628,8 @@
         /* Scanner-only: video must fill the entire screen */
         .vp-scanner-only #qr-reader {
             width: 100% !important;
-            height: 100dvh !important;
+            height: 100vh !important;
+            height: 100svh !important;
             position: relative !important;
         }
         .vp-scanner-only #qr-reader video {
@@ -1123,7 +1132,9 @@
             if (!hasSelectedEvent()) {
                 setStatus('Blocked');
                 setFeedback('Choose the gate event before starting the scanner.', 'error');
-                syncScannerButtons(); eventSelect.focus(); return;
+                syncScannerButtons();
+                if (eventSelect) eventSelect.focus();
+                return;
             }
 
             const preflight = cameraPreflightError();
@@ -1144,14 +1155,27 @@
                 const cameraId = await pickCamera();
                 setFeedback('Camera found — loading video…', 'info');
                 scanner = new Html5Qrcode(readerTargetId);
+                const cameraSource = typeof cameraId === 'string'
+                    ? { deviceId: { exact: cameraId } }
+                    : cameraId;
                 await scanner.start(
-                    cameraId,
+                    cameraSource,
                     {
-                        fps: 25,
-                        qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.72); return { width: s, height: s }; },
+                        fps: 15,
+                        aspectRatio: 16 / 9,
+                        qrbox: (w, h) => {
+                            const s = Math.max(220, Math.min(360, Math.floor(Math.min(w, h) * 0.68)));
+                            return { width: s, height: s };
+                        },
                         rememberLastUsedCamera: true,
                         showTorchButtonIfSupported: true,
                         showZoomSliderIfSupported: true,
+                        videoConstraints: {
+                            ...(typeof cameraId === 'string' ? { deviceId: { exact: cameraId } } : {}),
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                        },
                     },
                     (decoded) => { resetWatchdog(); applyCode(decoded); },
                     () => {}
