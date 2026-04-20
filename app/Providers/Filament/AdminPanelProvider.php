@@ -46,8 +46,135 @@ class AdminPanelProvider extends PanelProvider
 
             // ── Dark navy sidebar ───────────────────────────
             ->renderHook('panels::head.end', fn () => '
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap");
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOGIN PAGE — RESPONSIVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Full-screen centred layout */
+.fi-simple-layout {
+    min-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #f0f4fb !important;
+    padding: 1.25rem !important;
+    box-sizing: border-box !important;
+}
+
+/* Card wrapper */
+.fi-simple-main {
+    width: 100% !important;
+    max-width: 420px !important;
+    background: #fff !important;
+    border-radius: 18px !important;
+    box-shadow: 0 4px 32px rgba(13,27,62,.10) !important;
+    padding: 2rem 1.75rem !important;
+    box-sizing: border-box !important;
+}
+
+/* Logo / brand area inside the card */
+.fi-logo {
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 1.5rem !important;
+}
+.fi-logo img {
+    height: 2.8rem !important;
+    width: auto !important;
+}
+
+/* Page heading ("Sign in") */
+.fi-simple-page .fi-header-heading,
+.fi-simple-page h1 {
+    font-size: 1.45rem !important;
+    font-weight: 800 !important;
+    color: #0d1b3e !important;
+    text-align: center !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Field labels */
+.fi-simple-page .fi-fo-field-label-content {
+    font-size: .7rem !important;
+    font-weight: 700 !important;
+    color: #374151 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .06em !important;
+}
+
+/* Inputs — full width, taller touch targets */
+.fi-simple-page .fi-input-wrp {
+    border: 1.5px solid #dde4f0 !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    width: 100% !important;
+}
+.fi-simple-page .fi-input-wrp:focus-within {
+    border-color: #0a4fbe !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(10,79,190,.10) !important;
+}
+.fi-simple-page .fi-input {
+    font-size: 1rem !important;
+    padding-top: .7rem !important;
+    padding-bottom: .7rem !important;
+    width: 100% !important;
+    min-height: 44px !important;
+}
+
+/* Remember me checkbox row */
+.fi-simple-page .fi-checkbox-label,
+.fi-simple-page [x-data] label {
+    font-size: .82rem !important;
+    color: #475569 !important;
+}
+
+/* Sign in button — full width, prominent */
+.fi-simple-page .fi-btn-primary,
+.fi-simple-page .fi-form-actions .fi-btn,
+.fi-simple-page button[type="submit"] {
+    width: 100% !important;
+    justify-content: center !important;
+    background: #0a4fbe !important;
+    border-color: #0a4fbe !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    padding-top: .75rem !important;
+    padding-bottom: .75rem !important;
+    min-height: 48px !important;
+    margin-top: .5rem !important;
+}
+.fi-simple-page .fi-btn-primary:hover,
+.fi-simple-page button[type="submit"]:hover {
+    background: #083f98 !important;
+    border-color: #083f98 !important;
+}
+
+/* Tighten spacing between fields */
+.fi-simple-page .fi-fo-field-wrp {
+    margin-bottom: 1rem !important;
+}
+
+/* Small screens — reduce card padding */
+@media (max-width: 480px) {
+    .fi-simple-layout {
+        padding: .75rem !important;
+        justify-content: flex-start !important;
+        padding-top: 2rem !important;
+    }
+    .fi-simple-main {
+        padding: 1.5rem 1.25rem !important;
+        border-radius: 14px !important;
+    }
+}
+
 
 /* Rounded dashboard font */
 :root {
