@@ -6,7 +6,7 @@ use App\Models\LoginAttempt;
 use App\Models\PaymentTransaction;
 use App\Models\TicketScanLog;
 use App\Models\User;
-use Filament\Notifications\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
 

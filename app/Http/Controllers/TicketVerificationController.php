@@ -136,24 +136,48 @@ class TicketVerificationController extends Controller
 
         if (! $ticket) {
             $this->logScan($request, null, $ticketCode, 'rejected', 'Ticket not found', $rawPayload, $selectedEventId);
-            return response()->json(['ok' => false, 'message' => 'Ticket not found.']);
+            return response()->json([
+                'ok' => false,
+                'reason' => 'not_found',
+                'message' => 'Ticket not found.',
+                'detail' => 'This code does not match any ticket for this event.',
+            ]);
         }
 
         if ((int) $ticket->event_id !== $selectedEventId) {
             $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket belongs to another event', $rawPayload, $selectedEventId);
-            return response()->json(['ok' => false, 'message' => 'Ticket belongs to a different event.']);
+            return response()->json([
+                'ok' => false,
+                'reason' => 'wrong_event',
+                'message' => 'Wrong event.',
+                'detail' => 'This ticket is for: ' . ($ticket->event?->title ?? 'another event'),
+                'holder' => $ticket->holder_name ?: $ticket->user?->name ?: 'Guest',
+            ]);
         }
 
         $holderName = $ticket->holder_name ?: $ticket->user?->name ?: 'Guest';
 
         if ($ticket->status === Ticket::STATUS_CANCELLED) {
             $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket is cancelled', $rawPayload, $selectedEventId);
-            return response()->json(['ok' => false, 'message' => 'Ticket is cancelled.', 'holder' => $holderName]);
+            return response()->json([
+                'ok' => false,
+                'reason' => 'cancelled',
+                'message' => 'Ticket cancelled.',
+                'detail' => 'This ticket has been cancelled and is not valid for entry.',
+                'holder' => $holderName,
+            ]);
         }
 
         if ($ticket->status === Ticket::STATUS_USED || $ticket->used_at) {
             $this->logScan($request, $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
-            return response()->json(['ok' => false, 'message' => 'Already used. Entry denied.', 'holder' => $holderName]);
+            $usedAt = $ticket->used_at ? $ticket->used_at->format('d M H:i') : null;
+            return response()->json([
+                'ok' => false,
+                'reason' => 'already_used',
+                'message' => 'Already used.',
+                'detail' => $usedAt ? "Scanned in at {$usedAt}. Entry denied." : 'This ticket has already been used.',
+                'holder' => $holderName,
+            ]);
         }
 
         $ticket->forceFill(['status' => Ticket::STATUS_USED, 'used_at' => now()])->save();
@@ -162,7 +186,9 @@ class TicketVerificationController extends Controller
 
         return response()->json([
             'ok'       => true,
-            'message'  => 'Valid — welcome in!',
+            'reason'   => 'valid',
+            'message'  => 'Scan successful!',
+            'detail'   => 'Welcome in — ticket marked as used.',
             'holder'   => $holderName,
             'event'    => $ticket->event?->title ?? '',
             'category' => $ticket->ticketCategory?->name ?? '',

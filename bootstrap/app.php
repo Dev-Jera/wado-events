@@ -21,5 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Redirect unauthenticated scanner users to the Filament login
+        // (gate staff don't have a public-site account login)
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+            if ($request->is('ticket-verification*') && ! $request->expectsJson()) {
+                session()->put('url.intended', $request->fullUrl());
+                return redirect()->route('filament.admin.auth.login');
+            }
+        });
     })->create();

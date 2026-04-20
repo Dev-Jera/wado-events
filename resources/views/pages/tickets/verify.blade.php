@@ -42,6 +42,24 @@
             </header>
             @endif
 
+            {{-- ── EVENT SELECTOR BAR (always at top, above camera) ── --}}
+            @unless($scannerOnly)
+            <div class="vp-event-bar">
+                <label class="vp-event-bar-label" for="selected-event-id">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+                    Gate Event
+                </label>
+                <select id="selected-event-id" name="selected_event_id" class="vp-input vp-event-bar-select" required>
+                    <option value="">Select event…</option>
+                    @foreach ($events as $event)
+                        <option value="{{ $event->id }}" @selected($selectedEventId === (int) $event->id)>
+                            {{ $event->title }} ({{ $event->starts_at?->format('d M, H:i') }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endunless
+
             <div class="vp-grid {{ $scannerOnly ? 'vp-grid-scanner-only' : '' }}">
 
                 {{-- ── LEFT COLUMN ── --}}
@@ -113,6 +131,15 @@
                 {{-- ── RIGHT COLUMN ── --}}
                 <div class="vp-right {{ $scannerOnly ? 'vp-right-hidden' : '' }}">
 
+                    {{-- Mobile "other methods" toggle --}}
+                    <button type="button" class="vp-fallback-toggle" id="vp-fallback-toggle" aria-expanded="false">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        Can't scan? Other methods
+                        <svg class="vp-toggle-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+
+                    <div class="vp-fallback-body" id="vp-fallback-body">
+
                     {{-- Verify form --}}
                     <div class="vp-card">
                         <div class="vp-card-head">
@@ -126,18 +153,8 @@
                             @csrf
                             <input type="hidden" id="scanned-payload" name="scanned_payload" value="{{ old('scanned_payload') }}">
                             <input type="hidden" id="device-id" name="device_id" value="{{ old('device_id') }}">
-
-                            <div class="field">
-                                <label class="field-label" for="selected-event-id">Gate Event</label>
-                                <select id="selected-event-id" name="selected_event_id" class="vp-input" required>
-                                    <option value="">Select event…</option>
-                                    @foreach ($events as $event)
-                                        <option value="{{ $event->id }}" @selected($selectedEventId === (int) $event->id)>
-                                            {{ $event->title }} ({{ $event->starts_at?->format('d M, H:i') }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            {{-- event id synced from the top bar select via JS --}}
+                            <input type="hidden" id="verify-form-event-id" name="selected_event_id" value="{{ $selectedEventId ?: '' }}">
 
                             <div class="field">
                                 <label class="field-label" for="ticket-code-input">Ticket Code</label>
@@ -164,7 +181,7 @@
                         </div>
                         <form method="POST" action="{{ route('tickets.verify.store') }}" class="vp-form">
                             @csrf
-                            <input type="hidden" name="selected_event_id" value="{{ $selectedEventId }}">
+                            <input type="hidden" class="js-sync-event-id" name="selected_event_id" value="{{ $selectedEventId ?: '' }}">
                             <div class="field">
                                 <label class="field-label">Search by name, phone, or email</label>
                                 <div class="input-with-icon">
@@ -205,6 +222,7 @@
                         </div>
                     @endif
 
+                    </div>{{-- /vp-fallback-body --}}
                 </div>
             </div>
 
@@ -668,12 +686,80 @@
         .pill-valid { background:var(--blue-light); color:var(--blue); border:1px solid var(--blue-mid); }
         .pill-used  { background:var(--red-light);  color:var(--red); border:1px solid var(--red-mid); }
 
+        /* ── event selector bar (above grid) ── */
+        .vp-event-bar {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: .75rem 1.1rem;
+            box-shadow: var(--shadow);
+        }
+        .vp-event-bar-label {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .78rem;
+            font-weight: 700;
+            color: var(--blue);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .vp-event-bar-select { flex: 1; margin: 0; }
+
+        /* ── fallback toggle (mobile only) ── */
+        .vp-fallback-toggle {
+            display: none;
+        }
+        .vp-fallback-body {
+            display: contents; /* always visible on desktop */
+        }
+
         /* ── responsive ── */
         @media (max-width: 820px) {
             .vp-grid { grid-template-columns: 1fr; }
-            .vp-right { order: -1; }
+            .vp-event-bar { flex-direction: column; align-items: stretch; }
+            .vp-event-bar-label { justify-content: flex-start; }
             .offline-row { grid-template-columns: 1fr; }
             .result-grid { grid-template-columns: 1fr; }
+
+            /* Show the toggle button, hide the body by default */
+            .vp-fallback-toggle {
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+                width: 100%;
+                background: #fff;
+                border: 1.5px solid var(--border);
+                border-radius: var(--radius);
+                padding: .8rem 1.1rem;
+                font-size: .85rem;
+                font-weight: 700;
+                color: var(--blue);
+                cursor: pointer;
+                box-shadow: var(--shadow);
+            }
+            .vp-toggle-chevron {
+                margin-left: auto;
+                transition: transform .2s;
+            }
+            .vp-fallback-toggle[aria-expanded="true"] .vp-toggle-chevron {
+                transform: rotate(180deg);
+            }
+            .vp-fallback-body {
+                display: none;
+                flex-direction: column;
+                gap: 1.25rem;
+            }
+            .vp-fallback-body.open {
+                display: flex;
+            }
+            /* auto-open if there's a verification result or error */
+            .vp-fallback-body.has-result {
+                display: flex;
+            }
         }
 
         /* ── Fullscreen scan result overlay ── */
@@ -687,8 +773,9 @@
         .sco-hidden { opacity: 0; pointer-events: none; }
         .sco-visible { opacity: 1; pointer-events: auto; }
 
-        .sco-ok  { background: #16a34a; }
-        .sco-bad { background: #c0283c; }
+        .sco-ok   { background: #16a34a; }
+        .sco-bad  { background: #c0283c; }
+        .sco-warn { background: #b45309; }
 
         .sco-body {
             flex: 1; display: flex; flex-direction: column;
@@ -811,29 +898,36 @@
         };
 
         // ── Fullscreen result overlay (scanner_only mode) ──────────────
-        const OVERLAY_DURATION = 2500; // ms before auto-dismiss
+        const OVERLAY_DURATION = 3000;
+
+        // Colour by reason: valid=green, already_used=amber, everything else=red
+        const overlayColor = (result) => {
+            if (result.ok)                         return 'sco-ok';
+            if (result.reason === 'already_used')  return 'sco-warn';
+            if (result.reason === 'wrong_event')   return 'sco-warn';
+            return 'sco-bad';
+        };
 
         const showOverlay = (result) => {
             if (!overlay) return;
             clearTimeout(overlayTimer);
 
-            const ok = result.ok;
-            overlay.className = 'sco sco-visible ' + (ok ? 'sco-ok' : 'sco-bad');
+            overlay.className = 'sco sco-visible ' + overlayColor(result);
 
-            scoIconWrap.innerHTML = ok
-                ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-                       <path d="M20 6L9 17l-5-5"/>
-                   </svg>`
-                : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                   </svg>`;
+            scoIconWrap.innerHTML = result.ok
+                ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`
+                : (result.reason === 'already_used' || result.reason === 'wrong_event'
+                    ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+                    : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+                );
 
-            scoHolder.textContent  = result.holder || (ok ? 'Welcome in!' : 'Access Denied');
-            scoEvent.textContent   = [result.event, result.category].filter(Boolean).join(' · ');
-            scoMsg.textContent     = result.message || '';
-            scoCode.textContent    = result.code ? ('CODE: ' + result.code) : '';
+            scoHolder.textContent = result.holder || (result.ok ? 'Welcome in!' : 'Access Denied');
+            scoEvent.textContent  = result.ok
+                ? [result.event, result.category].filter(Boolean).join(' · ')
+                : result.message || '';
+            scoMsg.textContent    = result.detail || '';
+            scoCode.textContent   = result.code ? ('CODE: ' + result.code) : '';
 
-            // countdown bar
             if (scoProgressFill) {
                 scoProgressFill.style.transition = 'none';
                 scoProgressFill.style.width = '100%';
@@ -843,8 +937,7 @@
                 }));
             }
 
-            playSound(ok);
-
+            playSound(result.ok);
             overlayTimer = setTimeout(hideOverlay, OVERLAY_DURATION);
         };
 
@@ -913,14 +1006,25 @@
                         device_id:         getDeviceId(),
                     }),
                 })
-                .then(r => r.json())
+                .then(r => {
+                    if (r.status === 401 || r.status === 419) {
+                        // Session expired — send to login preserving the scanner URL
+                        window.location.href = @json(route('filament.admin.auth.login'))
+                            + '?intended=' + encodeURIComponent(window.location.href);
+                        return null;
+                    }
+                    return r.json();
+                })
                 .then(result => {
+                    if (!result) return;
                     showOverlay(result);
-                    setFeedback(result.ok ? '✓ Valid — next ticket' : '✗ ' + result.message,
-                                result.ok ? 'success' : 'error');
+                    setFeedback(
+                        result.ok ? '✓ ' + result.message : '✗ ' + (result.message || 'Denied'),
+                        result.ok ? 'success' : (result.reason === 'already_used' || result.reason === 'wrong_event' ? 'warning' : 'error')
+                    );
                 })
                 .catch(() => {
-                    showOverlay({ ok: false, message: 'Network error. Check connection.' });
+                    showOverlay({ ok: false, reason: 'network', message: 'Network error.', detail: 'Check your connection and try again.' });
                     setFeedback('Network error.', 'error');
                     scanLocked = false;
                 });
@@ -968,6 +1072,11 @@
                 statusEl.className   = 'vp-badge badge-scan';
                 setFeedback('Live — hold QR inside the scan area.', 'info');
                 syncScannerButtons(); resetWatchdog();
+
+                // Go fullscreen on mobile to remove browser chrome
+                if (scannerOnly) {
+                    try { document.documentElement.requestFullscreen?.(); } catch (_) {}
+                }
             } catch (err) {
                 setStatus('Error');
                 setFeedback('Camera could not start. Check permissions and try again.', 'error');
@@ -989,6 +1098,29 @@
                 syncScannerButtons();
             }
         };
+
+        // ── Sync top-bar event select → all hidden event id fields ──────
+        const syncEventFields = () => {
+            const val = eventSelect?.value || '';
+            document.querySelectorAll('#verify-form-event-id, .js-sync-event-id')
+                .forEach(el => { el.value = val; });
+        };
+        if (eventSelect) eventSelect.addEventListener('change', syncEventFields);
+
+        // ── Fallback toggle (mobile) ───────────────────────────────────
+        const fallbackToggle = document.getElementById('vp-fallback-toggle');
+        const fallbackBody   = document.getElementById('vp-fallback-body');
+        if (fallbackToggle && fallbackBody) {
+            // Auto-open if page has a verification result
+            if (fallbackBody.querySelector('.vp-result')) {
+                fallbackBody.classList.add('open');
+                fallbackToggle.setAttribute('aria-expanded', 'true');
+            }
+            fallbackToggle.addEventListener('click', () => {
+                const open = fallbackBody.classList.toggle('open');
+                fallbackToggle.setAttribute('aria-expanded', String(open));
+            });
+        }
 
         startBtn.addEventListener('click', startScanner);
         stopBtn.addEventListener('click', stopScanner);
