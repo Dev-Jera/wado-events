@@ -27,6 +27,7 @@
             src="{{ route('tickets.verify.index', ['embedded' => 1, 'back' => url('/dashboard/scanner-page')]) }}"
             title="Ticket Scanner"
             loading="lazy"
+            allow="camera; microphone; fullscreen"
         ></iframe>
     </div>
 
@@ -117,6 +118,14 @@
         if (window.matchMedia('(display-mode: standalone)').matches) {
             if (banner) banner.style.display = 'none';
         }
+
+        // Handle navigation requests from the sandboxed scanner iframe
+        window.addEventListener('message', (e) => {
+            if (e.origin !== window.location.origin) return;
+            if (e.data?.type === 'wado-navigate' && e.data?.url) {
+                window.location.href = e.data.url;
+            }
+        });
     })();
     </script>
 </x-filament-panels::page>

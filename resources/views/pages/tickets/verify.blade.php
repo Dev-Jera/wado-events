@@ -91,7 +91,7 @@
                                 Stop camera
                             </button>
                             @if($scannerOnly)
-                                <a href="{{ $returnToScannerUrl }}" class="btn btn-outline">Back to normal view</a>
+                                <a href="{{ $returnToScannerUrl }}" class="btn btn-outline">← Back</a>
                             @endif
                         </div>
                     </div>
@@ -1068,7 +1068,8 @@
             }
             if (isEmbedded && !scannerOnly) {
                 const url = fullScannerBaseUrl + '&event_id=' + encodeURIComponent(String(eventSelect.value || ''));
-                (window.top && window.top !== window ? window.top : window).location.href = url;
+                // Can't navigate parent directly from a sandboxed iframe — use postMessage
+                window.parent.postMessage({ type: 'wado-navigate', url }, window.location.origin);
                 return;
             }
             try {
