@@ -993,11 +993,18 @@
                     : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
                 );
 
-            scoHolder.textContent = result.holder || (result.ok ? 'Welcome in!' : 'Access Denied');
+            // Clear, reason-based headings
+            const reasonLabel = (() => {
+                if (result.ok)                              return result.message || 'Ticket verified.';
+                if (result.reason === 'already_used')       return 'Ticket already used.';
+                if (result.reason === 'wrong_event')        return 'Does not belong to this event.';
+                return 'Fake ticket.';
+            })();
+            scoHolder.textContent = reasonLabel;
             scoEvent.textContent  = result.ok
-                ? [result.event, result.category].filter(Boolean).join(' · ')
-                : result.message || '';
-            scoMsg.textContent    = result.detail || '';
+                ? (result.event ? 'for ' + result.event : '')
+                : (result.holder || '');
+            scoMsg.textContent    = result.ok ? (result.category || '') : (result.detail || '');
             scoCode.textContent   = result.code ? ('CODE: ' + result.code) : '';
 
             if (scoProgressFill) {

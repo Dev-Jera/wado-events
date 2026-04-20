@@ -106,13 +106,13 @@ class TicketVerificationController extends Controller
         // Signature check
         if ($payload && ! $this->ticketQrService->verifyPayloadSignature($payload)) {
             $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'fake', 'Invalid QR signature', $rawPayload, $selectedEventId);
-            return response()->json(['ok' => false, 'message' => 'Invalid QR signature. Possible fake ticket.']);
+            return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
         }
 
         // Event mismatch in payload
         if ($payload && isset($payload['event_id']) && (int) $payload['event_id'] !== $selectedEventId) {
             $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'rejected', 'QR belongs to another event', $rawPayload, $selectedEventId);
-            return response()->json(['ok' => false, 'message' => 'This QR belongs to a different event.']);
+            return response()->json(['ok' => false, 'reason' => 'wrong_event', 'message' => 'Does not belong to this event.']);
         }
 
         $ticketCode = $this->normalizeTicketCode((string) ($payload['code'] ?? ($data['ticket_code'] ?? '')));
@@ -138,9 +138,9 @@ class TicketVerificationController extends Controller
             $this->logScan($request, null, $ticketCode, 'rejected', 'Ticket not found', $rawPayload, $selectedEventId);
             return response()->json([
                 'ok' => false,
-                'reason' => 'not_found',
-                'message' => 'Ticket not found.',
-                'detail' => 'This code does not match any ticket for this event.',
+                'reason' => 'fake',
+                'message' => 'Fake ticket.',
+                'detail' => 'This code does not match any ticket in the system.',
             ]);
         }
 
@@ -149,7 +149,7 @@ class TicketVerificationController extends Controller
             return response()->json([
                 'ok' => false,
                 'reason' => 'wrong_event',
-                'message' => 'Wrong event.',
+                'message' => 'Does not belong to this event.',
                 'detail' => 'This ticket is for: ' . ($ticket->event?->title ?? 'another event'),
                 'holder' => $ticket->holder_name ?: $ticket->user?->name ?: 'Guest',
             ]);
@@ -161,8 +161,8 @@ class TicketVerificationController extends Controller
             $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket is cancelled', $rawPayload, $selectedEventId);
             return response()->json([
                 'ok' => false,
-                'reason' => 'cancelled',
-                'message' => 'Ticket cancelled.',
+                'reason' => 'fake',
+                'message' => 'Fake ticket.',
                 'detail' => 'This ticket has been cancelled and is not valid for entry.',
                 'holder' => $holderName,
             ]);
@@ -174,8 +174,8 @@ class TicketVerificationController extends Controller
             return response()->json([
                 'ok' => false,
                 'reason' => 'already_used',
-                'message' => 'Already used.',
-                'detail' => $usedAt ? "Scanned in at {$usedAt}. Entry denied." : 'This ticket has already been used.',
+                'message' => 'Ticket already used.',
+                'detail' => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
                 'holder' => $holderName,
             ]);
         }
@@ -187,8 +187,8 @@ class TicketVerificationController extends Controller
         return response()->json([
             'ok'       => true,
             'reason'   => 'valid',
-            'message'  => 'Scan successful!',
-            'detail'   => 'Welcome in — ticket marked as used.',
+            'message'  => 'Ticket verified for ' . ($ticket->event?->title ?? 'this event') . '.',
+            'detail'   => $holderName . ($ticket->ticketCategory?->name ? ' · ' . $ticket->ticketCategory->name : ''),
             'holder'   => $holderName,
             'event'    => $ticket->event?->title ?? '',
             'category' => $ticket->ticketCategory?->name ?? '',
