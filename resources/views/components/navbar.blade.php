@@ -4,7 +4,7 @@
 
 <nav class="site-nav" aria-label="Main navigation">
     <a href="{{ route('home') }}" class="brand" aria-label="Wado Tickets home">
-        <img src="{{ asset('images/wado-logo.png') }}" alt="Wado Tickets">
+        <img src="{{ asset('images/logos/logo-no-bg.png') }}" alt="Wado Tickets">
     </a>
 
     <a href="{{ $myTicketsUrl }}" class="mobile-ticket-link" aria-label="My tickets">
