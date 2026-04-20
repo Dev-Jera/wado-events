@@ -601,7 +601,46 @@
             width:100%; min-height:220px;
             border:2px dashed var(--blue-mid); border-radius:10px;
             background:var(--blue-tint); overflow:hidden;
+            position: relative;
         }
+
+        /* ── html5-qrcode video overrides ──
+           The library sets inline width/height on #qr-reader and creates
+           a <video> inside it. We must force the video to fill its container. */
+        #qr-reader { width: 100% !important; }
+        #qr-reader video {
+            width: 100% !important;
+            height: auto !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+        #qr-reader canvas { display: block !important; }
+        #qr-reader__scan_region { position: relative !important; }
+
+        /* Scanner-only: video must fill the entire screen */
+        .vp-scanner-only #qr-reader {
+            width: 100% !important;
+            height: 100dvh !important;
+            position: relative !important;
+        }
+        .vp-scanner-only #qr-reader video {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            z-index: 1 !important;
+        }
+        .vp-scanner-only #qr-reader canvas,
+        .vp-scanner-only #qr-reader__scan_region {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 2 !important;
+        }
+        /* Hide the library's default scan-border image overlay */
+        .vp-scanner-only #qr-reader__scan_region > img { display: none !important; }
         .scanner-actions { margin-top:.75rem; display:flex; gap:.5rem; }
 
         /* ── buttons ── */
@@ -843,6 +882,7 @@
         const csrfToken        = document.querySelector('meta[name=csrf-token]')?.content
                                  || document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1]?.replace(/%3D/g,'=') || '';
         const fullScannerBaseUrl = @json(route('tickets.verify.index', ['scanner_only' => 1, 'back' => $returnToScannerUrl]));
+        const initialEventId   = @json((string) ($selectedEventId ?: ''));
 
         const readerTargetId = 'qr-reader';
         const statusEl       = document.getElementById('scanner-status');
@@ -867,10 +907,11 @@
         const scoCode        = document.getElementById('sco-code');
         const scoProgressFill= document.getElementById('sco-progress-fill');
 
-        if (!startBtn || !stopBtn || !codeInput || !statusEl || !feedbackEl || !eventSelect || typeof Html5Qrcode === 'undefined') return;
+        if (!startBtn || !stopBtn || !codeInput || !statusEl || !feedbackEl || typeof Html5Qrcode === 'undefined') return;
 
         let scanner = null, running = false, lastCode = '', scanLocked = false,
             scanWatchdog = null, selectedCameraLabel = '', overlayTimer = null;
+        let selectedEventId = String(eventSelect?.value || initialEventId || '').trim();
 
         // ── Device ID ──────────────────────────────────────────────────
         const getDeviceId = () => {
@@ -967,7 +1008,7 @@
             feedbackEl.textContent = text;
             feedbackEl.className = 'scanner-feedback fb-' + tone;
         };
-        const hasSelectedEvent = () => String(eventSelect.value || '').trim() !== '';
+        const hasSelectedEvent = () => String(selectedEventId || '').trim() !== '';
         const syncScannerButtons = () => {
             if (running) { startBtn.disabled = true; stopBtn.disabled = false; return; }
             startBtn.disabled = !hasSelectedEvent();
@@ -1000,6 +1041,24 @@
             return null;
         };
 
+        const cameraPreflightError = () => {
+            if (!window.isSecureContext) {
+                return 'Camera requires HTTPS. Open this page over https:// (or localhost).';
+            }
+
+            if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+                const simulated = /simulator|emulator|headless|electron/i.test(navigator.userAgent || '')
+                    || Boolean(window.__nightmare)
+                    || (window.top !== window.self);
+                if (simulated) {
+                    return 'Camera API is unavailable in this simulator/embedded preview. Open the URL in a real browser on a real device.';
+                }
+                return 'This browser does not expose camera APIs (navigator.mediaDevices.getUserMedia missing).';
+            }
+
+            return null;
+        };
+
         // ── Core: handle a decoded QR ──────────────────────────────────
         const applyCode = (decodedText) => {
             const raw     = (decodedText || '').trim();
@@ -1020,7 +1079,7 @@
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify({
-                        selected_event_id: eventSelect.value,
+                        selected_event_id: selectedEventId,
                         ticket_code:       code,
                         scanned_payload:   payload ? JSON.stringify(payload) : raw,
                         device_id:         getDeviceId(),
@@ -1066,15 +1125,24 @@
                 setFeedback('Choose the gate event before starting the scanner.', 'error');
                 syncScannerButtons(); eventSelect.focus(); return;
             }
+
+            const preflight = cameraPreflightError();
+            if (preflight) {
+                setStatus('Error');
+                setFeedback('Camera failed: ' + preflight, 'error');
+                return;
+            }
+
             if (isEmbedded && !scannerOnly) {
-                const url = fullScannerBaseUrl + '&event_id=' + encodeURIComponent(String(eventSelect.value || ''));
+                const url = fullScannerBaseUrl + '&event_id=' + encodeURIComponent(selectedEventId);
                 // Can't navigate parent directly from a sandboxed iframe — use postMessage
                 window.parent.postMessage({ type: 'wado-navigate', url }, window.location.origin);
                 return;
             }
             try {
-                setStatus('Starting…'); setFeedback('Starting camera — allow access if prompted.', 'info');
+                setStatus('Starting…'); setFeedback('Requesting camera access…', 'info');
                 const cameraId = await pickCamera();
+                setFeedback('Camera found — loading video…', 'info');
                 scanner = new Html5Qrcode(readerTargetId);
                 await scanner.start(
                     cameraId,
@@ -1127,11 +1195,13 @@
 
         // ── Sync top-bar event select → all hidden event id fields ──────
         const syncEventFields = () => {
-            const val = eventSelect?.value || '';
+            const val = eventSelect?.value || selectedEventId || '';
+            selectedEventId = String(val).trim();
             document.querySelectorAll('#verify-form-event-id, .js-sync-event-id')
                 .forEach(el => { el.value = val; });
         };
         if (eventSelect) eventSelect.addEventListener('change', syncEventFields);
+        syncEventFields();
 
         // ── Fallback toggle (mobile) ───────────────────────────────────
         const fallbackToggle = document.getElementById('vp-fallback-toggle');
@@ -1150,15 +1220,17 @@
 
         startBtn.addEventListener('click', startScanner);
         stopBtn.addEventListener('click', stopScanner);
-        eventSelect.addEventListener('change', () => {
-            if (running) { setFeedback('Event changed — stop and restart the scanner.', 'warning'); return; }
-            setStatus(hasSelectedEvent() ? 'Ready' : 'Idle');
-            setFeedback(
-                hasSelectedEvent() ? 'Event selected. Start the camera.' : 'Choose an event first.',
-                hasSelectedEvent() ? 'neutral' : 'warning'
-            );
-            syncScannerButtons();
-        });
+        if (eventSelect) {
+            eventSelect.addEventListener('change', () => {
+                if (running) { setFeedback('Event changed — stop and restart the scanner.', 'warning'); return; }
+                setStatus(hasSelectedEvent() ? 'Ready' : 'Idle');
+                setFeedback(
+                    hasSelectedEvent() ? 'Event selected. Start the camera.' : 'Choose an event first.',
+                    hasSelectedEvent() ? 'neutral' : 'warning'
+                );
+                syncScannerButtons();
+            });
+        }
         window.addEventListener('beforeunload', stopScanner);
 
         // initial state
