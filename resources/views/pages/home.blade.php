@@ -268,29 +268,9 @@
                 <div class="event-modal-artists" id="event-modal-artists"></div>
             </div>
             <div class="event-modal-actions">
-                <button class="event-modal-buy" id="event-modal-buy" type="button">Buy Ticket</button>
-                <a class="event-modal-link" id="event-modal-link" href="/events">View Event</a>
+                <button class="event-modal-buy" id="event-modal-buy" type="button">Get Ticket</button>
+                <a class="event-modal-link" id="event-modal-link" href="/events">View details</a>
             </div>
-            <section class="event-payment-options" id="event-payment-options" hidden>
-                <p class="event-payment-title">Choose Payment Method</p>
-                <div class="event-payment-qty-wrap">
-                    <span class="event-payment-qty-label">Tickets</span>
-                    <div class="event-payment-qty">
-                        <button type="button" class="qty-btn" id="ticket-qty-minus">−</button>
-                        <span class="qty-value" id="ticket-qty-value">1</span>
-                        <button type="button" class="qty-btn" id="ticket-qty-plus">+</button>
-                    </div>
-                </div>
-                <p class="event-payment-amount">Total: <strong id="event-payment-amount">UGX 0</strong></p>
-                <div class="event-payment-grid">
-                    <button type="button" class="payment-option" data-provider="mtn">
-                        <img src="{{ asset('images/mtn-logo.png') }}" alt="MTN logo"><span>MTN MoMo</span>
-                    </button>
-                    <button type="button" class="payment-option" data-provider="airtel">
-                        <img src="{{ asset('images/airtel-logo.png') }}" alt="Airtel logo"><span>Airtel Money</span>
-                    </button>
-                </div>
-            </section>
         </div>
     </article>
 </div>
@@ -1055,7 +1035,7 @@ body.modal-open { overflow:hidden; }
     const updateTotal = () => {
         if (qtyVal) qtyVal.textContent = String(qty);
         if (paymentAmt) paymentAmt.textContent = fmtUgx(unitPrice * qty);
-        if (modalBuy) modalBuy.textContent = unitPrice <= 0 ? 'Free Entry' : 'Buy Ticket';
+        if (modalBuy) modalBuy.textContent = unitPrice <= 0 ? 'Get Ticket →' : 'Buy Ticket';
     };
 
     const dataFromCard = card => ({
@@ -1109,22 +1089,11 @@ body.modal-open { overflow:hidden; }
     modal.querySelectorAll('[data-modal-close]').forEach(el => el.addEventListener('click', closeModal));
     document.addEventListener('keydown', e => { if (e.key==='Escape'&&modal.classList.contains('is-open')) closeModal(); });
 
-    if (modalBuy && paymentOpts) {
+    if (modalBuy) {
         modalBuy.addEventListener('click', () => {
-            if (unitPrice <= 0) { window.location.href = `${modalLink.href}/checkout`; return; }
-            paymentOpts.hidden = !paymentOpts.hidden;
-            if (!paymentOpts.hidden) updateTotal();
+            window.location.href = `${modalLink.href}/checkout`;
         });
     }
-    if (qtyPlus)  qtyPlus.addEventListener('click',  () => { qty++;            updateTotal(); });
-    if (qtyMinus) qtyMinus.addEventListener('click', () => { if(qty>1) qty--;  updateTotal(); });
-    paymentBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            paymentBtns.forEach(b => b.classList.remove('is-selected'));
-            btn.classList.add('is-selected');
-            if (btn.dataset.provider) window.location.href = `${modalLink.href}/checkout?payment_provider=${btn.dataset.provider}`;
-        });
-    });
 })();
 </script>
 

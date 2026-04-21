@@ -71,7 +71,9 @@
                 <input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', $idempotencyKey) }}">
                 <input type="hidden" name="payment_provider" id="payment_provider_input" value="{{ old('payment_provider', $selectedPaymentProvider) }}">
 
-                <p class="form-title">Payment details</p>
+                @php $allFree = $event->is_free || $event->ticketCategories->every(fn($c) => (float) $c->price <= 0); @endphp
+
+                <p class="form-title">{{ $allFree ? 'Reserve your spot' : 'Payment details' }}</p>
                 <p class="form-sub">Fill in your details to complete your booking</p>
 
                 @guest
@@ -147,32 +149,36 @@
 
                 <div class="field-divider"></div>
 
-                <div class="field">
-                    <span class="field-span">Payment provider</span>
-                    <div class="provider-grid">
-                        <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'mtn' ? 'is-selected' : '' }}" data-provider="mtn">
-                            <div class="provider-icon mtn-icon">M</div>
-                            <span class="provider-name">MTN MoMo</span>
-                        </button>
-                        <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'airtel' ? 'is-selected' : '' }}" data-provider="airtel">
-                            <div class="provider-icon airtel-icon">A</div>
-                            <span class="provider-name">Airtel Money</span>
-                        </button>
+                <div id="payment-fields" style="{{ $allFree ? 'display:none;' : '' }}">
+                    <div class="field" style="margin-bottom:14px;">
+                        <span class="field-span">Payment provider</span>
+                        <div class="provider-grid">
+                            <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'mtn' ? 'is-selected' : '' }}" data-provider="mtn">
+                                <div class="provider-icon mtn-icon">M</div>
+                                <span class="provider-name">MTN MoMo</span>
+                            </button>
+                            <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'airtel' ? 'is-selected' : '' }}" data-provider="airtel">
+                                <div class="provider-icon airtel-icon">A</div>
+                                <span class="provider-name">Airtel Money</span>
+                            </button>
+                        </div>
+                        @error('payment_provider') <small class="field-error">{{ $message }}</small> @enderror
                     </div>
-                    @error('payment_provider') <small class="field-error">{{ $message }}</small> @enderror
+
+                    <label class="field">
+                        <span>Mobile money number</span>
+                        <input type="text" name="phone_number" value="{{ old('phone_number', $phoneNumber) }}" placeholder="e.g. 2567XXXXXXXX">
+                        @error('phone_number') <small>{{ $message }}</small> @enderror
+                    </label>
+
+                    <div class="field-divider" style="margin-top:14px;"></div>
                 </div>
 
-                <label class="field">
-                    <span>Mobile money number</span>
-                    <input type="text" name="phone_number" value="{{ old('phone_number', $phoneNumber) }}" placeholder="e.g. 2567XXXXXXXX">
-                    @error('phone_number') <small>{{ $message }}</small> @enderror
-                </label>
+                <button type="submit" class="checkout-btn" id="checkout-submit-btn">
+                    {{ $allFree ? 'Get Ticket →' : 'Initiate payment →' }}
+                </button>
 
-                <div class="field-divider"></div>
-
-                <button type="submit" class="checkout-btn">Initiate payment →</button>
-
-                <p class="secure-note">
+                <p class="secure-note" id="secure-note" style="{{ $allFree ? 'display:none;' : '' }}">
                     <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1L3 3.5v4C3 10.5 5.5 13.5 8 15c2.5-1.5 5-4.5 5-7.5v-4L8 1z" stroke="currentColor" stroke-width="1.2"/></svg>
                     Secured · Your payment is encrypted
                 </p>
@@ -477,6 +483,9 @@
             const passwordFields = document.getElementById('account_password_fields');
 
             const formatUgx = (n) => n <= 0 ? 'Free' : 'UGX ' + Math.round(n).toLocaleString('en-US');
+            const paymentFields = document.getElementById('payment-fields');
+            const secureNote = document.getElementById('secure-note');
+            const submitBtn = document.getElementById('checkout-submit-btn');
 
             const updateSummary = () => {
                 const selected = categorySelect?.options[categorySelect.selectedIndex];
@@ -484,11 +493,16 @@
                 const label = selected?.dataset.label || '—';
                 const priceLabel = selected?.dataset.priceLabel || '—';
                 const qty = parseInt(quantityInput?.value || 1, 10);
+                const isFree = price <= 0;
 
                 if (summaryCategory) summaryCategory.textContent = label;
                 if (summaryPrice) summaryPrice.textContent = priceLabel;
                 if (summaryQty) summaryQty.textContent = qty;
-                if (summaryTotal) summaryTotal.textContent = price <= 0 ? 'Free' : formatUgx(price * qty);
+                if (summaryTotal) summaryTotal.textContent = isFree ? 'Free' : formatUgx(price * qty);
+
+                if (paymentFields) paymentFields.style.display = isFree ? 'none' : '';
+                if (secureNote) secureNote.style.display = isFree ? 'none' : '';
+                if (submitBtn) submitBtn.textContent = isFree ? 'Get Ticket →' : 'Initiate payment →';
             };
 
             if (categorySelect) categorySelect.addEventListener('change', updateSummary);

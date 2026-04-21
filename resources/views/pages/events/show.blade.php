@@ -18,7 +18,7 @@
                     <span class="pill-status">{{ ucfirst($event->status) }}</span>
                     @if ($event->ticketCategories->isNotEmpty())
                         <a href="{{ route('checkout.create', $event) }}" class="btn-buy">
-                            {{ (float) $event->ticket_price <= 0 ? 'Reserve Spot' : 'Buy Ticket' }}
+                            {{ (float) $event->ticket_price <= 0 ? 'Get Ticket' : 'Buy Ticket' }}
                         </a>
                     @endif
                 </div>
@@ -55,7 +55,7 @@
                                 <span class="ti-price">{{ (float) $ticketCategory->price <= 0 ? 'Free' : 'UGX '.number_format((float) $ticketCategory->price, 0) }}</span>
                                 <span class="ti-left">{{ $ticketCategory->tickets_remaining }} / {{ $ticketCategory->ticket_count }} left</span>
                                 <a href="{{ route('checkout.create', [$event, 'ticket_category' => $ticketCategory->id]) }}" class="ti-btn">
-                                    {{ (float) $ticketCategory->price <= 0 ? 'Reserve now' : 'Buy now' }}
+                                    {{ (float) $ticketCategory->price <= 0 ? 'Get Ticket' : 'Buy now' }}
                                 </a>
                             </div>
                         </div>

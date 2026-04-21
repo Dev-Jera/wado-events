@@ -118,6 +118,16 @@ class EventForm
                     Tab::make('Ticket categories')
                         ->icon('heroicon-o-ticket')
                         ->schema([
+                            Section::make('Is this a free event?')
+                                ->description('Turn this on if attendees do not need to pay.')
+                                ->schema([
+                                    Toggle::make('is_free')
+                                        ->label('Free event — no payment required')
+                                        ->helperText('When enabled, all ticket prices are set to 0 and payment fields are hidden.')
+                                        ->onColor('success')
+                                        ->live(),
+                                ]),
+
                             Section::make()
                                 ->schema([
                                     Repeater::make('ticketCategories')
@@ -137,9 +147,10 @@ class EventForm
                                             TextInput::make('price')
                                                 ->numeric()
                                                 ->default(0)
-                                                ->required()
                                                 ->prefix('UGX')
-                                                ->placeholder('50000'),
+                                                ->placeholder('50000')
+                                                ->hidden(fn (callable $get): bool => (bool) $get('../../../../is_free'))
+                                                ->required(fn (callable $get): bool => ! (bool) $get('../../../../is_free')),
 
                                             TextInput::make('ticket_count')
                                                 ->label('Tickets')
@@ -161,12 +172,12 @@ class EventForm
                                                 ->columnSpan(2),
                                         ])
                                         ->mutateRelationshipDataBeforeCreateUsing(function (array $data, callable $get): array {
-                                            $data['price'] = $get('../../is_free') ? 0 : ($data['price'] ?? 0);
+                                            $data['price'] = $get('../../../../is_free') ? 0 : ($data['price'] ?? 0);
                                             $data['tickets_remaining'] = $data['ticket_count'] ?? 0;
                                             return $data;
                                         })
                                         ->mutateRelationshipDataBeforeSaveUsing(function (array $data, callable $get): array {
-                                            $data['price'] = $get('../../is_free') ? 0 : ($data['price'] ?? 0);
+                                            $data['price'] = $get('../../../../is_free') ? 0 : ($data['price'] ?? 0);
                                             $data['tickets_remaining'] = $data['ticket_count'] ?? ($data['tickets_remaining'] ?? 0);
                                             return $data;
                                         }),
@@ -178,17 +189,12 @@ class EventForm
                         ->icon('heroicon-o-cog-6-tooth')
                         ->schema([
                             Grid::make(2)->schema([
-                                Section::make('Visibility & pricing')
+                                Section::make('Visibility')
                                     ->schema([
                                         Toggle::make('is_featured')
                                             ->label('Feature on homepage')
                                             ->helperText('Pinned to top of public events page.')
                                             ->onColor('primary'),
-
-                                        Toggle::make('is_free')
-                                            ->label('Free event')
-                                            ->helperText('All ticket prices set to 0.')
-                                            ->onColor('success'),
                                     ]),
 
                                 Section::make('At a glance')

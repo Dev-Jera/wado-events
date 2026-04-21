@@ -30,6 +30,7 @@ class Event extends Model
         'status',
         'image_url',
         'is_featured',
+        'is_free',
     ];
 
     protected function casts(): array
@@ -39,6 +40,7 @@ class Event extends Model
             'ends_at' => 'datetime',
             'ticket_price' => 'decimal:2',
             'is_featured' => 'boolean',
+            'is_free'     => 'boolean',
         ];
     }
 

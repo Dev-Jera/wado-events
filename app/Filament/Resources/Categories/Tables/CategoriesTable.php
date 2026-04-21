@@ -29,7 +29,7 @@ class CategoriesTable
                     ->sortable(),
                 TextColumn::make('access_mode')
                     ->label('Access')
-                    ->state(fn (): string => auth()->user()?->isGateStaff() ? 'READ ONLY' : 'EDIT')
+                    ->state(fn (): string => auth()->user()?->isGateAgent() ? 'READ ONLY' : 'EDIT')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'READ ONLY' ? 'gray' : 'success'),
                 TextColumn::make('created_at')

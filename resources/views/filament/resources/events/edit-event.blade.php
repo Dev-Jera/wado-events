@@ -219,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 .wado-edit-right {
-    width: 320px;
+    width: 280px;
     flex-shrink: 0;
     position: sticky;
     top: 1.75rem;
@@ -270,16 +270,102 @@ document.addEventListener("DOMContentLoaded", function() {
 
 .wado-form-wrap .fi-grid,
 .wado-form-wrap .fi-sc,
+.wado-form-wrap .fi-sc-tabs,
 .wado-form-wrap .fi-section,
+.wado-form-wrap .fi-section-content,
 .wado-form-wrap form {
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
 }
 
 .wado-form-wrap .fi-grid-col {
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     flex: none !important;
+}
+
+.wado-form-wrap .fi-sc-tabs-tab.fi-active {
+    margin-top: 0;
+    padding: 0;
+    background: #fff;
+}
+
+.wado-form-wrap .fi-sc-tabs.fi-contained {
+    border-radius: 14px;
+    border: 1px solid #d9dde5;
+    box-shadow: none;
+}
+
+.wado-form-wrap .fi-tabs.fi-contained {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    overflow: hidden;
+    border-bottom: 1px solid #d9dde5;
+    padding: 0;
+    background: #fff;
+    counter-reset: create-step;
+}
+
+.wado-form-wrap .fi-tabs-item {
+    counter-increment: create-step;
+    position: relative;
+    border-radius: 0;
+    border: 0;
+    border-inline-end: 1px solid #d9dde5;
+    justify-content: flex-start;
+    gap: 0.55rem;
+    padding: 0.85rem 1rem;
+    white-space: normal;
+    min-height: 46px;
+    background: #fff;
+}
+
+.wado-form-wrap .fi-tabs-item:last-child {
+    border-inline-end: 0;
+}
+
+.wado-form-wrap .fi-tabs-item > .fi-icon {
+    display: none;
+}
+
+.wado-form-wrap .fi-tabs-item::before {
+    content: counter(create-step);
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    background: #f2f4f8;
+    color: #111827;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+}
+
+.wado-form-wrap .fi-tabs-item .fi-tabs-item-label {
+    color: #111827;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: normal;
+}
+
+.wado-form-wrap .fi-tabs-item.fi-active {
+    background: #112657;
+}
+
+.wado-form-wrap .fi-tabs-item.fi-active::before {
+    background: #2f4b86;
+    color: #fff;
+}
+
+.wado-form-wrap .fi-tabs-item.fi-active .fi-tabs-item-label {
+    color: #fff;
 }
 
 .wado-form-wrap .fi-section {

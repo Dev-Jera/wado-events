@@ -3,6 +3,7 @@
 namespace App\Services\Payment;
 
 use App\Mail\TicketConfirmed;
+use App\Models\EmailLog;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -63,16 +64,33 @@ class PaymentNotificationService
                 ]);
             }
 
-            Mail::to($recipient)->queue(new TicketConfirmed(
+            $subject = 'Your WADO Ticket — ' . ($ticket->event?->title ?? 'Event Confirmed');
+
+            Mail::to($recipient)->send(new TicketConfirmed(
                 $ticket,
                 $payment,
                 $ticketUrl,
                 $qrCodeDataUri,
                 $pdfContent
             ));
+
+            EmailLog::create([
+                'ticket_id' => $ticket->id,
+                'recipient' => $recipient,
+                'subject'   => $subject,
+                'status'    => 'sent',
+            ]);
         } catch (\Throwable $e) {
             Log::error('TicketConfirmed: email notification failed', [
                 'ticket_id' => $ticket->id ?? null,
+                'error'     => $e->getMessage(),
+            ]);
+
+            EmailLog::create([
+                'ticket_id' => $ticket->id ?? null,
+                'recipient' => $recipient ?? '',
+                'subject'   => 'Ticket Confirmation',
+                'status'    => 'failed',
                 'error'     => $e->getMessage(),
             ]);
         }
