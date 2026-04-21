@@ -6,11 +6,9 @@ use App\Mail\TicketConfirmed;
 use App\Models\EmailLog;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 
 class PaymentNotificationService
 {
@@ -25,7 +23,7 @@ class PaymentNotificationService
         $this->sendEmail($ticket, null);
     }
 
-    protected function sendEmail(Ticket $ticket, ?PaymentTransaction $payment): void
+    public function sendEmail(Ticket $ticket, ?PaymentTransaction $payment): void
     {
         try {
             $recipient = (string) ($ticket->user?->email ?? '');
@@ -34,45 +32,10 @@ class PaymentNotificationService
             }
 
             $ticket = $ticket->fresh(['event', 'user', 'ticketCategory']);
-
             $ticketUrl = route('tickets.show', $ticket);
-
-            $qrCodeDataUri = null;
-            if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
-                $qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode(
-                    Storage::disk('public')->get($ticket->qr_code_path)
-                );
-            }
-
-            $pdfContent = null;
-            try {
-                $pdf = Pdf::loadView('pages.tickets.pdf_compact', [
-                    'ticket'        => $ticket,
-                    'qrCodeDataUri' => $qrCodeDataUri,
-                ]);
-                $pdf->setPaper('a4', 'portrait');
-                $pdf->setOptions([
-                    'isHtml5ParserEnabled' => true,
-                    'isRemoteEnabled'      => false,
-                    'defaultFont'          => 'sans-serif',
-                ]);
-                $pdfContent = $pdf->output();
-            } catch (\Throwable $e) {
-                Log::warning('TicketConfirmed: PDF generation failed, sending email without attachment', [
-                    'ticket_id' => $ticket->id,
-                    'error'     => $e->getMessage(),
-                ]);
-            }
-
             $subject = 'Your WADO Ticket — ' . ($ticket->event?->title ?? 'Event Confirmed');
 
-            Mail::to($recipient)->queue(new TicketConfirmed(
-                $ticket,
-                $payment,
-                $ticketUrl,
-                $qrCodeDataUri,
-                $pdfContent
-            ));
+            Mail::to($recipient)->queue(new TicketConfirmed($ticket, $payment, $ticketUrl));
 
             EmailLog::create([
                 'ticket_id' => $ticket->id,

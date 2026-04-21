@@ -3,7 +3,10 @@
 namespace App\Filament\Resources\EmailLogs;
 
 use App\Models\EmailLog;
+use App\Services\Payment\PaymentNotificationService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -69,7 +72,28 @@ class EmailLogResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([])
-            ->recordActions([])
+            ->recordActions([
+                Action::make('resend')
+                    ->label('Resend')
+                    ->icon(Heroicon::OutlinedPaperAirplane)
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Resend confirmation email?')
+                    ->modalDescription(fn ($record) => 'This will resend the ticket email to ' . $record->recipient . '.')
+                    ->action(function ($record) {
+                        $ticket = $record->ticket;
+                        if (! $ticket) {
+                            Notification::make()->title('Ticket not found')->danger()->send();
+                            return;
+                        }
+                        try {
+                            app(PaymentNotificationService::class)->sendEmail($ticket, $ticket->paymentTransaction);
+                            Notification::make()->title('Email queued for ' . $record->recipient)->success()->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->title('Failed: ' . $e->getMessage())->danger()->send();
+                        }
+                    }),
+            ])
             ->toolbarActions([]);
     }
 
