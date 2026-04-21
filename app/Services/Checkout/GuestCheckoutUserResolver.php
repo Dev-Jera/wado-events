@@ -67,9 +67,21 @@ class GuestCheckoutUserResolver
                 ];
             }
 
-            throw ValidationException::withMessages([
-                'email' => 'An account with this email already exists. Log in to track tickets or use a different email for guest checkout.',
-            ]);
+            // If the existing account has no real password (guest-created), allow
+            // them to continue as guest silently. If they have a real account,
+            // only block if createAccount is requested (password conflict).
+            if ($createAccount) {
+                throw ValidationException::withMessages([
+                    'email' => 'An account with this email already exists. Log in instead or use a different email.',
+                ]);
+            }
+
+            $request->session()->put('checkout_guest_user_id', $existing->id);
+
+            return [
+                'user' => $existing,
+                'guest_checkout' => true,
+            ];
         }
 
         $user = User::query()->create([
