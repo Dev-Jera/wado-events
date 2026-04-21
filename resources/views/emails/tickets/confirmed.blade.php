@@ -25,6 +25,16 @@
                     <td style="height:5px;background:linear-gradient(90deg,#2563eb,#7c3aed,#dc2626);"></td>
                 </tr>
 
+                {{-- Event banner image --}}
+                @if ($ticket->event?->image_url)
+                <tr>
+                    <td style="padding:0;line-height:0;">
+                        <img src="{{ $ticket->event->image_url }}" alt="{{ $ticket->event->title }}" width="600"
+                             style="width:100%;max-width:600px;height:220px;object-fit:cover;display:block;border:0;">
+                    </td>
+                </tr>
+                @endif
+
                 {{-- Event title block --}}
                 <tr>
                     <td style="background:#172665;padding:28px 32px;">

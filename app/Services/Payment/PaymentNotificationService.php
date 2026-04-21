@@ -6,6 +6,11 @@ use App\Models\EmailLog;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -39,12 +44,32 @@ class PaymentNotificationService
             $ticketUrl = route('tickets.show', $ticket);
             $subject   = 'Your WADO Ticket — ' . ($ticket->event?->title ?? 'Event Confirmed');
 
-            // Build QR code data URI
+            // Generate PNG QR code for email (SVG data URIs are blocked by Gmail)
             $qrCodeDataUri = null;
-            if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
-                $qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode(
-                    Storage::disk('public')->get($ticket->qr_code_path)
-                );
+            try {
+                $qrPayload = json_encode([
+                    'v'        => 2,
+                    'code'     => (string) $ticket->ticket_code,
+                    'event_id' => (int) $ticket->event_id,
+                ], JSON_UNESCAPED_SLASHES);
+
+                $qrResult = (new Builder(
+                    writer: new PngWriter(),
+                    writerOptions: [],
+                    data: $qrPayload,
+                    encoding: new Encoding('UTF-8'),
+                    errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+                    size: 300,
+                    margin: 10,
+                    roundBlockSizeMode: RoundBlockSizeMode::Margin,
+                ))->build();
+
+                $qrCodeDataUri = 'data:image/png;base64,' . base64_encode($qrResult->getString());
+            } catch (\Throwable $qrEx) {
+                Log::warning('TicketConfirmed: QR generation failed for email', [
+                    'ticket_id' => $ticket->id,
+                    'error'     => $qrEx->getMessage(),
+                ]);
             }
 
             // Render email HTML
