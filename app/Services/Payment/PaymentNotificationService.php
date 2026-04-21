@@ -5,6 +5,7 @@ namespace App\Services\Payment;
 use App\Mail\TicketConfirmed;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -30,7 +31,10 @@ class PaymentNotificationService
             return;
         }
 
+        $ticket = $ticket->fresh(['event', 'user', 'ticketCategory']);
+
         $ticketUrl = route('tickets.show', $ticket);
+
         $qrCodeDataUri = null;
         if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
             $qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode(
@@ -38,11 +42,32 @@ class PaymentNotificationService
             );
         }
 
+        $pdfContent = null;
+        try {
+            $pdf = Pdf::loadView('pages.tickets.pdf_compact', [
+                'ticket'        => $ticket,
+                'qrCodeDataUri' => $qrCodeDataUri,
+            ]);
+            $pdf->setPaper('a4', 'portrait');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => false,
+                'defaultFont'          => 'sans-serif',
+            ]);
+            $pdfContent = $pdf->output();
+        } catch (\Throwable $e) {
+            Log::warning('TicketConfirmed: PDF generation failed, sending email without attachment', [
+                'ticket_id' => $ticket->id,
+                'error'     => $e->getMessage(),
+            ]);
+        }
+
         Mail::to($recipient)->queue(new TicketConfirmed(
-            $ticket->fresh(['event', 'user', 'ticketCategory']),
+            $ticket,
             $payment,
             $ticketUrl,
-            $qrCodeDataUri
+            $qrCodeDataUri,
+            $pdfContent
         ));
     }
 

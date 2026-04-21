@@ -16,19 +16,30 @@ class TicketConfirmed extends Mailable
         public Ticket $ticket,
         public ?PaymentTransaction $payment,
         public ?string $ticketUrl,
-        public ?string $qrCodeDataUri
+        public ?string $qrCodeDataUri,
+        public ?string $pdfContent = null
     ) {
     }
 
     public function build(): self
     {
-        return $this
-            ->subject('Your WADO ticket is confirmed')
-            ->markdown('emails.tickets.confirmed', [
-                'ticket' => $this->ticket,
-                'payment' => $this->payment,
-                'ticketUrl' => $this->ticketUrl,
+        $mail = $this
+            ->subject('Your WADO Ticket — ' . ($this->ticket->event?->title ?? 'Event Confirmed'))
+            ->view('emails.tickets.confirmed', [
+                'ticket'       => $this->ticket,
+                'payment'      => $this->payment,
+                'ticketUrl'    => $this->ticketUrl,
                 'qrCodeDataUri' => $this->qrCodeDataUri,
             ]);
+
+        if ($this->pdfContent) {
+            $mail->attachData(
+                $this->pdfContent,
+                'wado-ticket-' . $this->ticket->ticket_code . '.pdf',
+                ['mime' => 'application/pdf']
+            );
+        }
+
+        return $mail;
     }
 }
