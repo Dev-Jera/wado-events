@@ -26,49 +26,56 @@ class PaymentNotificationService
 
     protected function sendEmail(Ticket $ticket, ?PaymentTransaction $payment): void
     {
-        $recipient = (string) ($ticket->user?->email ?? '');
-        if ($recipient === '') {
-            return;
-        }
-
-        $ticket = $ticket->fresh(['event', 'user', 'ticketCategory']);
-
-        $ticketUrl = route('tickets.show', $ticket);
-
-        $qrCodeDataUri = null;
-        if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
-            $qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode(
-                Storage::disk('public')->get($ticket->qr_code_path)
-            );
-        }
-
-        $pdfContent = null;
         try {
-            $pdf = Pdf::loadView('pages.tickets.pdf_compact', [
-                'ticket'        => $ticket,
-                'qrCodeDataUri' => $qrCodeDataUri,
-            ]);
-            $pdf->setPaper('a4', 'portrait');
-            $pdf->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled'      => false,
-                'defaultFont'          => 'sans-serif',
-            ]);
-            $pdfContent = $pdf->output();
+            $recipient = (string) ($ticket->user?->email ?? '');
+            if ($recipient === '') {
+                return;
+            }
+
+            $ticket = $ticket->fresh(['event', 'user', 'ticketCategory']);
+
+            $ticketUrl = route('tickets.show', $ticket);
+
+            $qrCodeDataUri = null;
+            if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
+                $qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode(
+                    Storage::disk('public')->get($ticket->qr_code_path)
+                );
+            }
+
+            $pdfContent = null;
+            try {
+                $pdf = Pdf::loadView('pages.tickets.pdf_compact', [
+                    'ticket'        => $ticket,
+                    'qrCodeDataUri' => $qrCodeDataUri,
+                ]);
+                $pdf->setPaper('a4', 'portrait');
+                $pdf->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'sans-serif',
+                ]);
+                $pdfContent = $pdf->output();
+            } catch (\Throwable $e) {
+                Log::warning('TicketConfirmed: PDF generation failed, sending email without attachment', [
+                    'ticket_id' => $ticket->id,
+                    'error'     => $e->getMessage(),
+                ]);
+            }
+
+            Mail::to($recipient)->queue(new TicketConfirmed(
+                $ticket,
+                $payment,
+                $ticketUrl,
+                $qrCodeDataUri,
+                $pdfContent
+            ));
         } catch (\Throwable $e) {
-            Log::warning('TicketConfirmed: PDF generation failed, sending email without attachment', [
-                'ticket_id' => $ticket->id,
+            Log::error('TicketConfirmed: email notification failed', [
+                'ticket_id' => $ticket->id ?? null,
                 'error'     => $e->getMessage(),
             ]);
         }
-
-        Mail::to($recipient)->queue(new TicketConfirmed(
-            $ticket,
-            $payment,
-            $ticketUrl,
-            $qrCodeDataUri,
-            $pdfContent
-        ));
     }
 
     protected function sendSms(Ticket $ticket, PaymentTransaction $payment): void
