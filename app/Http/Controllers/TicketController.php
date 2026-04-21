@@ -9,8 +9,9 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
-use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -174,7 +175,7 @@ class TicketController extends Controller
             ], JSON_UNESCAPED_SLASHES);
 
             $result = (new Builder(
-                writer: new PngWriter(),
+                writer: new SvgWriter(),
                 writerOptions: [],
                 data: $payload,
                 encoding: new Encoding('UTF-8'),
@@ -184,8 +185,10 @@ class TicketController extends Controller
                 roundBlockSizeMode: RoundBlockSizeMode::Margin,
             ))->build();
 
-            return 'data:image/png;base64,' . base64_encode($result->getString());
-        } catch (\Throwable) {
+            // Return raw SVG markup for inline embedding in DomPDF
+            return $result->getString();
+        } catch (\Throwable $e) {
+            Log::warning('PDF QR generation failed', ['ticket_id' => $ticket->id, 'error' => $e->getMessage()]);
             return null;
         }
     }
@@ -194,11 +197,14 @@ class TicketController extends Controller
     {
         $imageUrl = $ticket->event?->image_url;
         if (! $imageUrl) {
+            Log::info('PDF image: no image_url on event', ['event_id' => $ticket->event_id]);
             return null;
         }
 
         // Strip /storage/ prefix to get the disk-relative path
         $diskPath = ltrim(str_replace('/storage/', '', $imageUrl), '/');
+
+        Log::info('PDF image lookup', ['image_url' => $imageUrl, 'disk_path' => $diskPath, 'exists' => Storage::disk('public')->exists($diskPath)]);
 
         if (! Storage::disk('public')->exists($diskPath)) {
             return null;

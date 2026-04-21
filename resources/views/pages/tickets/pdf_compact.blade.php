@@ -67,7 +67,7 @@
                 <td class="qr-cell">
                     <div class="qr-box">
                         @if (!empty($qrCodeDataUri))
-                            <img src="{{ $qrCodeDataUri }}" alt="QR Code">
+                            {!! $qrCodeDataUri !!}
                         @else
                             <div class="qr-placeholder">QR</div>
                         @endif
@@ -131,6 +131,7 @@ h1 { margin: 0 0 10px; font-size: 26px; line-height: 1.15; color: #ffffff; }
 .zone-cell { width: 190px; }
 .qr-box { width: 120px; height: 120px; padding: 10px; background: #ffffff; border-radius: 12px; }
 .qr-box img { width: 100%; height: 100%; display: block; }
+.qr-box svg { width: 100%; height: 100%; display: block; }
 .qr-placeholder { text-align: center; line-height: 100px; color: #111827; font-weight: 700; }
 .scan-title { margin-bottom: 8px; font-size: 20px; font-weight: 700; color: #f3f6fb; }
 .scan-sub { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,.7); }
