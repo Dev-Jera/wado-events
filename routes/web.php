@@ -62,6 +62,12 @@ Route::middleware('auth')->group(function () {
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
+// TEMPORARY: outbound IP check — remove after use
+Route::get('/outbound-ip', function () {
+    $ip = file_get_contents('https://api.ipify.org');
+    return response("Railway outbound IP: {$ip}");
+});
+
 // MarzPay Webhook - Must bypass CSRF protection
 Route::post('/payments/marzepay/webhook', PaymentWebhookController::class)
     ->withoutMiddleware(VerifyCsrfToken::class)
