@@ -46,6 +46,10 @@ return [
         'timeout' => (int) env('MARZEPAY_TIMEOUT', 30),
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+    ],
+
     'africas_talking' => [
         'base_url' => env('AFRICASTALKING_BASE_URL', 'https://api.africastalking.com'),
         'username' => env('AFRICASTALKING_USERNAME'),

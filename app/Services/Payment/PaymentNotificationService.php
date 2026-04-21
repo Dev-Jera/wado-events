@@ -2,13 +2,13 @@
 
 namespace App\Services\Payment;
 
-use App\Mail\TicketConfirmed;
 use App\Models\EmailLog;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class PaymentNotificationService
 {
@@ -25,23 +25,99 @@ class PaymentNotificationService
 
     public function sendEmail(Ticket $ticket, ?PaymentTransaction $payment): void
     {
+        $recipient = '';
+        $subject   = 'Ticket Confirmation';
+
         try {
             $recipient = (string) ($ticket->user?->email ?? '');
             if ($recipient === '') {
+                Log::warning('TicketConfirmed: no recipient email', ['ticket_id' => $ticket->id]);
                 return;
             }
 
-            $ticket = $ticket->fresh(['event', 'user', 'ticketCategory']);
+            $ticket    = $ticket->fresh(['event', 'user', 'ticketCategory']);
             $ticketUrl = route('tickets.show', $ticket);
-            $subject = 'Your WADO Ticket — ' . ($ticket->event?->title ?? 'Event Confirmed');
+            $subject   = 'Your WADO Ticket — ' . ($ticket->event?->title ?? 'Event Confirmed');
 
-            Mail::to($recipient)->queue(new TicketConfirmed($ticket, $payment, $ticketUrl));
+            // Build QR code data URI
+            $qrCodeDataUri = null;
+            if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
+                $qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode(
+                    Storage::disk('public')->get($ticket->qr_code_path)
+                );
+            }
+
+            // Render email HTML
+            $htmlContent = view('emails.tickets.confirmed', [
+                'ticket'        => $ticket,
+                'payment'       => $payment,
+                'ticketUrl'     => $ticketUrl,
+                'qrCodeDataUri' => $qrCodeDataUri,
+            ])->render();
+
+            // Build Brevo API payload
+            $payload = [
+                'sender'      => [
+                    'name'  => config('mail.from.name', config('app.name')),
+                    'email' => config('mail.from.address', 'hello@example.com'),
+                ],
+                'to'          => [['email' => $recipient]],
+                'subject'     => $subject,
+                'htmlContent' => $htmlContent,
+            ];
+
+            // Attach PDF ticket
+            try {
+                $pdf = Pdf::loadView('pages.tickets.pdf_compact', [
+                    'ticket'        => $ticket,
+                    'qrCodeDataUri' => $qrCodeDataUri,
+                ]);
+                $pdf->setPaper('a4', 'portrait');
+                $pdf->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'sans-serif',
+                ]);
+                $payload['attachment'] = [[
+                    'name'    => 'wado-ticket-' . $ticket->ticket_code . '.pdf',
+                    'content' => base64_encode($pdf->output()),
+                ]];
+            } catch (\Throwable $pdfEx) {
+                Log::warning('TicketConfirmed: PDF generation failed, sending without attachment', [
+                    'ticket_id' => $ticket->id,
+                    'error'     => $pdfEx->getMessage(),
+                ]);
+            }
+
+            $apiKey = (string) config('services.brevo.api_key', '');
+            if ($apiKey === '') {
+                throw new \RuntimeException('Brevo API key not configured (BREVO_API_KEY)');
+            }
+
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'api-key'      => $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept'       => 'application/json',
+                ])
+                ->post('https://api.brevo.com/v3/smtp/email', $payload);
+
+            if (! $response->successful()) {
+                throw new \RuntimeException(
+                    'Brevo API error ' . $response->status() . ': ' . $response->body()
+                );
+            }
 
             EmailLog::create([
                 'ticket_id' => $ticket->id,
                 'recipient' => $recipient,
                 'subject'   => $subject,
                 'status'    => 'sent',
+            ]);
+
+            Log::info('TicketConfirmed: email sent via Brevo API', [
+                'ticket_id' => $ticket->id,
+                'to'        => $recipient,
             ]);
         } catch (\Throwable $e) {
             Log::error('TicketConfirmed: email notification failed', [
@@ -51,8 +127,8 @@ class PaymentNotificationService
 
             EmailLog::create([
                 'ticket_id' => $ticket->id ?? null,
-                'recipient' => $recipient ?? '',
-                'subject'   => 'Ticket Confirmation',
+                'recipient' => $recipient,
+                'subject'   => $subject,
                 'status'    => 'failed',
                 'error'     => $e->getMessage(),
             ]);
