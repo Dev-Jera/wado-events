@@ -54,10 +54,10 @@
                 </tr>
 
                 {{-- Event banner image --}}
-                @if ($ticket->event?->image_url)
+                @if (!empty($eventImageUrl))
                 <tr>
                     <td style="padding:0;line-height:0;font-size:0;">
-                        <img src="{{ Str::startsWith($ticket->event->image_url, 'http') ? $ticket->event->image_url : url($ticket->event->image_url) }}"
+                        <img src="{{ $eventImageUrl }}"
                              alt="{{ $ticket->event->title }}"
                              width="600"
                              class="banner-img"

@@ -72,12 +72,22 @@ class PaymentNotificationService
                 ]);
             }
 
+            // Resolve event banner to absolute URL
+            $eventImageUrl = null;
+            $rawImage = $ticket->event?->image_url;
+            if ($rawImage) {
+                $eventImageUrl = str_starts_with($rawImage, 'http')
+                    ? $rawImage
+                    : rtrim(config('app.url'), '/') . '/' . ltrim($rawImage, '/');
+            }
+
             // Render email HTML
             $htmlContent = view('emails.tickets.confirmed', [
                 'ticket'        => $ticket,
                 'payment'       => $payment,
                 'ticketUrl'     => $ticketUrl,
                 'qrCodeDataUri' => $qrCodeDataUri,
+                'eventImageUrl' => $eventImageUrl,
             ])->render();
 
             // Build Brevo API payload
