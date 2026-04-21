@@ -83,8 +83,8 @@ class PaymentNotificationService
             // Build Brevo API payload
             $payload = [
                 'sender'      => [
-                    'name'  => config('mail.from.name', config('app.name')),
-                    'email' => config('mail.from.address', 'hello@example.com'),
+                    'name'  => 'WADO Tickets',
+                    'email' => config('mail.from.address', 'wadoconcepts@gmail.com'),
                 ],
                 'to'          => [['email' => $recipient]],
                 'subject'     => $subject,
