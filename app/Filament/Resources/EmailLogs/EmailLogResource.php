@@ -73,6 +73,17 @@ class EmailLogResource extends Resource
             ])
             ->filters([])
             ->recordActions([
+                Action::make('preview')
+                    ->label('Preview')
+                    ->icon(Heroicon::OutlinedEye)
+                    ->color('gray')
+                    ->url(fn ($record) => $record->ticket
+                        ? route('admin.email.preview', $record->ticket)
+                        : null
+                    )
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => (bool) $record->ticket_id),
+
                 Action::make('resend')
                     ->label('Resend')
                     ->icon(Heroicon::OutlinedPaperAirplane)

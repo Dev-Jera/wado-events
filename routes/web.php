@@ -57,6 +57,42 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin/finance', [FinanceController::class, 'index'])->name('admin.finance.index');
     Route::get('/admin/finance/{event}', [FinanceController::class, 'show'])->name('admin.finance.show');
+
+    Route::get('/admin/email-preview/{ticket}', function (\App\Models\Ticket $ticket) {
+        abort_unless(auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin(), 403);
+
+        $ticket->loadMissing(['event', 'user', 'ticketCategory']);
+        $ticketUrl = route('tickets.show', $ticket);
+
+        $qrCodeDataUri = null;
+        try {
+            $qrPayload = json_encode(['v' => 2, 'code' => (string) $ticket->ticket_code, 'event_id' => (int) $ticket->event_id], JSON_UNESCAPED_SLASHES);
+            $result = (new \Endroid\QrCode\Builder\Builder(
+                writer: new \Endroid\QrCode\Writer\PngWriter(),
+                writerOptions: [],
+                data: $qrPayload,
+                encoding: new \Endroid\QrCode\Encoding\Encoding('UTF-8'),
+                errorCorrectionLevel: \Endroid\QrCode\ErrorCorrectionLevel::Medium,
+                size: 300,
+                margin: 10,
+                roundBlockSizeMode: \Endroid\QrCode\RoundBlockSizeMode::Margin,
+            ))->build();
+            $qrCodeDataUri = 'data:image/png;base64,' . base64_encode($result->getString());
+        } catch (\Throwable) {}
+
+        $rawImage = $ticket->event?->image_url;
+        $eventImageUrl = $rawImage
+            ? (str_starts_with($rawImage, 'http') ? $rawImage : rtrim(config('app.url'), '/') . '/' . ltrim($rawImage, '/'))
+            : null;
+
+        return view('emails.tickets.confirmed', [
+            'ticket'        => $ticket,
+            'payment'       => $ticket->paymentTransaction,
+            'ticketUrl'     => $ticketUrl,
+            'qrCodeDataUri' => $qrCodeDataUri,
+            'eventImageUrl' => $eventImageUrl,
+        ]);
+    })->name('admin.email.preview');
 });
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
