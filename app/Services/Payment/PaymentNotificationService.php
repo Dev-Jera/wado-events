@@ -18,7 +18,12 @@ class PaymentNotificationService
         $this->sendSms($ticket, $payment);
     }
 
-    protected function sendEmail(Ticket $ticket, PaymentTransaction $payment): void
+    public function sendFreeTicketConfirmed(Ticket $ticket): void
+    {
+        $this->sendEmail($ticket, null);
+    }
+
+    protected function sendEmail(Ticket $ticket, ?PaymentTransaction $payment): void
     {
         $recipient = (string) ($ticket->user?->email ?? '');
         if ($recipient === '') {

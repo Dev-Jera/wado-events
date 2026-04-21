@@ -147,8 +147,8 @@ class MarzePayService
             'ok' => $ok,
             'message' => (string) data_get($json, 'message', $response->reason() ?: 'Unable to initiate collection.'),
             'payload' => $json,
-            'reference' => (string) (data_get($json, 'data.transaction.reference')
-                ?? data_get($json, 'data.transaction.uuid')
+            'reference' => (string) (data_get($json, 'data.transaction.uuid')
+                ?? data_get($json, 'data.transaction.reference')
                 ?? data_get($json, 'reference')
                 ?? ''),
             'provider_status' => $transactionStatus === 'sandbox' ? 'sandbox' : ($ok ? 'pending' : 'failed'),
@@ -159,7 +159,13 @@ class MarzePayService
     {
         $secret = (string) config('services.marzepay.webhook_secret', '');
 
-        if ($secret === '' || blank($providedSignature)) {
+        // MarzPay does not send webhook signatures — allow through when no secret is configured
+        if ($secret === '') {
+            Log::warning('MarzPay webhook received with no secret configured — accepting without verification');
+            return true;
+        }
+
+        if (blank($providedSignature)) {
             return false;
         }
 
@@ -170,10 +176,19 @@ class MarzePayService
 
     public function resolveWebhookState(array $payload): string
     {
+        // MarzPay sends event_type: "collection.completed" / "collection.failed"
+        $eventType = strtolower((string) (data_get($payload, 'event_type') ?? ''));
+        if (str_ends_with($eventType, '.completed')) {
+            return 'confirmed';
+        }
+        if (str_ends_with($eventType, '.failed') || str_ends_with($eventType, '.cancelled')) {
+            return 'failed';
+        }
+
         $status = strtolower((string) (
-            data_get($payload, 'status')
+            data_get($payload, 'transaction.status')
+            ?? data_get($payload, 'status')
             ?? data_get($payload, 'payment_status')
-            ?? data_get($payload, 'event')
             ?? data_get($payload, 'data.status')
             ?? ''
         ));

@@ -14,7 +14,7 @@ class TicketConfirmed extends Mailable
 
     public function __construct(
         public Ticket $ticket,
-        public PaymentTransaction $payment,
+        public ?PaymentTransaction $payment,
         public ?string $ticketUrl,
         public ?string $qrCodeDataUri
     ) {

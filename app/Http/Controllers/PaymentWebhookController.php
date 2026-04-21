@@ -24,16 +24,22 @@ class PaymentWebhookController extends Controller
         }
 
         $payload = $request->all();
+
+        // MarzPay sends reference in transaction.reference
         $idempotencyKey = strtoupper((string) (
-            data_get($payload, 'idempotency_key')
+            data_get($payload, 'transaction.reference')
+            ?? data_get($payload, 'idempotency_key')
             ?? data_get($payload, 'reference')
             ?? data_get($payload, 'metadata.idempotency_key')
             ?? data_get($payload, 'data.idempotency_key')
             ?? ''
         ));
 
+        // MarzPay sends provider transaction ID in collection.provider_transaction_id
         $providerReference = (string) (
-            data_get($payload, 'transaction_id')
+            data_get($payload, 'collection.provider_transaction_id')
+            ?? data_get($payload, 'transaction.uuid')
+            ?? data_get($payload, 'transaction_id')
             ?? data_get($payload, 'provider_reference')
             ?? data_get($payload, 'data.transaction_id')
             ?? data_get($payload, 'data.provider_reference')
@@ -55,7 +61,13 @@ class PaymentWebhookController extends Controller
 
             $locked->forceFill([
                 'provider_reference' => $providerReference ?: $locked->provider_reference,
-                'provider_status' => (string) (data_get($payload, 'status') ?? data_get($payload, 'data.status') ?? $locked->provider_status),
+                'provider_status' => (string) (
+                    data_get($payload, 'transaction.status')
+                    ?? data_get($payload, 'event_type')
+                    ?? data_get($payload, 'status')
+                    ?? data_get($payload, 'data.status')
+                    ?? $locked->provider_status
+                ),
                 'callback_received_at' => now(),
                 'webhook_payload' => $payload,
             ])->save();

@@ -114,7 +114,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function canAccessOperationsPanel(): bool
     {
-        return $this->canViewOperationsDashboard() || $this->isGateStaff();
+        return $this->canViewOperationsDashboard() || $this->isGateStaff() || $this->isEventOwner();
     }
 
     public function canAccessGateEvent(int $eventId): bool

@@ -35,7 +35,7 @@ class AdminPanelProvider extends PanelProvider
 
             // ── Brand ──────────────────────────────────────
             ->brandName('WADO')
-            ->brandLogo(asset('images/wado-logo.png'))
+            ->brandLogo(asset('images/logos/logo-no-bg.png'))
             ->brandLogoHeight('2.2rem')
 
             // ── Colors ─────────────────────────────────────

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\EventBookmarkController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GatePortalController;
@@ -53,16 +54,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
 
     Route::get('/admin/events/{event}', [AdminEventController::class, 'show'])->name('admin.events.show');
+
+    Route::get('/admin/finance', [FinanceController::class, 'index'])->name('admin.finance.index');
+    Route::get('/admin/finance/{event}', [FinanceController::class, 'show'])->name('admin.finance.show');
 });
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-
-// TEMPORARY: outbound IP check for MarzPay whitelisting — remove after use
-Route::get('/outbound-ip', function () {
-    $ip = file_get_contents('https://api.ipify.org');
-    return response("Railway outbound IP: {$ip}");
-});
 
 // MarzPay Webhook - Must bypass CSRF protection
 Route::post('/payments/marzepay/webhook', PaymentWebhookController::class)

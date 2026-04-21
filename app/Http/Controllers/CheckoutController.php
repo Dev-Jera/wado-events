@@ -26,7 +26,8 @@ class CheckoutController extends Controller
         protected MarzePayService $marzePayService,
         protected PaymentLifecycleService $paymentLifecycleService,
         protected GuestCheckoutUserResolver $guestCheckoutUserResolver,
-        protected InventorySyncService $inventorySyncService
+        protected InventorySyncService $inventorySyncService,
+        protected \App\Services\Payment\PaymentNotificationService $paymentNotificationService
     ) {
     }
 
@@ -137,15 +138,17 @@ class CheckoutController extends Controller
                 return $ticket;
             });
 
+            $this->paymentNotificationService->sendFreeTicketConfirmed($ticket->fresh('user'));
+
             if ($guestCheckout) {
                 return redirect()
                     ->route('events.show', $event)
-                    ->with('success', 'Free ticket issued. We sent your ticket details to your email. Keep your payment phone active for SMS updates.');
+                    ->with('success', 'Free ticket issued. Check your email for your ticket details.');
             }
 
             return redirect()
                 ->route('tickets.show', $ticket)
-                ->with('success', 'Free ticket issued successfully.');
+                ->with('success', 'Free ticket issued. Check your email for a copy of your ticket.');
         }
 
         $idempotencyKey = strtoupper(trim((string) $data['idempotency_key']));

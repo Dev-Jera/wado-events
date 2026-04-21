@@ -176,8 +176,10 @@ class UserResource extends Resource
     {
         return [
             'super_admin' => 'SUPER ADMIN',
-            'customer' => 'CUSTOMER',
+            'admin' => 'ADMIN',
+            'event_owner' => 'EVENT OWNER',
             'gate_agent' => 'GATE OFFICER',
+            'customer' => 'CUSTOMER',
         ];
     }
 }
