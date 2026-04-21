@@ -58,6 +58,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/finance', [FinanceController::class, 'index'])->name('admin.finance.index');
     Route::get('/admin/finance/{event}', [FinanceController::class, 'show'])->name('admin.finance.show');
 
+    Route::get('/admin/pdf-preview/{ticket}', function (\App\Models\Ticket $ticket) {
+        abort_unless(auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin(), 403);
+
+        $ticket->load(['event.category', 'ticketCategory']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pages.tickets.pdf_compact', [
+            'ticket'        => $ticket,
+            'qrCodeDataUri' => app(\App\Http\Controllers\TicketController::class)->buildPngQrDataUri($ticket),
+            'eventImageUri' => app(\App\Http\Controllers\TicketController::class)->buildEventImageDataUri($ticket),
+        ]);
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => false, 'defaultFont' => 'sans-serif']);
+
+        return $pdf->stream('wado-ticket-preview.pdf');
+    })->name('admin.pdf.preview');
+
     Route::get('/admin/email-preview/{ticket}', function (\App\Models\Ticket $ticket) {
         abort_unless(auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin(), 403);
 

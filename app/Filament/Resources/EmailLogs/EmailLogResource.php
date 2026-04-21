@@ -74,11 +74,11 @@ class EmailLogResource extends Resource
             ->filters([])
             ->recordActions([
                 Action::make('preview')
-                    ->label('Preview')
+                    ->label('Preview PDF')
                     ->icon(Heroicon::OutlinedEye)
                     ->color('gray')
                     ->url(fn ($record) => $record->ticket
-                        ? route('admin.email.preview', $record->ticket)
+                        ? route('admin.pdf.preview', $record->ticket)
                         : null
                     )
                     ->openUrlInNewTab()

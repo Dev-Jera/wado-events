@@ -165,7 +165,7 @@ class TicketController extends Controller
         return $pdf->download(sprintf('wado-ticket-%s.pdf', $ticket->ticket_code));
     }
 
-    protected function buildPngQrDataUri(Ticket $ticket): ?string
+    public function buildPngQrDataUri(Ticket $ticket): ?string
     {
         try {
             $payload = json_encode([
@@ -193,7 +193,7 @@ class TicketController extends Controller
         }
     }
 
-    protected function buildEventImageDataUri(Ticket $ticket): ?string
+    public function buildEventImageDataUri(Ticket $ticket): ?string
     {
         $imageUrl = $ticket->event?->image_url;
         if (! $imageUrl) {
