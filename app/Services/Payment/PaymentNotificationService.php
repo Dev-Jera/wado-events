@@ -66,7 +66,7 @@ class PaymentNotificationService
 
             $subject = 'Your WADO Ticket — ' . ($ticket->event?->title ?? 'Event Confirmed');
 
-            Mail::to($recipient)->send(new TicketConfirmed(
+            Mail::to($recipient)->queue(new TicketConfirmed(
                 $ticket,
                 $payment,
                 $ticketUrl,
