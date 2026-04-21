@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Services\Ticket\TicketQrService;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -141,22 +146,74 @@ class TicketController extends Controller
         abort_unless($ticket->user_id === auth()->id(), 403);
 
         $ticket->load(['event.category', 'ticketCategory']);
-        $this->ensureTicketQrCode($ticket);
 
         $pdf = Pdf::loadView('pages.tickets.pdf_compact', [
-            'ticket' => $ticket,
-            'qrCodeDataUri' => $this->getQrCodeDataUri($ticket),
+            'ticket'        => $ticket,
+            'qrCodeDataUri' => $this->buildPngQrDataUri($ticket),
+            'eventImageUri' => $this->buildEventImageDataUri($ticket),
         ]);
 
         $pdf->setPaper('a4', 'portrait');
         $pdf->setOptions([
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled' => false, // Disable remote images to prevent hanging
-            'defaultFont' => 'sans-serif',
+            'isHtml5ParserEnabled'  => true,
+            'isRemoteEnabled'       => false,
+            'defaultFont'           => 'sans-serif',
             'isFontSubsettingEnabled' => true,
         ]);
 
         return $pdf->download(sprintf('wado-ticket-%s.pdf', $ticket->ticket_code));
+    }
+
+    protected function buildPngQrDataUri(Ticket $ticket): ?string
+    {
+        try {
+            $payload = json_encode([
+                'v'        => 2,
+                'code'     => (string) $ticket->ticket_code,
+                'event_id' => (int) $ticket->event_id,
+            ], JSON_UNESCAPED_SLASHES);
+
+            $result = (new Builder(
+                writer: new PngWriter(),
+                writerOptions: [],
+                data: $payload,
+                encoding: new Encoding('UTF-8'),
+                errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+                size: 300,
+                margin: 10,
+                roundBlockSizeMode: RoundBlockSizeMode::Margin,
+            ))->build();
+
+            return 'data:image/png;base64,' . base64_encode($result->getString());
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    protected function buildEventImageDataUri(Ticket $ticket): ?string
+    {
+        $imageUrl = $ticket->event?->image_url;
+        if (! $imageUrl) {
+            return null;
+        }
+
+        // Strip /storage/ prefix to get the disk-relative path
+        $diskPath = ltrim(str_replace('/storage/', '', $imageUrl), '/');
+
+        if (! Storage::disk('public')->exists($diskPath)) {
+            return null;
+        }
+
+        $contents = Storage::disk('public')->get($diskPath);
+        $ext      = strtolower(pathinfo($diskPath, PATHINFO_EXTENSION));
+        $mime     = match ($ext) {
+            'jpg', 'jpeg', 'jfif' => 'image/jpeg',
+            'png'                 => 'image/png',
+            'webp'                => 'image/webp',
+            default               => 'image/jpeg',
+        };
+
+        return 'data:' . $mime . ';base64,' . base64_encode($contents);
     }
 
     protected function ensureTicketQrCode(Ticket $ticket): void

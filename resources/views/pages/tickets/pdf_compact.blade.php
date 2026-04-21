@@ -8,13 +8,9 @@
 @php
     $isCancelled = $ticket->status === \App\Models\Ticket::STATUS_CANCELLED;
     $isUsed = $ticket->status === \App\Models\Ticket::STATUS_USED;
-    $eventImage = $ticket->event->image_url;
-    if ($eventImage && !str_starts_with($eventImage, 'http://') && !str_starts_with($eventImage, 'https://') && !str_starts_with($eventImage, '/')) {
-        $eventImage = asset($eventImage);
-    }
-    $useEventImage = $eventImage && (str_starts_with($eventImage, 'http://') || str_starts_with($eventImage, 'https://'));
     $statusLabel = $isCancelled ? 'Cancelled' : ($isUsed ? 'Used' : 'Confirmed');
     $statusClass = $isCancelled ? 'danger' : ($isUsed ? 'muted' : 'success');
+    $useEventImage = !empty($eventImageUri ?? null);
 @endphp
 
 <div class="page">
@@ -38,7 +34,7 @@
                 </td>
                 <td class="hero-image">
                     @if ($useEventImage)
-                        <img src="{{ $eventImage }}" alt="{{ $ticket->event->title }}">
+                        <img src="{{ $eventImageUri }}" alt="{{ $ticket->event->title }}">
                     @else
                         <div class="image-fallback">{{ $ticket->ticketCategory->name }}</div>
                     @endif
