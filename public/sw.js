@@ -1,7 +1,7 @@
 const CACHE_NAME = 'wado-scanner-v1';
 const CORE_ASSETS = [
   '/manifest.webmanifest',
-  '/images/wado-logo.png'
+  '/images/logos/logo-no-bg.png'
 ];
 
 self.addEventListener('install', (event) => {
