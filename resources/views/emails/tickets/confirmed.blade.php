@@ -72,28 +72,49 @@
                         <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">You're going to</div>
                         <div class="hero-title" style="font-size:26px;font-weight:800;color:#ffffff;line-height:1.2;margin-bottom:18px;">{{ $ticket->event?->title ?? 'WADO Event' }}</div>
 
-                        {{-- Badges — stack on mobile --}}
+                        {{-- Info badges — stack on mobile --}}
                         <table class="badges-table" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:0;">
                             <tr>
+                                {{-- Date --}}
                                 <td class="badge-td" style="padding:0 8px 0 0;vertical-align:top;">
-                                    <div class="badge-inner" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:8px 14px;">
-                                        <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);white-space:nowrap;">
-                                            📅 {{ $ticket->event?->starts_at?->format('d M Y') ?? 'TBD' }}
-                                        </span>
+                                    <div class="badge-inner" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;">
+                                        <table cellpadding="0" cellspacing="0" border="0"><tr>
+                                            <td style="vertical-align:middle;padding-right:8px;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <div style="font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Date</div>
+                                                <div style="font-size:12px;font-weight:700;color:#ffffff;white-space:nowrap;">{{ $ticket->event?->starts_at?->format('d M Y') ?? 'TBD' }}</div>
+                                            </td>
+                                        </tr></table>
                                     </div>
                                 </td>
+                                {{-- Time --}}
                                 <td class="badge-td" style="padding:0 8px 0 0;vertical-align:top;">
-                                    <div class="badge-inner" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:8px 14px;">
-                                        <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);white-space:nowrap;">
-                                            🕐 {{ $ticket->event?->starts_at?->format('H:i') ?? 'TBD' }}
-                                        </span>
+                                    <div class="badge-inner" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;">
+                                        <table cellpadding="0" cellspacing="0" border="0"><tr>
+                                            <td style="vertical-align:middle;padding-right:8px;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <div style="font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Time</div>
+                                                <div style="font-size:12px;font-weight:700;color:#ffffff;white-space:nowrap;">{{ $ticket->event?->starts_at?->format('H:i') ?? 'TBD' }}</div>
+                                            </td>
+                                        </tr></table>
                                     </div>
                                 </td>
+                                {{-- Venue --}}
                                 <td class="badge-td" style="padding:0;vertical-align:top;">
-                                    <div class="badge-inner" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:8px 14px;">
-                                        <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);">
-                                            📍 {{ $ticket->event?->venue ?? '' }}{{ $ticket->event?->city ? ', ' . $ticket->event->city : '' }}
-                                        </span>
+                                    <div class="badge-inner" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;">
+                                        <table cellpadding="0" cellspacing="0" border="0"><tr>
+                                            <td style="vertical-align:middle;padding-right:8px;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <div style="font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Venue</div>
+                                                <div style="font-size:12px;font-weight:700;color:#ffffff;">{{ $ticket->event?->venue ?? '' }}{{ $ticket->event?->city ? ', ' . $ticket->event->city : '' }}</div>
+                                            </td>
+                                        </tr></table>
                                     </div>
                                 </td>
                             </tr>
@@ -105,7 +126,12 @@
                 <tr>
                     <td class="details-cell" style="background:#ffffff;padding:28px 32px;">
 
-                        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">Ticket Details</div>
+                        <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;"><tr>
+                            <td style="vertical-align:middle;padding-right:7px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            </td>
+                            <td style="vertical-align:middle;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;">Ticket Details</td>
+                        </tr></table>
 
                         <table class="ticket-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:12px;border-collapse:separate;border-spacing:0;overflow:hidden;">
                             <tr style="background:#f9fafb;">
@@ -133,7 +159,12 @@
                         {{-- QR Code --}}
                         @if ($qrCodeDataUri)
                         <div style="text-align:center;margin:26px 0 18px;">
-                            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;">Your Entry QR Code</div>
+                            <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 14px;"><tr>
+                                <td style="vertical-align:middle;padding-right:7px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="14" y1="14" x2="21" y2="14"/><line x1="21" y1="18" x2="21" y2="21"/><line x1="18" y1="21" x2="21" y2="21"/></svg>
+                                </td>
+                                <td style="vertical-align:middle;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;">Your Entry QR Code</td>
+                            </tr></table>
                             <div style="display:inline-block;background:#ffffff;border:2px solid #e5e7eb;border-radius:16px;padding:16px;">
                                 <img class="qr-img" src="{{ $qrCodeDataUri }}" alt="Ticket QR Code" width="160" height="160" style="width:160px;height:160px;display:block;">
                             </div>
@@ -154,9 +185,14 @@
                 {{-- Note --}}
                 <tr>
                     <td class="note-cell" style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 32px;">
-                        <div style="font-size:12px;color:#6b7280;line-height:1.7;">
-                            <strong style="color:#374151;">What to bring:</strong> Present your QR code at the gate — from this email, the attached PDF, or your ticket page online. Keep your code <strong style="color:#374151;">{{ $ticket->ticket_code }}</strong> handy as backup.
-                        </div>
+                        <table cellpadding="0" cellspacing="0" border="0"><tr>
+                            <td style="vertical-align:top;padding-right:10px;padding-top:2px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </td>
+                            <td style="vertical-align:top;font-size:12px;color:#6b7280;line-height:1.7;">
+                                <strong style="color:#374151;">What to bring:</strong> Present your QR code at the gate — from this email, the attached PDF, or your ticket page online. Keep your code <strong style="color:#374151;">{{ $ticket->ticket_code }}</strong> handy as backup.
+                            </td>
+                        </tr></table>
                     </td>
                 </tr>
 
