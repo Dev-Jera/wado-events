@@ -185,8 +185,7 @@ class TicketController extends Controller
                 roundBlockSizeMode: RoundBlockSizeMode::Margin,
             ))->build();
 
-            // Return raw SVG markup for inline embedding in DomPDF
-            return $result->getString();
+            return 'data:image/svg+xml;base64,' . base64_encode($result->getString());
         } catch (\Throwable $e) {
             Log::warning('PDF QR generation failed', ['ticket_id' => $ticket->id, 'error' => $e->getMessage()]);
             return null;

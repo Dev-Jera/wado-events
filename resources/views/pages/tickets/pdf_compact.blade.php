@@ -67,7 +67,7 @@
                 <td class="qr-cell">
                     <div class="qr-box">
                         @if (!empty($qrCodeDataUri))
-                            {!! $qrCodeDataUri !!}
+                            <img src="{{ $qrCodeDataUri }}" alt="QR Code">
                         @else
                             <div class="qr-placeholder">QR</div>
                         @endif
