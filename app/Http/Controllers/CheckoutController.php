@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CheckoutRequest;
 use App\Jobs\ExpirePendingPayment;
+use App\Jobs\SendTicketNotification;
 use App\Models\Event;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
@@ -16,6 +17,7 @@ use App\Services\Ticket\TicketQrService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -87,6 +89,15 @@ class CheckoutController extends Controller
         }
         RateLimiter::hit($rateLimitKey, 600);
 
+        // Concurrency gate: cap simultaneous checkout transactions per event so a
+        // ticket-drop spike queues cheaply in Redis rather than hammering the DB.
+        if (! $this->acquireCheckoutSlot($event->id)) {
+            throw ValidationException::withMessages([
+                'quantity' => 'Checkout is busy right now due to high demand. Wait a moment and try again.',
+            ]);
+        }
+
+        try {
         $data = $request->validated();
 
         $createAccount = (bool) ($data['create_account'] ?? false);
@@ -138,7 +149,7 @@ class CheckoutController extends Controller
                 return $ticket;
             });
 
-            $this->paymentNotificationService->sendFreeTicketConfirmed($ticket->fresh('user'));
+            SendTicketNotification::dispatch($ticket->id);
 
             if ($guestCheckout) {
                 return redirect()
@@ -268,6 +279,10 @@ class CheckoutController extends Controller
                 'type' => 'success',
                 'message' => "We have sent a payment request via {$providerLabel} to {$phoneNumber}. Check your phone and enter your PIN to complete payment.",
             ]);
+
+        } finally {
+            $this->releaseCheckoutSlot($event->id);
+        }
     }
 
     protected function redirectForExistingPayment(Request $request, PaymentTransaction $payment)
@@ -329,6 +344,33 @@ class CheckoutController extends Controller
             'airtel' => 'Airtel Money',
             default => 'Mobile Money',
         };
+    }
+
+    protected function acquireCheckoutSlot(int $eventId, int $max = 20): bool
+    {
+        try {
+            $key    = "checkout:active:{$eventId}";
+            $active = Redis::incr($key);
+            Redis::expire($key, 30);
+
+            if ($active > $max) {
+                Redis::decr($key);
+                return false;
+            }
+
+            return true;
+        } catch (\Throwable) {
+            return true; // fail open: let the request through if Redis is unavailable
+        }
+    }
+
+    protected function releaseCheckoutSlot(int $eventId): void
+    {
+        try {
+            Redis::decr("checkout:active:{$eventId}");
+        } catch (\Throwable) {
+            // nothing to do
+        }
     }
 
     protected function purchaseRateLimitKey(Request $request, Event $event): string

@@ -5,8 +5,8 @@ namespace App\Jobs;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Services\Admin\AdminIncidentNotificationService;
-use App\Services\Payment\PaymentNotificationService;
 use App\Services\Ticket\TicketQrService;
+use App\Jobs\SendTicketNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +18,8 @@ class IssueTicketForPayment implements ShouldQueue
     use Queueable;
 
     public int $tries = 4;
+
+    public string $queue = 'tickets';
 
     public function __construct(public int $paymentTransactionId)
     {
@@ -53,7 +55,7 @@ class IssueTicketForPayment implements ShouldQueue
         return null;
     }
 
-    public function handle(TicketQrService $ticketQrService, PaymentNotificationService $notificationService): void
+    public function handle(TicketQrService $ticketQrService): void
     {
         $payment = PaymentTransaction::query()
             ->with(['user', 'event', 'ticketCategory'])
@@ -99,7 +101,7 @@ class IssueTicketForPayment implements ShouldQueue
         });
 
         if ($ticket instanceof Ticket) {
-            $notificationService->sendTicketConfirmed($ticket->fresh('user'), $payment->fresh());
+            SendTicketNotification::dispatch($ticket->id, $payment->id);
         }
     }
 

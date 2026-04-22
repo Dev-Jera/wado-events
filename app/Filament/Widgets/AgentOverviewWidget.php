@@ -14,6 +14,8 @@ class AgentOverviewWidget extends Widget
 
     protected static ?int $sort = 2;
 
+    protected static ?string $pollingInterval = '5s';
+
     protected function getViewData(): array
     {
         $today = now()->startOfDay();

@@ -14,6 +14,7 @@ use App\Services\Event\InventorySyncService;
 use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -35,32 +36,36 @@ class GatePortalController extends Controller
 
         $user = $request->user();
 
-        $events = Event::query()
-            ->with([
-                'ticketCategories:id,event_id,name,price,ticket_count,tickets_remaining,sort_order',
-            ])
-            ->withSum('ticketCategories as allocated_total', 'ticket_count')
-            ->withSum('ticketCategories as inventory_remaining_total', 'tickets_remaining')
-            ->withSum([
-                'tickets as issued_with_qr_total' => fn ($q) => $q->whereNotNull('qr_code_path'),
-            ], 'quantity')
-            ->withSum([
-                'tickets as scanned_total' => fn ($q) => $q->where(function ($sq): void {
-                    $sq->where('status', Ticket::STATUS_USED)
-                        ->orWhereNotNull('used_at');
-                }),
-            ], 'quantity')
-            ->withSum([
-                'tickets as confirmed_total' => fn ($q) => $q->where('status', Ticket::STATUS_CONFIRMED),
-            ], 'quantity')
-            ->withSum([
-                'tickets as cancelled_total' => fn ($q) => $q->where('status', Ticket::STATUS_CANCELLED),
-            ], 'quantity')
-            ->when($user?->isGateAgent() && ! $user?->isSuperAdmin(), function ($query) use ($user): void {
-                $query->whereHas('gateAgents', fn ($assigned) => $assigned->where('users.id', $user->id));
-            })
-            ->orderBy('starts_at')
-            ->get();
+        $userId = $user?->id ?? 0;
+
+        $events = Cache::remember("gate:portal:events:{$userId}", 15, function () use ($user) {
+            return Event::query()
+                ->with([
+                    'ticketCategories:id,event_id,name,price,ticket_count,tickets_remaining,sort_order',
+                ])
+                ->withSum('ticketCategories as allocated_total', 'ticket_count')
+                ->withSum('ticketCategories as inventory_remaining_total', 'tickets_remaining')
+                ->withSum([
+                    'tickets as issued_with_qr_total' => fn ($q) => $q->whereNotNull('qr_code_path'),
+                ], 'quantity')
+                ->withSum([
+                    'tickets as scanned_total' => fn ($q) => $q->where(function ($sq): void {
+                        $sq->where('status', Ticket::STATUS_USED)
+                            ->orWhereNotNull('used_at');
+                    }),
+                ], 'quantity')
+                ->withSum([
+                    'tickets as confirmed_total' => fn ($q) => $q->where('status', Ticket::STATUS_CONFIRMED),
+                ], 'quantity')
+                ->withSum([
+                    'tickets as cancelled_total' => fn ($q) => $q->where('status', Ticket::STATUS_CANCELLED),
+                ], 'quantity')
+                ->when($user?->isGateAgent() && ! $user?->isSuperAdmin(), function ($query) use ($user): void {
+                    $query->whereHas('gateAgents', fn ($assigned) => $assigned->where('users.id', $user->id));
+                })
+                ->orderBy('starts_at')
+                ->get();
+        });
 
         if ($eventId > 0 && ! $events->contains('id', $eventId)) {
             return redirect()
@@ -94,33 +99,35 @@ class GatePortalController extends Controller
         if ($selected) {
             $event = $selected['event'];
 
-            $categoryRows = TicketCategory::query()
-                ->where('event_id', $event->id)
-                ->withSum([
-                    'tickets as issued_with_qr_total' => fn ($q) => $q->whereNotNull('qr_code_path'),
-                ], 'quantity')
-                ->withSum([
-                    'tickets as scanned_total' => fn ($q) => $q->where(function ($sq): void {
-                        $sq->where('status', Ticket::STATUS_USED)
-                            ->orWhereNotNull('used_at');
-                    }),
-                ], 'quantity')
-                ->orderBy('sort_order')
-                ->get()
-                ->map(function (TicketCategory $category): array {
-                    $issuedWithQr = (int) ($category->issued_with_qr_total ?? 0);
-                    $scanned = (int) ($category->scanned_total ?? 0);
+            $categoryRows = Cache::remember("gate:portal:categories:{$event->id}", 15, function () use ($event) {
+                return TicketCategory::query()
+                    ->where('event_id', $event->id)
+                    ->withSum([
+                        'tickets as issued_with_qr_total' => fn ($q) => $q->whereNotNull('qr_code_path'),
+                    ], 'quantity')
+                    ->withSum([
+                        'tickets as scanned_total' => fn ($q) => $q->where(function ($sq): void {
+                            $sq->where('status', Ticket::STATUS_USED)
+                                ->orWhereNotNull('used_at');
+                        }),
+                    ], 'quantity')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(function (TicketCategory $category): array {
+                        $issuedWithQr = (int) ($category->issued_with_qr_total ?? 0);
+                        $scanned      = (int) ($category->scanned_total ?? 0);
 
-                    return [
-                        'category' => $category,
-                        'allocated' => (int) $category->ticket_count,
-                        'inventory_remaining' => (int) $category->tickets_remaining,
-                        'issued_with_qr' => $issuedWithQr,
-                        'scanned' => $scanned,
-                        'at_gate_remaining' => max($issuedWithQr - $scanned, 0),
-                    ];
-                })
-                ->values();
+                        return [
+                            'category'            => $category,
+                            'allocated'           => (int) $category->ticket_count,
+                            'inventory_remaining' => (int) $category->tickets_remaining,
+                            'issued_with_qr'      => $issuedWithQr,
+                            'scanned'             => $scanned,
+                            'at_gate_remaining'   => max($issuedWithQr - $scanned, 0),
+                        ];
+                    })
+                    ->values();
+            });
         }
 
         return view('pages.gate.portal', [
@@ -313,13 +320,17 @@ class GatePortalController extends Controller
 
     protected function getAgentCashCollectedToday(int $userId): float
     {
-        return (float) PaymentTransaction::query()
-            ->where('sales_channel', 'WALK_IN')
-            ->whereIn('payment_provider', ['cash', 'pos'])
-            ->where('status', PaymentTransaction::STATUS_CONFIRMED)
-            ->where('collected_by_user_id', $userId)
-            ->whereDate('collected_at', now()->toDateString())
-            ->sum('total_amount');
+        $key = "gate:agent_cash:{$userId}:" . now()->format('Ymd');
+
+        return (float) Cache::remember($key, 60, function () use ($userId) {
+            return PaymentTransaction::query()
+                ->where('sales_channel', 'WALK_IN')
+                ->whereIn('payment_provider', ['cash', 'pos'])
+                ->where('status', PaymentTransaction::STATUS_CONFIRMED)
+                ->where('collected_by_user_id', $userId)
+                ->whereDate('collected_at', now()->toDateString())
+                ->sum('total_amount');
+        });
     }
 
 }

@@ -8,8 +8,12 @@ use App\Models\Ticket;
 use App\Models\TicketScanLog;
 use App\Services\Admin\AdminIncidentNotificationService;
 use App\Services\Ticket\TicketQrService;
+use App\Events\TicketScanned;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class TicketVerificationController extends Controller
 {
@@ -168,6 +172,7 @@ class TicketVerificationController extends Controller
             ]);
         }
 
+        // Fast path: already used — skip acquiring the lock entirely
         if ($ticket->status === Ticket::STATUS_USED || $ticket->used_at) {
             $this->logScan($request, $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
             $usedAt = $ticket->used_at ? $ticket->used_at->format('d M H:i') : null;
@@ -180,20 +185,88 @@ class TicketVerificationController extends Controller
             ]);
         }
 
-        $ticket->forceFill(['status' => Ticket::STATUS_USED, 'used_at' => now()])->save();
+        // Redis lock (10 s TTL) prevents two simultaneous scans of the same code from
+        // both succeeding. The DB transaction + lockForUpdate inside catches any race
+        // that slips through (e.g. when Redis is unavailable and the lock is skipped).
+        try {
+            $broadcastData = null;
 
-        $this->logScan($request, $ticket, $ticketCode, 'valid', 'Ticket verified and marked used', $rawPayload, $selectedEventId);
+            $jsonResponse = Cache::lock('scan:' . $ticketCode, 10)->block(5, function () use (
+                $request, $ticketCode, $rawPayload, $selectedEventId, &$broadcastData
+            ): \Illuminate\Http\JsonResponse {
+                return DB::transaction(function () use (
+                    $request, $ticketCode, $rawPayload, $selectedEventId, &$broadcastData
+                ): \Illuminate\Http\JsonResponse {
+                    $locked = Ticket::query()
+                        ->with(['event', 'user', 'ticketCategory'])
+                        ->where('ticket_code', $ticketCode)
+                        ->lockForUpdate()
+                        ->first();
 
-        return response()->json([
-            'ok'       => true,
-            'reason'   => 'valid',
-            'message'  => 'Ticket verified for ' . ($ticket->event?->title ?? 'this event') . '.',
-            'detail'   => $holderName . ($ticket->ticketCategory?->name ? ' · ' . $ticket->ticketCategory->name : ''),
-            'holder'   => $holderName,
-            'event'    => $ticket->event?->title ?? '',
-            'category' => $ticket->ticketCategory?->name ?? '',
-            'code'     => $ticket->ticket_code,
-        ]);
+                    if (! $locked) {
+                        return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Ticket not found.']);
+                    }
+
+                    $holderName = $locked->holder_name ?: $locked->user?->name ?: 'Guest';
+
+                    if ($locked->status === Ticket::STATUS_USED || $locked->used_at) {
+                        $this->logScan($request, $locked, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
+                        $usedAt = $locked->used_at ? $locked->used_at->format('d M H:i') : null;
+                        return response()->json([
+                            'ok'     => false,
+                            'reason' => 'already_used',
+                            'message' => 'Ticket already used.',
+                            'detail' => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
+                            'holder' => $holderName,
+                        ]);
+                    }
+
+                    $locked->forceFill(['status' => Ticket::STATUS_USED, 'used_at' => now()])->save();
+
+                    $this->logScan($request, $locked, $ticketCode, 'valid', 'Ticket verified and marked used', $rawPayload, $selectedEventId);
+
+                    $broadcastData = [
+                        'holder'   => $holderName,
+                        'category' => $locked->ticketCategory?->name ?? '',
+                    ];
+
+                    return response()->json([
+                        'ok'       => true,
+                        'reason'   => 'valid',
+                        'message'  => 'Ticket verified for ' . ($locked->event?->title ?? 'this event') . '.',
+                        'detail'   => $holderName . ($locked->ticketCategory?->name ? ' · ' . $locked->ticketCategory->name : ''),
+                        'holder'   => $holderName,
+                        'event'    => $locked->event?->title ?? '',
+                        'category' => $locked->ticketCategory?->name ?? '',
+                        'code'     => $locked->ticket_code,
+                    ]);
+                });
+            });
+
+            // Broadcast after the DB transaction commits so the event is never
+            // pushed to the queue while the row lock is still held.
+            if ($broadcastData !== null) {
+                broadcast(new TicketScanned(
+                    eventId:   $selectedEventId,
+                    ticketCode: $ticketCode,
+                    holder:    $broadcastData['holder'],
+                    category:  $broadcastData['category'],
+                    result:    'valid',
+                    ok:        true,
+                    staffName: $request->user()?->name ?? 'Staff',
+                    scannedAt: now()->format('H:i:s'),
+                    deviceId:  $request->string('device_id')->toString(),
+                ));
+            }
+
+            return $jsonResponse;
+
+        } catch (LockTimeoutException) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Scanner is busy. Wait a moment and try again.',
+            ], 429);
+        }
     }
 
     public function export(Request $request)
@@ -392,14 +465,52 @@ class TicketVerificationController extends Controller
                 ]);
         }
 
-        $ticket->forceFill([
-            'status' => Ticket::STATUS_USED,
-            'used_at' => now(),
-        ])->save();
+        try {
+            [$markedTicket, $alreadyUsed] = Cache::lock('scan:' . $ticketCode, 10)->block(5, function () use (
+                $ticket, $ticketCode
+            ): array {
+                return DB::transaction(function () use ($ticket, $ticketCode): array {
+                    $locked = Ticket::query()
+                        ->where('ticket_code', $ticketCode)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $locked || $locked->status === Ticket::STATUS_USED || $locked->used_at) {
+                        return [$locked, true];
+                    }
+
+                    $locked->forceFill(['status' => Ticket::STATUS_USED, 'used_at' => now()])->save();
+                    return [$locked, false];
+                });
+            });
+        } catch (LockTimeoutException) {
+            return redirect()
+                ->route('tickets.verify.index', $eventIdForRedirect)
+                ->withInput()
+                ->with('verification', [
+                    'ok'      => false,
+                    'message' => 'Scanner is busy. Wait a moment and try again.',
+                    'ticket'  => $ticket,
+                    'payload' => $payload,
+                ]);
+        }
+
+        if ($alreadyUsed) {
+            $this->logScan($request, $markedTicket ?? $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
+            return redirect()
+                ->route('tickets.verify.index', $eventIdForRedirect)
+                ->withInput()
+                ->with('verification', [
+                    'ok'      => false,
+                    'message' => 'Ticket already used. Access denied.',
+                    'ticket'  => $markedTicket ?? $ticket,
+                    'payload' => $payload,
+                ]);
+        }
 
         $this->logScan(
             $request,
-            $ticket,
+            $markedTicket,
             $ticketCode,
             'valid',
             'Ticket verified and marked used',
@@ -411,9 +522,9 @@ class TicketVerificationController extends Controller
             ->route('tickets.verify.index', $eventIdForRedirect)
             ->withInput()
             ->with('verification', [
-                'ok' => true,
+                'ok'     => true,
                 'message' => 'Ticket verified and marked as used.',
-                'ticket' => $ticket,
+                'ticket'  => $markedTicket,
                 'payload' => $payload,
             ]);
     }

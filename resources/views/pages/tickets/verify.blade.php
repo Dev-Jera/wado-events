@@ -126,6 +126,41 @@
                     </div>
                     @endunless
 
+                    {{-- ── Live Gate Feed (WebSocket) ── --}}
+                    @unless($scannerOnly)
+                    <div class="vp-card" id="live-feed-card">
+                        <div class="vp-card-head">
+                            <div class="vp-card-title">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.66 3.34a12 12 0 0 1 0 16.97"/><path d="M3.34 3.34a12 12 0 0 0 0 16.97"/></svg>
+                                Live Gate Feed
+                            </div>
+                            <span id="live-feed-ws-status" class="vp-badge badge-idle" style="font-size:.68rem">Offline</span>
+                        </div>
+                        <ul id="live-feed-list" class="lf-list">
+                            <li id="lf-empty" class="lf-empty">Live scans from all gate devices will appear here once connected.</li>
+                        </ul>
+                    </div>
+                    @endunless
+
+                    <style>
+                        .lf-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .32rem; max-height: 280px; overflow-y: auto; }
+                        .lf-empty { font-size: .75rem; color: var(--muted, #8fa3b1); padding: .4rem 0; text-align: center; }
+                        .lf-item { display: flex; align-items: center; gap: .5rem; padding: .38rem .5rem; border-radius: 8px; font-size: .78rem; }
+                        .lf-ok   { background: #f0faf4; }
+                        .lf-warn { background: #fffbec; }
+                        .lf-bad  { background: #fff3f3; }
+                        .lf-icon { font-size: .9rem; font-weight: 700; width: 1.1rem; text-align: center; flex-shrink: 0; }
+                        .lf-ok   .lf-icon { color: #1a9e52; }
+                        .lf-warn .lf-icon { color: #c47d00; }
+                        .lf-bad  .lf-icon { color: #c0392b; }
+                        .lf-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .05rem; }
+                        .lf-name { font-weight: 600; color: #1a2535; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .lf-cat  { font-size: .69rem; color: #536684; }
+                        .lf-right { display: flex; flex-direction: column; align-items: flex-end; gap: .05rem; flex-shrink: 0; }
+                        .lf-time  { font-size: .69rem; color: #7c8da7; font-variant-numeric: tabular-nums; }
+                        .lf-staff { font-size: .65rem; color: #a0b0c0; }
+                    </style>
+
                 </div>
 
                 {{-- ── RIGHT COLUMN ── --}}
@@ -894,6 +929,7 @@
     </style>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
     <script>
     (function () {
         const scannerOnly      = @json($scannerOnly);
@@ -1288,6 +1324,66 @@
             offlineRows = Array.isArray(parsed?.rows) ? parsed.rows : [];
             renderOffline();
         });
+
+        // ── Reverb WebSocket: live scan feed across all gate devices ──────
+        const liveFeedList     = document.getElementById('live-feed-list');
+        const liveFeedWsStatus = document.getElementById('live-feed-ws-status');
+        const lfEmpty          = document.getElementById('lf-empty');
+        let wsScansChannel     = null;
+        let wsPusher           = null;
+
+        const escHtml = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const prependScan = (data) => {
+            if (!liveFeedList) return;
+            if (lfEmpty) lfEmpty.remove();
+            const cls  = data.ok ? 'lf-ok' : (data.result === 'already_used' ? 'lf-warn' : 'lf-bad');
+            const icon = data.ok ? '✓' : (data.result === 'already_used' ? '↩' : '✗');
+            const li   = document.createElement('li');
+            li.className = 'lf-item ' + cls;
+            li.innerHTML =
+                `<span class="lf-icon">${icon}</span>` +
+                `<span class="lf-body"><span class="lf-name">${escHtml(data.holder)}</span>` +
+                (data.category ? `<span class="lf-cat">${escHtml(data.category)}</span>` : '') +
+                `</span><span class="lf-right"><span class="lf-time">${escHtml(data.scanned_at)}</span>` +
+                (data.staff_name ? `<span class="lf-staff">${escHtml(data.staff_name)}</span>` : '') +
+                `</span>`;
+            liveFeedList.prepend(li);
+            while (liveFeedList.children.length > 25) liveFeedList.removeChild(liveFeedList.lastChild);
+        };
+
+        const reverbKey    = @json(config('broadcasting.connections.reverb.key', ''));
+        const reverbHost   = @json(config('broadcasting.connections.reverb.options.host', '127.0.0.1'));
+        const reverbPort   = {{ (int) config('broadcasting.connections.reverb.options.port', 8080) }};
+        const reverbScheme = @json(config('broadcasting.connections.reverb.options.scheme', 'http'));
+
+        const subscribeScans = (evtId) => {
+            if (!wsPusher || !evtId) return;
+            if (wsScansChannel) wsPusher.unsubscribe(wsScansChannel.name);
+            wsScansChannel = wsPusher.subscribe('private-event.' + evtId + '.scans');
+            wsScansChannel.bind('TicketScanned', prependScan);
+        };
+
+        if (reverbKey && window.Pusher) {
+            wsPusher = new window.Pusher(reverbKey, {
+                wsHost:            reverbHost,
+                wsPort:            reverbPort,
+                wssPort:           reverbPort,
+                forceTLS:          reverbScheme === 'https',
+                enabledTransports: ['ws', 'wss'],
+                cluster:           '',
+                authEndpoint:      '/broadcasting/auth',
+                auth:              { headers: { 'X-CSRF-TOKEN': csrfToken } },
+            });
+            wsPusher.connection.bind('connected', () => {
+                if (liveFeedWsStatus) { liveFeedWsStatus.textContent = 'Live'; liveFeedWsStatus.className = 'vp-badge badge-scan'; }
+            });
+            wsPusher.connection.bind('disconnected', () => {
+                if (liveFeedWsStatus) { liveFeedWsStatus.textContent = 'Offline'; liveFeedWsStatus.className = 'vp-badge badge-idle'; }
+            });
+            if (selectedEventId) subscribeScans(selectedEventId);
+            if (eventSelect) eventSelect.addEventListener('change', () => subscribeScans(selectedEventId));
+        }
     })();
     </script>
 @endsection

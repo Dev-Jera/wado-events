@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\FinanceController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\TicketDismissController;
 use App\Http\Controllers\TicketVerificationController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/health', HealthController::class)->name('health');
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
@@ -42,7 +45,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
     Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
-    Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->name('tickets.verify.scan-json');
+    Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->middleware('throttle:60,1')->name('tickets.verify.scan-json');
     Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
 
     Route::get('/admin/payments', [PaymentController::class, 'adminIndex'])->name('payments.admin.index');
@@ -112,7 +115,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
-Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->middleware('throttle:30,1')->name('checkout.store');
 
 // TEMPORARY: outbound IP check — remove after use
 Route::get('/outbound-ip', function () {

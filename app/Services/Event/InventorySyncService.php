@@ -4,6 +4,7 @@ namespace App\Services\Event;
 
 use App\Models\Event;
 use App\Models\TicketCategory;
+use Illuminate\Support\Facades\Cache;
 
 class InventorySyncService
 {
@@ -17,5 +18,11 @@ class InventorySyncService
         $event->forceFill([
             'tickets_available' => (int) ($inventory?->remaining_total ?? 0),
         ])->save();
+
+        // Flush caches that show event availability so the next request sees fresh data.
+        // Gate portal caches (15 s TTL) are short-lived enough to expire on their own.
+        Cache::tags(["event:{$event->id}"])->flush();
+        Cache::forget('events:list');
+        Cache::forget('home:featured_events');
     }
 }
