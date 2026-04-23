@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Admin\AdminIncidentNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -87,6 +88,47 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->to($this->resolvePostAuthRedirect($request));
+    }
+
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => ['required', 'email']]);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', 'We\'ve emailed you a password reset link. Check your inbox.')
+            : back()->withErrors(['email' => __($status)]);
+    }
+
+    public function showResetPassword(string $token)
+    {
+        return view('auth.reset-password', ['token' => $token]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token'    => ['required'],
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password): void {
+                $user->forceFill(['password' => $password])->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', 'Your password has been reset. You can now log in.')
+            : back()->withErrors(['email' => __($status)]);
     }
 
     public function logout(Request $request)

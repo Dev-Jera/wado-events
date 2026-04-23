@@ -19,6 +19,10 @@
                     <h1>Log in to your account</h1>
                     <p class="auth-copy">Sign in once &mdash; complete purchases, return later, and open My Tickets anytime.</p>
 
+                    @if (session('status'))
+                        <p class="auth-status-msg">{{ session('status') }}</p>
+                    @endif
+
                     <form method="POST" action="{{ route('login.store') }}" class="auth-form">
                         @csrf
 
@@ -52,6 +56,7 @@
                         </div>
 
                         <button type="submit" class="auth-btn">Log in</button>
+                        <p class="auth-forgot"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
                     </form>
 
                     <div class="auth-divider"><hr><span>or log in with</span><hr></div>
@@ -153,6 +158,12 @@
 
         .auth-switch { margin: 0.95rem 0 0; text-align: center; color: #8a9ab8; font-size: 0.92rem; }
         .auth-switch a { color: var(--brand-blue); font-weight: 700; }
+
+        .auth-forgot { margin: 0.5rem 0 0; text-align: right; font-size: 0.82rem; }
+        .auth-forgot a { color: #8a9ab8; text-decoration: none; }
+        .auth-forgot a:hover { color: var(--brand-blue); }
+
+        .auth-status-msg { margin: 0 0 1rem; padding: 0.65rem 0.85rem; background: rgba(22,163,74,0.12); border: 1px solid rgba(22,163,74,0.3); border-radius: 8px; color: #4ade80; font-size: 0.86rem; line-height: 1.35; }
 
         .auth-art { position: absolute; right: 1.1rem; bottom: 1.5rem; width: 220px; }
         .auth-art-curve { position: absolute; right: 58px; top: -150px; width: 150px; height: 150px; border-right: 2px dashed var(--brand-red); border-bottom: 2px dashed var(--brand-red); border-radius: 0 0 150px 0; }

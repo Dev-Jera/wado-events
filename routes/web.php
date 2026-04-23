@@ -30,6 +30,11 @@ Route::middleware('guest')->group(function () {
         ->name('login.store');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {
@@ -117,11 +122,6 @@ Route::middleware('auth')->group(function () {
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->middleware('throttle:30,1')->name('checkout.store');
 
-// TEMPORARY: outbound IP check — remove after use
-Route::get('/outbound-ip', function () {
-    $ip = file_get_contents('https://api.ipify.org');
-    return response("Railway outbound IP: {$ip}");
-});
 
 // MarzPay Webhook - Must bypass CSRF protection
 Route::post('/payments/marzepay/webhook', PaymentWebhookController::class)

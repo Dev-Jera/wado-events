@@ -62,8 +62,7 @@ return [
         'add_routes'       => true,
         'docs_url'         => '/docs',
         'assets_directory' => null,
-        // Restrict docs to authenticated admins in production
-        'middleware'       => [],
+        'middleware'       => env('APP_ENV') !== 'local' ? ['auth'] : [],
     ],
 
     'external' => [
