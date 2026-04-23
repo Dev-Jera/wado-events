@@ -14,7 +14,6 @@
         "filament/filament": "5.4",
         "getbrevo/brevo-php": "^4.0",
         "laravel/framework": "^12.0",
-        "laravel/horizon": "^5.0",
         "laravel/reverb": "^1.0",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^3.0",
