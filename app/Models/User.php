@@ -157,7 +157,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
           <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;padding:32px 28px;">
             <h2 style="color:#0a1525;margin:0 0 8px;">Reset your password</h2>
             <p style="color:#555;margin:0 0 24px;">Hi {$name}, we received a request to reset your WADO Tickets password. Click the button below. This link expires in 60 minutes.</p>
-            <a href="{$resetUrl}" style="display:inline-block;background:#e8241a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;">Reset password</a>
+            <a href="{$resetUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;">Reset password</a>
             <p style="color:#999;font-size:13px;margin:24px 0 0;">If you didn't request this, ignore this email — your password won't change.</p>
             <p style="color:#ccc;font-size:12px;margin:8px 0 0;">Or copy this link: {$resetUrl}</p>
           </div>
