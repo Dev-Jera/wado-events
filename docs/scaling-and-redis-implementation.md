@@ -270,17 +270,19 @@ Redis is the central infrastructure layer of the platform. It serves four distin
 
 `ExpirePendingPayment` — runs on the default queue with a 5-minute delay. If a user initiates payment but never completes it, this job releases the reserved seat back to inventory. It checks if the payment is still pending before acting, so it is safe even if payment is completed before the delay fires.
 
-**Laravel Horizon** (production only) — Horizon is a process supervisor and monitoring dashboard for queues. It runs on the production Linux server in place of a plain `queue:listen`. It auto-scales the number of worker processes based on queue depth, restarts crashed workers, and provides a web dashboard at `/horizon` showing:
-- Jobs processed per minute
-- Failed jobs with full stack traces
-- Per-queue throughput
-- Worker process health
+**The queue worker on production** is started inside `start.sh` — the script Railway runs every time the app boots:
 
-Horizon cannot run on Windows (it requires Linux `ext-pcntl`). Local development uses `php artisan queue:listen` instead.
+```bash
+php artisan queue:work --daemon --queue=tickets,notifications,default --tries=3 --timeout=60 --max-time=3600 &
+```
 
-**Horizon is configured in** `config/horizon.php`:
-- `production` environment: 5 worker processes for `tickets` queue, 3 for `notifications`, auto-scaling enabled
-- `local` environment: single worker
+The `--queue` flag is critical. It tells the worker which queues to listen on, in priority order. `tickets` is checked first (ticket issuance), then `notifications` (emails/SMS), then `default` (everything else). If a queue name is missing from this list, jobs dispatched to it will sit in Redis indefinitely and never be processed — this was a real incident where emails stopped sending because the worker was started without the queue names.
+
+**Rule: whenever a new job class is added that calls `$this->onQueue('some-name')`, that name must be added to the `--queue=` list in `start.sh` before deploying.**
+
+The `--max-time=3600` flag restarts the worker after one hour. This prevents gradual memory growth from a long-running PHP process. The `&` runs it in the background so the script continues to start the web server.
+
+**What "queues" actually are:** You do not create queues manually. A queue is just a named list in Redis. When a job calls `$this->onQueue('tickets')`, Laravel pushes a serialised job payload into a Redis list called `queues:tickets`. When the worker runs with `--queue=tickets`, it pops items from that list and executes them. The list is created automatically the first time a job is pushed to it. There is nothing to configure or provision — queues exist as long as jobs are being dispatched to them.
 
 ### 5.3 WebSockets & Laravel Reverb
 
@@ -918,7 +920,15 @@ If a notification job is failing consistently, Horizon is the first place to che
 
 ### Application Logs
 
-Logs are written to `storage/logs/laravel.log`. In development, the `pail` process in `composer dev` streams these to the terminal in real time. On Railway, view logs via the Railway dashboard → service → Logs tab.
+**Local development:** Logs are written to `storage/logs/laravel.log`. The `pail` process in `composer dev` streams these to the terminal in real time with colour coding by level.
+
+**On Railway:** Laravel writes to `storage/logs/laravel.log` by default, but that file lives inside the container filesystem and is not visible anywhere. To make logs visible, set this environment variable on Railway:
+
+```
+LOG_CHANNEL=stderr
+```
+
+With `stderr`, Laravel writes every log line to standard error output, which Railway captures and displays in the **Logs tab** of your service in real time. You will see every error, job failure, slow query warning, and email send as it happens. Without this setting, the Railway Logs tab shows only server startup output and nothing from the application itself.
 
 Slow database queries (over 500ms) are automatically logged:
 ```
@@ -999,12 +1009,13 @@ Send 6 rapid POST requests to `/login` with wrong credentials. The 6th should re
 **Cause:** `REDIS_CLIENT=phpredis` but the phpredis PHP extension is not installed (common on Windows/XAMPP).  
 **Fix:** Change to `REDIS_CLIENT=predis` in `.env`. Ensure `predis/predis` is in `composer.json`.
 
-### Queue jobs not processing
+### Queue jobs not processing / emails not sending
 
-**Check 1:** Is the queue worker running? Look for the `queue` process in `composer dev` output.  
-**Check 2:** Is `QUEUE_CONNECTION=redis` in `.env`?  
-**Check 3:** Is Redis running? Run `memurai-cli.exe ping`.  
-**Check 4:** Check failed jobs: `php artisan queue:failed`.
+**Check 1:** Is the queue worker running? Look for the `queue` process in `composer dev` output locally. On Railway, check the Logs tab for the `Starting queue worker` line on startup.  
+**Check 2:** Does the worker command include all queue names? In `start.sh`, the `--queue=` flag must list every queue your jobs use: `tickets,notifications,default`. If a job calls `$this->onQueue('refunds')` but `refunds` is not in that list, those jobs will never run.  
+**Check 3:** Is `QUEUE_CONNECTION=redis` set in both `.env` and Railway Variables?  
+**Check 4:** Is Redis running? Run `memurai-cli.exe ping` locally.  
+**Check 5:** Check failed jobs: `php artisan queue:failed`. Jobs that failed after all retries appear here.
 
 ### Reverb WebSocket not connecting
 
@@ -1020,13 +1031,9 @@ Run `php artisan scribe:generate` again. If changes still do not appear, run wit
 php artisan scribe:generate --force
 ```
 
-### "Horizon inactive" on production
+### Logs not visible on Railway
 
-SSH into the production server (or use Railway shell) and restart the Horizon process:
-```bash
-php artisan horizon:terminate
-php artisan horizon
-```
+Set `LOG_CHANNEL=stderr` in Railway → your app service → Variables. Without this, Laravel writes logs to a file inside the container that is not accessible. With `stderr`, every log line appears in the Railway Logs tab.
 
 ### Double booking occurred
 
@@ -1040,7 +1047,6 @@ Check if the database is SQLite (which does not support `lockForUpdate()`). Prod
 |---------|---------|------|---------|
 | `laravel/framework` | ^12.0 | Production | Core framework |
 | `filament/filament` | 5.4 | Production | Admin panel |
-| `laravel/horizon` | ^5.0 | Production | Queue monitoring (Linux/production) |
 | `laravel/reverb` | ^1.0 | Production | WebSocket server |
 | `predis/predis` | ^3.0 | Production | Pure PHP Redis client |
 | `barryvdh/laravel-dompdf` | ^3.1 | Production | PDF ticket generation |
