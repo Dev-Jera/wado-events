@@ -18,12 +18,12 @@ class SendTicketNotification implements ShouldQueue
 
     public int $timeout = 90;
 
-    public string $queue = 'notifications';
-
     public function __construct(
         public int  $ticketId,
         public ?int $paymentTransactionId = null,
-    ) {}
+    ) {
+        $this->onQueue('notifications');
+    }
 
     public function backoff(): array
     {

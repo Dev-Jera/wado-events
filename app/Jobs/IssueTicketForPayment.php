@@ -19,10 +19,9 @@ class IssueTicketForPayment implements ShouldQueue
 
     public int $tries = 4;
 
-    public string $queue = 'tickets';
-
     public function __construct(public int $paymentTransactionId)
     {
+        $this->onQueue('tickets');
     }
 
     public function backoff(): array
