@@ -352,40 +352,145 @@ Horizon dashboard available at `/horizon` (super-admin only).
 
 ---
 
-## 7. Package Summary
+## 7. API Documentation (Scribe)
+
+### 7.1 Overview
+
+API documentation is generated using **Scribe** (`knuckleswtf/scribe` v5.9.0). It reads your routes, FormRequest validation rules, and controller docblocks to produce:
+
+- An interactive HTML docs page with **Try It Out** buttons
+- A downloadable **Postman collection** (v2.1.0)
+- An **OpenAPI 3.0.3 spec** (compatible with Swagger UI and Insomnia)
+
+### 7.2 Accessing the Docs
+
+| URL | Content |
+|-----|---------|
+| `/docs` | Interactive HTML documentation |
+| `/docs.postman` | Postman collection (JSON download) |
+| `/docs.openapi` | OpenAPI/Swagger spec (YAML download) |
+
+### 7.3 Endpoint Groups
+
+All endpoints are organised into named groups via `@group` docblocks on each controller:
+
+| Group | Controller | Endpoints |
+|-------|-----------|-----------|
+| Authentication | `AuthController` | Login, register, logout |
+| Events | `EventController` | List events, view event |
+| Checkout | `CheckoutController` | Checkout form, submit booking |
+| Tickets | `TicketController` | My tickets, download, PDF, refund request |
+| Gate Portal | `GatePortalController` | Gate dashboard, walk-in sales |
+| Ticket Verification | `TicketVerificationController` | Scan ticket, verification list, export |
+| Admin — Payments | `PaymentController` | Confirm, refund, resend notifications |
+| Webhooks | `PaymentWebhookController` | MarzPay payment webhook |
+
+### 7.4 Authentication in the Docs
+
+The platform uses **session-based authentication** (Laravel session cookie), not API tokens. To test endpoints via Try It Out:
+
+1. Log in at `/login` in the same browser
+2. Open `/docs` — your session cookie is sent automatically with every request
+
+### 7.5 Regenerating the Docs
+
+Run this whenever you add or modify endpoints:
+
+```bash
+php artisan scribe:generate
+```
+
+Scribe caches endpoint data in `.scribe/endpoints.cache/`. If you want a completely fresh generation:
+
+```bash
+php artisan scribe:generate --force
+```
+
+### 7.6 Configuration
+
+Scribe is configured in `config/scribe.php`. Key settings:
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| `type` | `laravel` | Serves docs as a Blade view at `/docs` |
+| `routes.exclude` | `dashboard/*`, `telescope/*`, `horizon/*` | Filament and dev-tool routes are excluded |
+| `postman.enabled` | `true` | Postman collection generated on every run |
+| `openapi.enabled` | `true` | OpenAPI spec generated on every run |
+| `example_languages` | `bash`, `javascript`, `php` | Code samples shown in docs |
+| `groups.order` | Authentication → Events → Checkout → ... | Explicit group ordering |
+
+### 7.7 Adding Documentation to a New Endpoint
+
+Add a docblock above the controller method:
+
+```php
+/**
+ * Book a ticket
+ *
+ * Reserves a seat and initiates payment for the given event.
+ *
+ * @authenticated
+ * @response 302 scenario="Free ticket" {}
+ * @response 200 scenario="Paid ticket — payment initiated" {"payment_url": "https://..."}
+ */
+public function store(CheckoutRequest $request, Event $event) { ... }
+```
+
+Scribe automatically reads validation rules from `CheckoutRequest` to document the request body fields.
+
+---
+
+## 8. Package Summary
 
 | Package | Version | Purpose | Environment |
 |---------|---------|---------|-------------|
 | `laravel/horizon` | ^5.0 | Queue monitoring dashboard, process management | Production (Linux only) |
 | `laravel/reverb` | ^1.0 | WebSocket server for real-time features | Both |
 | `predis/predis` | ^3.0 | Pure PHP Redis client (replaces phpredis extension) | Both |
+| `knuckleswtf/scribe` | ^5.9 | API documentation, Postman collection, OpenAPI spec | Dev |
 
 ---
 
-## 8. Files Changed
+## 9. Files Changed
 
 | File | Change |
 |------|--------|
-| `composer.json` | Added `laravel/horizon`, `laravel/reverb`, `predis/predis`; updated `dev` script to include Reverb; pinned versions |
+| `composer.json` | Added `laravel/horizon`, `laravel/reverb`, `predis/predis`, `knuckleswtf/scribe`; updated `dev` script to include Reverb; pinned versions |
 | `composer.lock` | Updated with new package lock entries |
 | `config/database.php` | Changed Redis client default from `phpredis` to `predis` |
 | `.env` | Changed `REDIS_CLIENT` from `phpredis` to `predis` |
 | `.env.example` | Changed `REDIS_CLIENT` to `predis`; changed `QUEUE_CONNECTION` and `CACHE_STORE` to `redis`; changed `BROADCAST_CONNECTION` to `reverb`; added full Reverb variable block |
 | `config/horizon.php` | Published by `horizon:install` (was pre-existing, confirmed correct) |
 | `config/reverb.php` | Published by `reverb:install` |
+| `config/scribe.php` | New — Scribe configuration: route matching, auth, groups, output format |
 | `app/Providers/HorizonServiceProvider.php` | Published by `horizon:install` |
+| `app/Http/Controllers/AuthController.php` | Added `@group Authentication` docblock |
+| `app/Http/Controllers/EventController.php` | Added `@group Events` docblock |
+| `app/Http/Controllers/CheckoutController.php` | Added `@group Checkout` docblock |
+| `app/Http/Controllers/TicketController.php` | Added `@group Tickets` docblock |
+| `app/Http/Controllers/GatePortalController.php` | Added `@group Gate Portal` docblock |
+| `app/Http/Controllers/TicketVerificationController.php` | Added `@group Ticket Verification` docblock |
+| `app/Http/Controllers/PaymentController.php` | Added `@group Admin — Payments` docblock |
+| `app/Http/Controllers/PaymentWebhookController.php` | Added `@group Webhooks` docblock |
 | `database/migrations/2026_04_22_000002_add_indexes_to_payment_transactions_table.php` | New — indexes on `created_at`, `(event_id, status)`, `(user_id, status)` |
 | `database/migrations/2026_04_22_000003_add_indexes_to_events_table.php` | New — indexes on `status`, `starts_at`, `is_featured` |
+| `.scribe/` | Generated endpoint YAML cache files |
+| `resources/views/scribe/index.blade.php` | Generated docs view |
+| `public/vendor/scribe/` | Generated docs CSS and JS assets |
 
 ---
 
-## 9. Verified Working
+## 10. Verified Working
 
 | Check | Result |
 |-------|--------|
-| `php artisan package:discover` | All packages discovered including Horizon and Reverb |
+| `php artisan package:discover` | All packages discovered including Horizon, Reverb, and Scribe |
 | `php artisan migrate` | Both index migrations ran successfully |
 | `config('cache.default')` | Returns `redis` |
 | `config('queue.default')` | Returns `redis` |
 | `config('database.redis.client')` | Returns `predis` |
 | `memurai-cli.exe ping` | Returns `PONG` — Redis live on port 6379 |
+| `php artisan scribe:generate` | Docs generated successfully at `/docs` |
+| `/docs` | Interactive docs page loads with all 8 endpoint groups |
+| `/docs.postman` | Postman collection available for download |
+| `/docs.openapi` | OpenAPI spec available for download |
