@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
@@ -139,6 +141,50 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->canAccessOperationsPanel();
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $resetUrl = url(route('password.reset', ['token' => $token, 'email' => $this->email], false));
+        $name     = $this->name ?: 'there';
+
+        $html = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family:sans-serif;background:#f4f4f4;margin:0;padding:24px;">
+          <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;padding:32px 28px;">
+            <h2 style="color:#0a1525;margin:0 0 8px;">Reset your password</h2>
+            <p style="color:#555;margin:0 0 24px;">Hi {$name}, we received a request to reset your WADO Tickets password. Click the button below. This link expires in 60 minutes.</p>
+            <a href="{$resetUrl}" style="display:inline-block;background:#e8241a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;">Reset password</a>
+            <p style="color:#999;font-size:13px;margin:24px 0 0;">If you didn't request this, ignore this email — your password won't change.</p>
+            <p style="color:#ccc;font-size:12px;margin:8px 0 0;">Or copy this link: {$resetUrl}</p>
+          </div>
+        </body>
+        </html>
+        HTML;
+
+        $apiKey = (string) config('services.brevo.api_key', '');
+
+        if ($apiKey === '') {
+            Log::error('Password reset email failed: BREVO_API_KEY not configured');
+            return;
+        }
+
+        $response = Http::timeout(15)
+            ->withHeaders(['api-key' => $apiKey, 'Accept' => 'application/json'])
+            ->post('https://api.brevo.com/v3/smtp/email', [
+                'sender'      => ['name' => 'WADO Tickets', 'email' => config('mail.from.address')],
+                'to'          => [['email' => $this->email, 'name' => $this->name]],
+                'subject'     => 'Reset your WADO Tickets password',
+                'htmlContent' => $html,
+            ]);
+
+        if (! $response->successful()) {
+            Log::error('Password reset email failed via Brevo API', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+        }
     }
 
     public function getFilamentAvatarUrl(): ?string
