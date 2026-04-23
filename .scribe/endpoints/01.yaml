@@ -1,0 +1,115 @@
+name: Events
+description: |-
+
+  Browse and view public events.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: events
+    metadata:
+      custom: []
+      groupName: Events
+      groupDescription: |-
+
+        Browse and view public events.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Cookie: '{YOUR_SESSION_COOKIE}'
+      Accept: application/json
+      Content-Type: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+              "message": "Server Error"
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6Im9aL1NrWnJ3a0NZSDhuTmExMWJ5Z3c9PSIsInZhbHVlIjoiSDB1blpUTXZXMy9valBrcDNUZW1PSzlxazJCVTVWZmxhOWVSVFNMdDIxZDlYQ0hnN2tTbWNXVUlweUVEcGVyL3hpeG81OSs0M01WUUlKaFRqMUtDOU9FYmNzRXZLYWI1T3NmbU41blBobzhTV2RQRTBYdndONTh1OTNPNHkvaGciLCJtYWMiOiI2MzQ4MWMwMDFlNzU1NzU0MDAwZDg2YzdiY2RkMjViYjdlODJjOTRlZmIwZmU1YTE1YmY1MWYzYWQ4OWU4MTNkIiwidGFnIjoiIn0%3D; expires=Thu, 23 Apr 2026 09:30:55 GMT; Max-Age=7200; path=/; samesite=lax; laravel-session=eyJpdiI6IjVldVgzUXo0M2ZGOW5RN3FjeEw5Q1E9PSIsInZhbHVlIjoiS1NIYmtlbTNkWWQxRzZuT3QvWFY5UTNPYUt1eWdaT3RGdC9MNWtXZGV1Y0JJTENod3k5L3hzSzB4M09SdmtESTVndENmektJSFBwUnNMeWhla21MU1JVZ09tc3ZxSGRHQXhlY2EzWTRVYUF3V2lmcWtuUHh2U2dYQTdFVmRTMy8iLCJtYWMiOiJlYjM0MDk3ZmE2OTJlMDVhOWIwNjliODBlNzgzN2E1N2M4OWI2ZmFkOGJhMmVkYjlmMTczNWFlOGIzNTgxMjk5IiwidGFnIjoiIn0%3D; expires=Thu, 23 Apr 2026 09:30:55 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Cookie
+      - 3V5EgbkvZcDPa166h8fd4ae
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'events/{id}'
+    metadata:
+      custom: []
+      groupName: Events
+      groupDescription: |-
+
+        Browse and view public events.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Cookie: '{YOUR_SESSION_COOKIE}'
+      Accept: application/json
+      Content-Type: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the event.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+              "message": "Server Error"
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6IldIWllJNmZUWC9odkJpd1NzcDdKYkE9PSIsInZhbHVlIjoibjZNS0hwcU04WVdDWUtyVXdZVis1TUJGZG1yajhGVC8vclRWS2xtdUFDKy9HQWZhc0lKWFlvdFpDL0ZZMzlPdEtoR3drL3MvYllKWEltN2w1OVdCNkU2UTdmQnBlRHhYdmpYdWxRQTBrQ21rbk45NjlIT0s5b2QwMUFOWUs1Y2IiLCJtYWMiOiJmMzg0ZTU3ODFkMmY1ZTY1YTU0N2NlNzUyZmRjMTBkYTkyYjE1YjM2NWY3Y2UyYWU5MTFlOTQ5MzdmYmJhZjIyIiwidGFnIjoiIn0%3D; expires=Thu, 23 Apr 2026 09:30:55 GMT; Max-Age=7200; path=/; samesite=lax; laravel-session=eyJpdiI6IkpBampQcldSTWxtOVc1R3hhVVZYZHc9PSIsInZhbHVlIjoiZUNaQ1pzaEVrd0tpWjhBRTdNSkV5Y084YU5KSitCN05TVXc5QmMyMXYxOVdWSlFScE5YQW52WnUwYzNqNlhuWU0vM1NxSk1vY0JqbE5zL0g2d0pnRXBybWdRYzA1K3YzSUluNmtnMlpyTStaNnpENzYwbE56Vm5YeEZ1Tkt6b3giLCJtYWMiOiIzN2EwNGRlZDg5MWJlOWJmZGZmY2IwZDdjZTMxZGQ2YzUzZmI1NTk1MDUzZWEwODYyYTFlMmYzZDczNzNjZDdkIiwidGFnIjoiIn0%3D; expires=Thu, 23 Apr 2026 09:30:55 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Cookie
+      - 3V5EgbkvZcDPa166h8fd4ae
+    controller: null
+    method: null
+    route: null

@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+/**
+ * @group Tickets
+ *
+ * View, download, and manage purchased tickets.
+ */
 class TicketController extends Controller
 {
     public function __construct(protected TicketQrService $ticketQrService)

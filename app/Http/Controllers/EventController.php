@@ -7,6 +7,11 @@ use App\Support\StaticEventCatalog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @group Events
+ *
+ * Browse and view public events.
+ */
 class EventController extends Controller
 {
     public function index()

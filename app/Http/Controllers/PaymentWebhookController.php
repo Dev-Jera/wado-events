@@ -10,6 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @group Webhooks
+ *
+ * Incoming callbacks from external payment providers. Called by MarzPay, not by the browser.
+ */
 class PaymentWebhookController extends Controller
 {
     public function __invoke(Request $request, MarzePayService $marzePayService, PaymentLifecycleService $lifecycleService): JsonResponse

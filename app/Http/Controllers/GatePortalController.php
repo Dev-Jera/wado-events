@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @group Gate Portal
+ *
+ * Gate agent dashboard and walk-in ticket sales.
+ */
 class GatePortalController extends Controller
 {
     public function __construct(

@@ -21,6 +21,11 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @group Checkout
+ *
+ * Seat reservation and ticket purchase flow.
+ */
 class CheckoutController extends Controller
 {
     public function __construct(

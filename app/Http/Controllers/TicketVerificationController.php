@@ -15,6 +15,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @group Ticket Verification
+ *
+ * Scan and verify tickets at the event entrance.
+ */
 class TicketVerificationController extends Controller
 {
     public function __construct(

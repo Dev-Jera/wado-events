@@ -1,0 +1,42 @@
+name: Webhooks
+description: |-
+
+  Incoming callbacks from external payment providers. Called by MarzPay, not by the browser.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: payments/marzepay/webhook
+    metadata:
+      custom: []
+      groupName: Webhooks
+      groupDescription: |-
+
+        Incoming callbacks from external payment providers. Called by MarzPay, not by the browser.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Cookie: '{YOUR_SESSION_COOKIE}'
+      Accept: application/json
+      Content-Type: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Cookie
+      - 3V5EgbkvZcDPa166h8fd4ae
+    controller: null
+    method: null
+    route: null

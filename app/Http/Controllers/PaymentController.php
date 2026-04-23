@@ -8,6 +8,11 @@ use App\Services\Payment\PaymentLifecycleService;
 use App\Services\Payment\PaymentNotificationService;
 use Illuminate\Http\Request;
 
+/**
+ * @group Admin — Payments
+ *
+ * Admin operations: confirm, refund, and resend payment notifications.
+ */
 class PaymentController extends Controller
 {
     public function adminIndex(Request $request)
