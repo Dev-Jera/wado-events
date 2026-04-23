@@ -68,6 +68,10 @@
             {{-- RIGHT: Form --}}
             <form method="POST" action="{{ route('checkout.store', $event) }}" class="checkout-right" id="checkout-form">
                 @csrf
+                {{-- Honeypot: bots fill this, humans never see it --}}
+                <div style="display:none" aria-hidden="true">
+                    <input type="text" name="website" value="" tabindex="-1" autocomplete="off">
+                </div>
                 <input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', $idempotencyKey) }}">
                 <input type="hidden" name="payment_provider" id="payment_provider_input" value="{{ old('payment_provider', $selectedPaymentProvider) }}">
 

@@ -21,6 +21,10 @@
 
                     <form method="POST" action="{{ route('register.store') }}" class="auth-form">
                         @csrf
+                        {{-- Honeypot: bots fill this, humans never see it --}}
+                        <div style="display:none" aria-hidden="true">
+                            <input type="text" name="website" value="" tabindex="-1" autocomplete="off">
+                        </div>
 
                         <label>
                             <span>Full name</span>

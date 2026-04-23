@@ -1,2 +1,18 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /events
+Allow: /events/*
+Allow: /login
+Allow: /register
+
+Disallow: /my-tickets
+Disallow: /my-tickets/*
+Disallow: /events/*/checkout
+Disallow: /gate-portal
+Disallow: /ticket-verification
+Disallow: /admin/*
+Disallow: /dashboard/*
+Disallow: /telescope
+Disallow: /docs
+Disallow: /forgot-password
+Disallow: /reset-password

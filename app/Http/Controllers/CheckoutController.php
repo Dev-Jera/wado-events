@@ -79,6 +79,10 @@ class CheckoutController extends Controller
 
     public function store(CheckoutRequest $request, Event $event)
     {
+        if ($request->filled('website')) {
+            return redirect()->route('events.show', $event);
+        }
+
         $event->load('ticketCategories');
         abort_if($this->isCheckoutClosed($event), 404);
 

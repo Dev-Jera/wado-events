@@ -69,6 +69,10 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        if ($request->filled('website')) {
+            return redirect()->route('home');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
@@ -99,11 +103,11 @@ class AuthController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        Password::sendResetLink($request->only('email'));
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', 'We\'ve emailed you a password reset link. Check your inbox.')
-            : back()->withErrors(['email' => __($status)]);
+        // Always return the same message regardless of whether the email exists
+        // — prevents attackers from enumerating which emails are registered.
+        return back()->with('status', 'If that email is registered, you\'ll receive a reset link shortly.');
     }
 
     public function showResetPassword(string $token)
