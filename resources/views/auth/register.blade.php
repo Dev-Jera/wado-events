@@ -82,14 +82,14 @@
                     <div class="auth-divider"><hr><span>or sign up with</span><hr></div>
 
                     <div class="auth-social">
-                        <button type="button" class="auth-social-btn">
+                        <a href="{{ route('social.redirect', 'google') }}" class="auth-social-btn">
                             <span class="auth-social-icon"><img src="{{ asset('images/google.png') }}" alt="Google logo"></span>
                             <span>Google</span>
-                        </button>
-                        <button type="button" class="auth-social-btn">
+                        </a>
+                        <a href="{{ route('social.redirect', 'facebook') }}" class="auth-social-btn">
                             <span class="auth-social-icon"><img src="{{ asset('images/facebook-logo.png') }}" alt="Facebook logo"></span>
                             <span>Facebook</span>
-                        </button>
+                        </a>
                     </div>
 
                     <p class="auth-switch">Already have an account? <a href="{{ route('login') }}">Log in</a></p>

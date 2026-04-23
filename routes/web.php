@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\FinanceController;
@@ -22,6 +23,9 @@ Route::get('/health', HealthController::class)->name('health');
 Route::get('/', HomeController::class)->name('home');
 Route::get('/events', [EventController::class, 'index'])->middleware('throttle:60,1')->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->middleware('throttle:60,1')->name('events.show');
+
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
