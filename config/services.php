@@ -50,6 +50,11 @@ return [
         'api_key' => env('BREVO_API_KEY'),
     ],
 
+    'turnstile' => [
+        'site_key'   => env('TURNSTILE_SITE_KEY', ''),
+        'secret_key' => env('TURNSTILE_SECRET_KEY', ''),
+    ],
+
     'africas_talking' => [
         'base_url' => env('AFRICASTALKING_BASE_URL', 'https://api.africastalking.com'),
         'username' => env('AFRICASTALKING_USERNAME'),

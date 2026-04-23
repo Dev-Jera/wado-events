@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthController::class)->name('health');
 
 Route::get('/', HomeController::class)->name('home');
-Route::get('/events', [EventController::class, 'index'])->name('events.index');
-Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events', [EventController::class, 'index'])->middleware('throttle:60,1')->name('events.index');
+Route::get('/events/{event}', [EventController::class, 'show'])->middleware('throttle:60,1')->name('events.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -29,7 +29,7 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:5,1')
         ->name('login.store');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+    Route::post('/register', [AuthController::class, 'register'])->middleware(['throttle:10,1', \App\Http\Middleware\VerifyTurnstile::class])->name('register.store');
 
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
@@ -120,7 +120,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
-Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->middleware('throttle:30,1')->name('checkout.store');
+Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->middleware(['throttle:30,1', \App\Http\Middleware\VerifyTurnstile::class])->name('checkout.store');
 
 
 // MarzPay Webhook - Must bypass CSRF protection
