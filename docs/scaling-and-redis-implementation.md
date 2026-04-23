@@ -564,6 +564,32 @@ Each time you run `php artisan scribe:generate`, Scribe re-reads all your routes
 | `/docs.postman` | Postman collection (JSON) — download and import into Postman |
 | `/docs.openapi` | OpenAPI 3.0 YAML spec — use with Swagger UI, Insomnia, etc. |
 
+> **Important:** `/docs.openapi` and `/docs.postman` are **machine-readable files**, not pages meant to be opened in a browser. If you visit `/docs.openapi` directly in Chrome or Firefox you will see a wall of raw YAML — that is normal and correct, it is not broken. These files are inputs for external tools, not for reading.
+
+**The primary human-readable interface is `/docs`.** That is where you browse endpoints, read descriptions, and fire real requests using the Try It Out buttons.
+
+#### Using `/docs.openapi` with Swagger UI
+
+Swagger UI is a popular open-source API explorer that renders an OpenAPI spec into a visual, interactive interface. To load your spec into it:
+
+1. Go to **https://editor.swagger.io**
+2. Click **File → Import URL**
+3. Paste: `http://127.0.0.1:8000/docs.openapi`
+4. Swagger UI renders your full API with try-it-out buttons, request schemas, and response examples
+
+This is useful when sharing the API with a frontend developer or external party who does not have access to the running application.
+
+#### Using `/docs.postman` with Postman
+
+Postman is the standard tool for API testing. To import your collection:
+
+1. Open Postman
+2. Click **Import** in the top-left
+3. Choose **Link** and paste: `http://127.0.0.1:8000/docs.postman`
+4. Postman creates a folder for every endpoint group with all parameters pre-filled
+
+Once imported, set up an environment in Postman with `baseUrl = http://127.0.0.1:8000` and log in via the `/login` request so Postman captures the session cookie.
+
 ### 7.3 How Authentication Works in the Docs
 
 This platform uses **session-based authentication** — not API tokens. There is no `Authorization: Bearer` header. Authentication is a browser cookie set by the `/login` endpoint.
