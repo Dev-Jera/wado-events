@@ -260,7 +260,27 @@ Redis is the central infrastructure layer of the platform. It serves four distin
 
 ### 5.2 Queue Workers & Laravel Horizon
 
-**What queues do:** Instead of processing ticket emails, SMS, PDFs, and QR code generation inside the HTTP request, the application dispatches jobs to a queue. A separate background process (the queue worker) picks up these jobs and processes them one by one. The HTTP response is returned immediately, and the user never waits for email delivery.
+**Why queues exist:** When someone buys a ticket, several things need to happen — generate a unique ticket code, generate a QR code image, send a confirmation email with the ticket attached, send an SMS. If all of that ran inside the HTTP request, the user would wait 3–10 seconds for a response. Under load with many buyers at once, requests would time out. Instead, the app returns a response to the user immediately ("payment received") and hands the slow work to a background queue worker, which processes it a few seconds later. The user never waits for email delivery or file generation.
+
+A secondary benefit: if the email server is temporarily down, the job retries automatically up to 3 times with a delay between attempts. Nothing is lost.
+
+**What belongs in a queue vs what does not:**
+
+The rule is: if a task calls an external service (email provider, SMS gateway) or generates a file (QR code, PDF), it goes in a queue. Everything else runs directly in the request because it is fast enough.
+
+| Task | Runs in queue? | Reason |
+|------|---------------|--------|
+| Send ticket confirmation email | Yes | Calls Brevo API — external, slow |
+| Send ticket SMS | Yes | Calls Brevo API — external, slow |
+| Generate QR code image | Yes | File generation — slow |
+| Issue ticket record after payment | Yes | Chains into email/SMS jobs |
+| Expire unpaid payment after timeout | Yes | Delayed task — must not block |
+| Load event listings page | No | Simple database query, milliseconds |
+| Show checkout page | No | Just renders a view |
+| Process payment webhook | No | Quick DB write, then dispatches a job |
+| Scan a ticket at the gate | No | Quick DB lookup and update |
+
+These are the only things that need to be in queues for what the app currently does. The three existing job classes cover all of them. No new queue work is needed unless a completely new category of slow background task is added.
 
 **Three job classes:**
 
