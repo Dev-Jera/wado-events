@@ -35,13 +35,41 @@
             <h2>Available categories</h2>
             <div class="category-list">
                 @forelse ($categories as $category)
-                    <div class="category-item">
+                    <div class="category-item" id="category-{{ $category->id }}">
                         <div>
                             <strong>{{ $category->name }}</strong>
                             <p>{{ $category->description ?: 'No description yet.' }}</p>
                         </div>
-                        <span>{{ $category->events_count }} events</span>
+                        <div class="category-actions">
+                            <span>{{ $category->events_count }} events</span>
+                            <button class="delete-btn" onclick="deleteCategory({{ $category->id }})">Delete</button>
+                        </div>
                     </div>
+
+                    <script>
+                        function deleteCategory(categoryId) {
+                            if (!confirm('Are you sure you want to delete this category?')) return;
+
+                            fetch(`/admin/categories/${categoryId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    document.getElementById(`category-${categoryId}`).remove();
+                                } else {
+                                    alert('Failed to delete the category.');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('An error occurred. Please try again.');
+                            });
+                        }
+                    </script>
                 @empty
                     <p>No categories yet. Create your first one on the left.</p>
                 @endforelse

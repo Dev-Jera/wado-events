@@ -9,6 +9,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use UnitEnum;
@@ -96,18 +97,24 @@ class ContentManagementPage extends Page
                             ->label('Banner 1')
                             ->image()
                             ->directory('hero-banners')
+                            ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
+                            ->maxSize(5120)
                             ->nullable(),
 
                         FileUpload::make('hero_banner_2')
                             ->label('Banner 2')
                             ->image()
                             ->directory('hero-banners')
+                            ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
+                            ->maxSize(5120)
                             ->nullable(),
 
                         FileUpload::make('hero_banner_3')
                             ->label('Banner 3')
                             ->image()
                             ->directory('hero-banners')
+                            ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
+                            ->maxSize(5120)
                             ->nullable(),
                     ])
                     ->columns(3),
@@ -122,6 +129,8 @@ class ContentManagementPage extends Page
                                     ->label('Photo')
                                     ->image()
                                     ->directory('packages')
+                                    ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
+                                    ->maxSize(5120)
                                     ->nullable()
                                     ->columnSpanFull(),
 
