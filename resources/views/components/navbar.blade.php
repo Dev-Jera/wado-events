@@ -21,6 +21,7 @@
         <div class="nav-links">
             <a href="{{ route('home') }}" @class(['active' => request()->routeIs('home')])>Home</a>
             <a href="{{ route('events.index') }}" @class(['active' => request()->routeIs('events.*')])>Events</a>
+            <a href="{{ route('ticket-packages.index') }}" @class(['active' => request()->routeIs('ticket-packages.*')])>Packages</a>
             @auth
                 <a href="{{ $myTicketsUrl }}" @class(['active' => request()->routeIs('tickets.index')])>My Tickets</a>
             @endauth

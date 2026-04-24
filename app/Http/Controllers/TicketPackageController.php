@@ -2,30 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TicketPackageController extends Controller
 {
     public function index()
     {
-        $ticketPackages = [
+        $settingsPath = storage_path('app/site-settings.json');
+        $s = file_exists($settingsPath)
+            ? (json_decode(file_get_contents($settingsPath), true) ?? [])
+            : [];
+
+        $defaultPackages = [
             [
-                'name' => 'Standard Package',
-                'price' => 50,
-                'description' => 'Access to all general events.',
+                'image' => asset('images/wrist-ticket.jpg'),
+                'label' => 'VIP Wristband Tickets',
+                'title' => 'Give your VIP guests a premium entry experience',
+                'copy'  => 'With our printed VIP wristbands, give your top-tier guests a cleaner, faster access experience from the moment they arrive. Colour-coded per category, tamper-proof, and printed on-demand.',
             ],
             [
-                'name' => 'VIP Package',
-                'price' => 150,
-                'description' => 'Includes VIP seating and complimentary drinks.',
+                'image' => asset('images/cutout-ticket.jpg'),
+                'label' => 'Gate-Sale Ticket Printing',
+                'title' => 'Print ticket batches for fast sales at the entrance',
+                'copy'  => 'Generate tickets in bulk and sell them at entry with optional scanner support when you need more control. Perfect for walk-in audiences and last-minute sales without the tech overhead.',
             ],
             [
-                'name' => 'Family Package',
-                'price' => 120,
-                'description' => 'Discounted access for families (up to 4 members).',
+                'image' => asset('images/Online ticket.jpg'),
+                'label' => 'Online Ticketing & Event Management',
+                'title' => 'Sell online and let us manage your event',
+                'copy'  => 'Let customers buy tickets online while our team manages verification, attendance, and event flow from one organised system. Real-time dashboards, QR scanning, and refund handling included.',
             ],
         ];
 
-        return view('ticket-packages.index', compact('ticketPackages'));
+        $packages = isset($s['packages']) && count($s['packages'])
+            ? array_map(fn ($p) => [
+                'image' => !empty($p['image']) ? Storage::url($p['image']) : null,
+                'label' => $p['label'] ?? '',
+                'title' => $p['title'] ?? '',
+                'copy'  => $p['copy']  ?? '',
+            ], $s['packages'])
+            : $defaultPackages;
+
+        return view('ticket-packages.index', compact('packages'));
     }
 }

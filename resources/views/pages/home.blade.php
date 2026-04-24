@@ -147,6 +147,7 @@
 
 {{-- Ticket Packages Marquee Section --}}
 <section class="ticket-packages-marquee" style="margin-top: 0;">
+    <div class="marquee-shell">
     <div class="marquee">
         <div class="marquee-content">
             @foreach ($packageSlides as $package)
@@ -160,6 +161,7 @@
             @endforeach
         </div>
     </div>
+    </div>{{-- /.marquee-shell --}}
 </section>
 
 {{-- ─────────────────────── FEATURED STRIP ─────────────────────── --}}
@@ -737,10 +739,16 @@ body {
 }
 
 /* ── Shared section scaffolding ────────────────────────────────────── */
- ticket-packages-marquee {
-    padding: 0 1rem 1.1rem;
-    overflow: hidden;
+.ticket-packages-marquee {
+    padding: 0 0 1.1rem;
     background: #321318;
+}
+
+.ticket-packages-marquee .marquee-shell {
+    max-width: var(--site-width, 1140px);
+    margin: 0 auto;
+    padding: 0 1rem;
+    overflow: hidden;
 }
 
 .marquee {
