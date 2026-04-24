@@ -72,6 +72,18 @@
             border: 1px solid #f4d28c;
         }
 
+        .site-flash-error {
+            background: #fff1f0;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .site-flash-info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #93c5fd;
+        }
+
         .site-footer {
             padding: 1.25rem 1rem 1.5rem;
             text-align: center;
@@ -92,12 +104,11 @@
     @endunless
 
     <main class="page-content">
-        @if (session('success'))
-            <div class="site-flash {{ $isFullBleed ? 'site-flash-fullbleed' : '' }} site-flash-success">{{ session('success') }}</div>
-        @endif
-        @if (session('warning'))
-            <div class="site-flash {{ $isFullBleed ? 'site-flash-fullbleed' : '' }} site-flash-warning">{{ session('warning') }}</div>
-        @endif
+        @foreach (['success' => 'site-flash-success', 'warning' => 'site-flash-warning', 'error' => 'site-flash-error', 'info' => 'site-flash-info'] as $key => $cls)
+            @if (session($key))
+                <div class="site-flash {{ $cls }}">{{ session($key) }}</div>
+            @endif
+        @endforeach
         @yield('content')
     </main>
 

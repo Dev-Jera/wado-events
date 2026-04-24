@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
@@ -43,6 +44,11 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
     Route::get('/my-tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/my-tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::get('/my-tickets/{ticket}/download', [TicketController::class, 'download'])->name('tickets.download');
@@ -131,3 +137,5 @@ Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->m
 Route::post('/payments/marzepay/webhook', PaymentWebhookController::class)
     ->withoutMiddleware(VerifyCsrfToken::class)
     ->name('payments.webhook.marzepay');
+
+require __DIR__.'/ticket-packages.php';

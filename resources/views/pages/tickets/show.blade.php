@@ -160,6 +160,32 @@
         </div>
     </div>
 
+    {{-- Refund section --}}
+    @if ($canRequestRefund ?? false)
+    <div class="tkd-refund-section" id="tkd-refund-section">
+        <button type="button" class="tkd-refund-toggle" id="tkd-refund-toggle" aria-expanded="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Request a refund
+        </button>
+        <div class="tkd-refund-form-wrap" id="tkd-refund-form-wrap" hidden>
+            <p class="tkd-refund-hint">Describe why you want a refund. Our team will review your request and respond within 2–3 business days.</p>
+            <form method="POST" action="{{ route('tickets.refund.request', $ticket) }}" class="tkd-refund-form">
+                @csrf
+                <textarea name="reason" rows="3" maxlength="500" required placeholder="e.g. I can no longer attend due to…" class="tkd-refund-textarea"></textarea>
+                <div class="tkd-refund-actions">
+                    <button type="button" class="tkd-btn tkd-btn-ghost" id="tkd-refund-cancel">Cancel</button>
+                    <button type="submit" class="tkd-btn tkd-btn-refund">Send refund request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @elseif (isset($payment) && $payment?->refund_requested_at && $ticket->status !== \App\Models\Ticket::STATUS_CANCELLED)
+    <div class="tkd-refund-status">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        Refund request submitted on {{ $payment->refund_requested_at->format('d M Y') }} &middot; Our team is reviewing it.
+    </div>
+    @endif
+
     <div class="tkd-footer">
         <div class="tkd-footer-route">
             <span class="tkd-route-dot"></span>
@@ -262,5 +288,40 @@
     .tkd-footer-actions, .tkd-back, .tkd-social, .tkd-footer-route { display: none !important; }
     .tkd-card { box-shadow: none !important; border: none !important; }
 }
+
+/* Refund section */
+.tkd-refund-section{border-top:1px solid rgba(255,255,255,.07);padding:1rem 1.4rem;}
+.tkd-refund-toggle{display:inline-flex;align-items:center;gap:0.5rem;background:transparent;border:1px solid rgba(232,36,26,.3);border-radius:8px;color:#f87171;font-size:.8rem;font-weight:700;padding:.45rem .85rem;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s;}
+.tkd-refund-toggle:hover{background:rgba(232,36,26,.08);border-color:rgba(232,36,26,.5);}
+.tkd-refund-form-wrap{margin-top:.9rem;}
+.tkd-refund-hint{margin:0 0 .75rem;color:#8a9ab8;font-size:.8rem;line-height:1.4;}
+.tkd-refund-textarea{width:100%;border:1px solid #1e3050;border-radius:8px;background:#0d1929;color:#fff;padding:.6rem .8rem;font-size:.86rem;font-family:inherit;resize:vertical;transition:border-color .15s,box-shadow .15s;}
+.tkd-refund-textarea:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.12);}
+.tkd-refund-actions{display:flex;gap:.6rem;margin-top:.7rem;justify-content:flex-end;}
+.tkd-btn-refund{background:rgba(232,36,26,.15);border:1px solid rgba(232,36,26,.4);color:#f87171;height:38px;padding:0 1rem;border-radius:8px;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;}
+.tkd-btn-refund:hover{background:rgba(232,36,26,.25);}
+.tkd-refund-status{display:flex;align-items:center;gap:.5rem;border-top:1px solid rgba(255,255,255,.07);padding:.8rem 1.4rem;color:#8a9ab8;font-size:.78rem;font-weight:600;}
+.tkd-refund-status svg{color:#f59e0b;flex-shrink:0;}
 </style>
+
+<script>
+(function () {
+    var toggle = document.getElementById('tkd-refund-toggle');
+    var wrap   = document.getElementById('tkd-refund-form-wrap');
+    var cancel = document.getElementById('tkd-refund-cancel');
+    if (!toggle || !wrap) return;
+    toggle.addEventListener('click', function () {
+        var hidden = wrap.hasAttribute('hidden');
+        if (hidden) { wrap.removeAttribute('hidden'); toggle.setAttribute('aria-expanded', 'true'); }
+        else { wrap.setAttribute('hidden', ''); toggle.setAttribute('aria-expanded', 'false'); }
+    });
+    if (cancel) {
+        cancel.addEventListener('click', function () {
+            wrap.setAttribute('hidden', '');
+            toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+})();
+</script>
+
 @endsection

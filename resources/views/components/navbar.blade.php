@@ -33,10 +33,35 @@
             @endguest
 
             @auth
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-ghost">Log out</button>
-                </form>
+                <div class="nav-user-menu" id="nav-user-menu">
+                    <button type="button" class="nav-user-btn" id="nav-user-toggle" aria-haspopup="true" aria-expanded="false">
+                        <span class="nav-user-avatar">{{ strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                        <span class="nav-user-name">{{ explode(' ', auth()->user()->name)[0] }}</span>
+                        <svg class="nav-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="nav-user-dropdown" id="nav-user-dropdown" role="menu">
+                        <a href="{{ route('profile.show') }}" class="nav-dd-item" role="menuitem" @class(['nav-dd-item-active' => request()->routeIs('profile.*')])>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7"/></svg>
+                            Profile
+                        </a>
+                        <a href="{{ route('tickets.index') }}" class="nav-dd-item" role="menuitem">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8zm5 0v10m5-10v10"/></svg>
+                            My Tickets
+                        </a>
+                        <a href="{{ route('ticket-packages.index') }}" class="nav-dd-item" role="menuitem">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8zm5 0v10m5-10v10"/></svg>
+                            Ticket Packages
+                        </a>
+                        <div class="nav-dd-divider"></div>
+                        <form method="POST" action="{{ route('logout') }}" class="nav-dd-form">
+                            @csrf
+                            <button type="submit" class="nav-dd-item nav-dd-logout" role="menuitem">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                                Log out
+                            </button>
+                        </form>
+                    </div>
+                </div>
             @endauth
         </div>
     </div>
@@ -149,6 +174,87 @@
         margin: 0;
     }
 
+    /* ── User menu ── */
+    .nav-user-menu { position: relative; }
+
+    .nav-user-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        height: 36px;
+        padding: 0 0.65rem 0 0.45rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        font-size: 0.88rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .nav-user-btn:hover { background: rgba(255,255,255,0.14); }
+
+    .nav-user-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #1a73e8;
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .nav-user-name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav-user-chevron { width: 14px; height: 14px; color: rgba(255,255,255,0.6); transition: transform 0.2s; }
+    .nav-user-menu.is-open .nav-user-chevron { transform: rotate(180deg); }
+
+    .nav-user-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        min-width: 180px;
+        background: #111d2e;
+        border: 1px solid #1e3050;
+        border-radius: 14px;
+        padding: 0.35rem;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+        z-index: 50;
+    }
+
+    .nav-user-menu.is-open .nav-user-dropdown { display: block; }
+
+    .nav-dd-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        border-radius: 9px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #c0cfe8;
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+    }
+
+    .nav-dd-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .nav-dd-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .nav-dd-item-active { color: #fff; background: rgba(26,115,232,0.15); }
+
+    .nav-dd-divider { height: 1px; background: #1e3050; margin: 0.3rem 0.4rem; }
+    .nav-dd-form { margin: 0; }
+    .nav-dd-logout { color: #e8241a; }
+    .nav-dd-logout:hover { background: rgba(232,36,26,0.1); color: #e8241a; }
+
     .mobile-menu-toggle,
     .mobile-ticket-link {
         display: none;
@@ -239,6 +345,27 @@
             justify-content: center;
         }
 
+        .nav-user-menu { width: 100%; }
+
+        .nav-user-btn {
+            width: 100%;
+            border-radius: 10px;
+            justify-content: flex-start;
+            height: 44px;
+            padding: 0 0.85rem;
+        }
+
+        .nav-user-name { max-width: none; flex: 1; text-align: left; }
+
+        .nav-user-dropdown {
+            position: static;
+            box-shadow: none;
+            border: none;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            margin-top: 0.4rem;
+        }
+
         /* On mobile, active link uses a subtle left border instead of white pill */
         .nav-links a.active {
             background: rgba(255, 255, 255, 0.12);
@@ -262,11 +389,27 @@
         const nav = document.querySelector('.site-nav');
         const toggle = nav?.querySelector('.mobile-menu-toggle');
 
-        if (!nav || !toggle) return;
+        if (nav && toggle) {
+            toggle.addEventListener('click', () => {
+                const isOpen = nav.classList.toggle('is-open');
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        }
 
-        toggle.addEventListener('click', () => {
-            const isOpen = nav.classList.toggle('is-open');
-            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        });
+        const userMenu = document.getElementById('nav-user-menu');
+        const userToggle = document.getElementById('nav-user-toggle');
+        if (userMenu && userToggle) {
+            userToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = userMenu.classList.toggle('is-open');
+                userToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+            document.addEventListener('click', (e) => {
+                if (!userMenu.contains(e.target)) {
+                    userMenu.classList.remove('is-open');
+                    userToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
     })();
 </script>

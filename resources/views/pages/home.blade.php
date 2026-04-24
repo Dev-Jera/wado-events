@@ -34,6 +34,27 @@
         asset('images/hero-image2.jpg'),
         asset('images/hero-image3.jfif'),
     ];
+
+    $packageSlides = [
+        [
+            'image' => asset('images/wrist-ticket.jpg'),
+            'label' => 'VIP Wristband Tickets',
+            'title' => 'Give your VIP guests a premium entry experience',
+            'copy'  => 'Use printed VIP wristbands for quick identification, cleaner access control, and a more organized premium gate setup.',
+        ],
+        [
+            'image' => asset('images/cutout-ticket.jpg'),
+            'label' => 'Gate-Sale Ticket Printing',
+            'title' => 'Print ticket batches for fast sales at the entrance',
+            'copy'  => 'Generate tickets in bulk, print them before the event, and sell them at entry with optional scanner support when you need more control.',
+        ],
+        [
+            'image' => asset('images/Online ticket.jpg'),
+            'label' => 'Online Ticketing & Event Management',
+            'title' => 'Sell online and manage your event with confidence',
+            'copy'  => 'Let customers buy tickets online while your team manages verification, attendance, and event flow from one organized system.',
+        ],
+    ];
 @endphp
 
 @section('content')
@@ -56,16 +77,30 @@
 </svg>
 
 {{-- ─────────────────────── HERO ─────────────────────── --}}
-<section class="hp-hero">
+<section class="hp-hero" id="hp-hero">
 
-    {{-- sliding background images --}}
-    @foreach ($heroImages as $i => $src)
-        <div class="hp-hero-slide {{ $i === 0 ? 'is-active' : '' }}"
-             style="background-image:url('{{ $src }}')"></div>
-    @endforeach
+    <div class="hp-hero-slide hp-hero-slide-intro is-active"
+         style="background-image:url('{{ $heroImages[0] }}')"></div>
+    <div class="hp-hero-slide"
+         style="background-image:url('{{ $heroImages[1] }}')"></div>
+    <div class="hp-hero-slide"
+         style="background-image:url('{{ $heroImages[2] }}')"></div>
     <div class="hp-hero-veil"></div>
 
-    <div class="hp-hero-body">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.hp-hero-slide');
+            let currentIndex = 0;
+
+            setInterval(() => {
+                slides[currentIndex].classList.remove('is-active');
+                currentIndex = (currentIndex + 1) % slides.length;
+                slides[currentIndex].classList.add('is-active');
+            }, 5000); // Change slide every 5 seconds
+        });
+    </script>
+
+    <div class="hp-hero-body hp-hero-panel hp-hero-panel-intro is-active">
         <p class="hp-hero-eyebrow">WADO EVENTS</p>
         <h1 class="hp-hero-heading">Discover Unforgettable<br>Events Near You</h1>
         <p class="hp-hero-sub">Concerts, sports, workshops &amp; more — book your spot in seconds.</p>
@@ -95,7 +130,80 @@
             @endforeach
         </div>
     </div>
+
+    <div class="hp-hero-body hp-hero-panel hp-hero-panel-packages" aria-live="polite">
+        <div class="hp-packages-heading">
+            <p class="hp-hero-eyebrow">FOR EVENT ORGANISERS</p>
+            <h1 class="hp-hero-heading">Hosting an event?<br>Discover our ticket packages.</h1>
+        </div>
+
+        <div class="hp-package-stage">
+            <div class="hp-package-track" id="hp-package-track">
+                @foreach ($packageSlides as $i => $package)
+                    <article class="hp-package-card {{ $i === 0 ? 'is-active' : 'hp-package-card--alt' }}">
+                        <div class="hp-package-media">
+                            <img src="{{ $package['image'] }}" alt="{{ $package['label'] }}">
+                        </div>
+                        <div class="hp-package-copy">
+                            <p class="hp-package-label">{{ $package['label'] }}</p>
+                            <h2 class="hp-package-title">{{ $package['title'] }}</h2>
+                            <p class="hp-package-text">{{ $package['copy'] }}</p>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+
+            <div class="hp-package-dots" id="hp-package-dots" aria-label="Ticket package slides">
+                @foreach ($packageSlides as $i => $package)
+                    <button
+                        type="button"
+                        class="hp-package-dot {{ $i === 0 ? 'is-active' : '' }}"
+                        data-package-index="{{ $i }}"
+                        aria-label="Show {{ $package['label'] }}"
+                        aria-pressed="{{ $i === 0 ? 'true' : 'false' }}"
+                    ></button>
+                @endforeach
+            </div>
+        </div>
+    </div>
 </section>
+
+{{-- Ticket Packages Marquee Section --}}
+<section class="ticket-packages-marquee">
+    <div class="marquee">
+        <div class="marquee-content">
+            <div class="marquee-label">
+                <span>TICKET PACKAGES</span>
+            </div>
+            @foreach ($packageSlides as $package)
+                <div class="marquee-item">
+                    <img src="{{ $package['image'] }}" alt="{{ $package['label'] }}">
+                    <div class="marquee-text">
+                        <h3>{{ $package['title'] }}</h3>
+                        <p>{{ $package['copy'] }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- ─────────────────────── CATEGORY BAR ─────────────────────── --}}
+<div class="hp-cat-bar" role="navigation" aria-label="Filter by category">
+    <div class="hp-cat-bar-inner">
+        <button class="hp-cat is-active" data-category="all" aria-pressed="true">
+            <svg class="hp-cat-icon" aria-hidden="true"><use href="#icon-community"/></svg>
+            All
+        </button>
+        @foreach ($categoryPills as $key => $cat)
+            <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false">
+                <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
+                {{ $cat['label'] }}
+                <span class="hp-cat-count">{{ $cat['count'] }}</span>
+            </button>
+        @endforeach
+    </div>
+</div>
 
 {{-- ─────────────────────── FEATURED STRIP ─────────────────────── --}}
 <section class="hp-featured" aria-label="Featured events">
@@ -314,12 +422,13 @@ body {
 /* ── HERO ────────────────────────────────────────────────────────────── */
 .hp-hero {
     position: relative;
-    min-height: 620px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 9.5rem 1.5rem 5rem;
+    height: 100vh;
+    min-height: 640px;
     overflow: hidden;
+}
+@keyframes hpHeroPan {
+    from { background-position: center top; }
+    to   { background-position: center 16%; }
 }
 
 /* background slides */
@@ -329,12 +438,23 @@ body {
     background-size: cover;
     background-position: center top;
     opacity: 0;
-    transition: opacity 1.1s ease;
+    transform: scale(1.02);
+    transition: opacity 1.1s ease, transform 1.1s ease;
     z-index: 0;
 }
-.hp-hero-slide.is-active { opacity: 1; }
+.hp-hero-slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+}
+.hp-hero-slide-intro.is-active {
+    animation: hpHeroPan 6s ease-in-out both;
+}
+/* slide 2: intentional dark gradient, no photo */
+.hp-hero-slide-package {
+    background: linear-gradient(160deg, #0d1225 0%, #140810 100%);
+}
 
-/* dark gradient veil over the image */
+/* dark veil over slide 1 photo — fades away on slide 2 */
 .hp-hero-veil {
     position: absolute;
     inset: 0;
@@ -345,14 +465,40 @@ body {
         rgba(6, 8, 15, .54) 45%,
         rgba(6, 8, 15, .82) 100%
     );
+    transition: opacity .9s ease;
 }
+.hp-hero.is-packages .hp-hero-veil { opacity: 0; }
 
-/* hero content */
+/* hero panels — both always absolutely positioned, same space */
 .hp-hero-body {
-    position: relative;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
     z-index: 2;
-    width: min(680px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 9.5rem 1.5rem 3rem;
     text-align: center;
+    margin-inline: auto;
+}
+.hp-hero-panel-intro  { max-width: 680px; }
+.hp-hero-panel-packages {
+    max-width: 1120px;
+    justify-content: flex-start;
+    overflow: hidden;
+    padding: 8rem 1.5rem 1.5rem;
+}
+.hp-hero-panel {
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
+    transition: opacity .6s ease, transform .6s ease;
+}
+.hp-hero-panel.is-active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 .hp-hero-eyebrow {
     margin: 0 0 .7rem;
@@ -375,6 +521,24 @@ body {
     font-size: clamp(.88rem, 1.9vw, 1.05rem);
     color: var(--muted);
     line-height: 1.65;
+}
+.hp-hero-sub-packages {
+    max-width: 44rem;
+    margin-inline: auto;
+}
+
+/* heading wrapper — collapses when not on first package */
+.hp-packages-heading {
+    overflow: hidden;
+    max-height: 10rem;
+    opacity: 1;
+    transition: max-height .45s ease, opacity .35s ease, margin .45s ease;
+    margin-bottom: .5rem;
+}
+.hp-hero:not(.is-first-package) .hp-packages-heading {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
 }
 
 /* ── glass search bar ── */
@@ -466,7 +630,236 @@ body {
 }
 .hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
 
+/* ── Category bar (below hero) ── */
+.hp-cat-bar {
+    position: sticky;
+    top: 4.2rem;
+    z-index: 30;
+    background: rgba(30, 10, 14, .94);
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+.hp-cat-bar-inner {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    overflow-x: auto;
+    padding: .62rem 1rem;
+    max-width: 1220px;
+    margin: 0 auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.hp-cat-bar-inner::-webkit-scrollbar { display: none; }
+.hp-cat-bar .hp-cat { flex-shrink: 0; }
+
+.hp-package-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    margin-top: 1rem;
+}
+.hp-package-track {
+    flex: 1;
+    position: relative;
+    min-height: 260px;
+}
+.hp-package-card {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(260px, .92fr);
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.1rem;
+    border-radius: 28px;
+    background: rgba(14, 17, 31, .5);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 24px 60px rgba(0,0,0,.26);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .4s ease;
+}
+.hp-package-card.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* image slides in from the left */
+.hp-package-media {
+    min-height: 280px;
+    border-radius: 22px;
+    overflow: hidden;
+    background: rgba(255,255,255,.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    transform: translateX(-40px);
+    opacity: 0;
+}
+.hp-package-card.is-active .hp-package-media {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform .65s cubic-bezier(.22,.68,0,1.1), opacity .5s ease;
+}
+.hp-package-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* description slides in from the right */
+.hp-package-copy {
+    text-align: left;
+    padding: .45rem .3rem;
+    transform: translateX(40px);
+    opacity: 0;
+}
+.hp-package-card.is-active .hp-package-copy {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform .65s cubic-bezier(.22,.68,0,1.1) .07s, opacity .5s ease .07s;
+}
+
+/* alt cards (index > 0): image uses scale+fade instead of slide */
+.hp-package-card--alt .hp-package-media {
+    transform: scale(1.04);
+    opacity: 0;
+}
+.hp-package-card--alt.is-active .hp-package-media {
+    transform: scale(1);
+    opacity: 1;
+    transition: transform .75s ease, opacity .55s ease;
+}
+
+.hp-package-label {
+    margin: 0 0 .7rem;
+    color: rgba(255, 196, 201, .92);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+.hp-package-title {
+    margin: 0 0 .8rem;
+    color: #fff;
+    font-size: clamp(1.35rem, 3vw, 2.15rem);
+    line-height: 1.12;
+    font-weight: 800;
+}
+.hp-package-text {
+    margin: 0;
+    color: rgba(180,200,240,.58);
+    font-size: .84rem;
+    line-height: 1.6;
+}
+.hp-package-dots {
+    display: flex;
+    justify-content: center;
+    gap: .55rem;
+    margin-top: 1rem;
+}
+.hp-package-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255,255,255,.28);
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease, opacity .18s ease;
+}
+.hp-package-dot:hover {
+    opacity: .85;
+}
+.hp-package-dot.is-active {
+    background: #fff;
+    transform: scale(1.18);
+}
+
 /* ── Shared section scaffolding ────────────────────────────────────── */
+.ticket-packages-marquee {
+    padding: 0 1rem 1.1rem;
+    overflow: hidden;
+    background: #321318;
+}
+
+.marquee {
+    overflow: hidden;
+    position: relative;
+    min-height: 150px;
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.marquee-content {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    width: max-content;
+    padding-right: 1rem;
+    will-change: transform;
+}
+
+.marquee-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.2rem;
+    border-radius: 999px;
+    background: rgba(160, 32, 46, 0.18);
+    border: 1px solid rgba(160, 32, 46, 0.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.marquee-label span {
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.marquee-item {
+    display: grid;
+    grid-template-columns: 132px minmax(240px, 360px);
+    align-items: center;
+    gap: .95rem;
+    min-height: 146px;
+    padding: .85rem;
+    border-radius: 20px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 16px 40px rgba(0,0,0,.22);
+}
+
+.marquee-item img {
+    width: 132px;
+    height: 132px;
+    border-radius: 16px;
+    object-fit: cover;
+    display: block;
+}
+
+.marquee-text h3 {
+    margin: 0 0 .35rem;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.marquee-text p {
+    margin: 0;
+    color: #ffffff;
+    font-size: .8rem;
+    line-height: 1.55;
+}
+
 .hp-featured,
 .hp-all {
     padding: 3.5rem 1rem 4rem;
@@ -830,15 +1223,15 @@ body {
     border: 1px solid rgba(255,255,255,.1); border-radius:999px;
     background: rgba(255,255,255,.05); padding:.2rem;
 }
-.qty-btn {
+ qty-btn {
     width:1.7rem; height:1.7rem; border-radius:999px;
     background: rgba(255,255,255,.07);
     border: 1px solid rgba(255,255,255,.12);
     color:rgba(220,232,255,.85); font-size:.95rem; font-weight:700; line-height:1; cursor:pointer;
     transition:border-color .15s;
 }
-.qty-btn:hover { border-color:var(--blue); color:#fff; }
-.qty-value { min-width:1.8rem; text-align:center; color:#fff; font-size:.85rem; font-weight:700; }
+ qty-btn:hover { border-color:var(--blue); color:#fff; }
+ qty-value { min-width:1.8rem; text-align:center; color:#fff; font-size:.85rem; font-weight:700; }
 .event-payment-grid { display:grid; grid-template-columns:1fr; gap:.42rem; }
 .payment-option {
     display:flex; align-items:center; gap:.7rem;
@@ -857,10 +1250,18 @@ body.modal-open { overflow:hidden; }
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
     .hp-grid { grid-template-columns: repeat(3,1fr); }
+    .hp-package-card { grid-template-columns: 1fr; }
+    .hp-package-media { min-height: 240px; transform: translateY(-24px); }
+    .hp-package-card.is-active .hp-package-media { transform: translateY(0); transition: transform .6s cubic-bezier(.22,.68,0,1.1), opacity .5s ease; }
+    /* alt cards: keep scale+fade at narrow widths (no translateY override) */
+    .hp-package-card--alt .hp-package-media { transform: scale(1.04); }
+    .hp-package-card--alt.is-active .hp-package-media { transform: scale(1); transition: transform .75s ease, opacity .55s ease; }
+    .hp-package-copy { text-align: center; transform: translateY(20px); }
+    .hp-package-card.is-active .hp-package-copy { transform: translateY(0); transition: transform .6s cubic-bezier(.22,.68,0,1.1) .07s, opacity .5s ease .07s; }
 }
 
 @media (max-width: 860px) {
-    .hp-hero { padding: 8rem 1.25rem 3.5rem; min-height: 520px; }
+    .hp-hero-body { padding: 7.5rem 1.25rem 2.5rem; }
     .hp-arrow { display: none; }
     .hp-grid { grid-template-columns: repeat(2,1fr); gap: .8rem; }
     .event-modal-card { grid-template-columns:1fr; grid-template-rows:220px 1fr; max-height:92vh; }
@@ -870,15 +1271,67 @@ body.modal-open { overflow:hidden; }
 /* ── Mobile ── */
 @media (max-width: 640px) {
     /* hero */
-    .hp-hero {
-        padding: 6.5rem 1rem 2.5rem;
-        min-height: auto;
-        text-align: center;
-    }
+    .hp-hero { min-height: 600px; }
+    .hp-hero-body { padding: 6rem 1rem 2rem; text-align: center; }
     .hp-hero-heading { font-size: 1.75rem; letter-spacing: -.02em; }
     .hp-hero-sub { font-size: .85rem; margin-bottom: 1.4rem; }
+    .hp-package-track { min-height: 320px; }
+    .hp-package-card {
+        padding: .8rem;
+        border-radius: 22px;
+    }
+    .hp-package-media { min-height: 180px; }
+    .hp-package-label { font-size: .72rem; }
+    .hp-package-title { font-size: 1.28rem; }
+    .hp-package-text {
+        font-size: .88rem;
+        line-height: 1.6;
+    }
 
     /* search bar — stack button below on very small screens */
+    .ticket-packages-marquee {
+        padding: 0 .75rem 1rem;
+    }
+    .marquee {
+        min-height: 212px;
+        mask-image: none;
+        -webkit-mask-image: none;
+    }
+    .marquee-content {
+        align-items: flex-start;
+        gap: .8rem;
+        padding-right: .8rem;
+    }
+    .marquee-label {
+        align-self: flex-start;
+        min-height: 40px;
+        padding: 0 .85rem;
+    }
+    .marquee-label span {
+        font-size: .68rem;
+        letter-spacing: .12em;
+    }
+    .marquee-item {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        width: min(76vw, 248px);
+        min-height: auto;
+        padding: .78rem;
+        text-align: center;
+        gap: .65rem;
+    }
+    .marquee-item img {
+        width: min(100%, 160px);
+        height: 112px;
+    }
+    .marquee-text h3 {
+        font-size: .84rem;
+        margin-bottom: .28rem;
+    }
+    .marquee-text p {
+        font-size: .72rem;
+        line-height: 1.45;
+    }
     .hp-search-bar {
         flex-wrap: wrap;
         padding: .55rem .55rem .55rem 1rem;
@@ -943,15 +1396,94 @@ body.modal-open { overflow:hidden; }
 {{-- ─────────────────────── SCRIPTS ─────────────────────── --}}
 <script>
 (() => {
-    // hero slideshow
-    const slides = document.querySelectorAll('.hp-hero-slide');
-    if (slides.length > 1) {
-        let idx = 0;
-        setInterval(() => {
-            slides[idx].classList.remove('is-active');
-            idx = (idx + 1) % slides.length;
-            slides[idx].classList.add('is-active');
-        }, 4500);
+    // hero intro + ticket packages sequence
+    const heroEl          = document.getElementById('hp-hero');
+    const heroIntroBg     = document.querySelector('.hp-hero-slide-intro');
+    const heroPackageBg   = document.querySelector('.hp-hero-slide-package');
+    const heroIntroPanel  = document.querySelector('.hp-hero-panel-intro');
+    const heroPackagePanel = document.querySelector('.hp-hero-panel-packages');
+    const packageCards    = Array.from(document.querySelectorAll('.hp-package-card'));
+    const packageDots     = Array.from(document.querySelectorAll('.hp-package-dot'));
+
+    if (heroEl && heroIntroBg && heroPackageBg && heroIntroPanel && heroPackagePanel && packageCards.length) {
+        const introDelay = 5000;
+        const packageDelay = 4200;
+        let packageIndex = 0;
+        let phaseTimer = null;
+        let packageTimer = null;
+
+        const setPackage = (index) => {
+            packageIndex = index;
+            heroEl.classList.toggle('is-first-package', index === 0);
+            packageCards.forEach((card, cardIndex) => {
+                card.classList.toggle('is-active', cardIndex === index);
+            });
+            packageDots.forEach((dot, dotIndex) => {
+                const isActive = dotIndex === index;
+                dot.classList.toggle('is-active', isActive);
+                dot.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        };
+
+        const showIntro = () => {
+            heroEl.classList.remove('is-packages', 'is-first-package');
+            heroIntroBg.classList.add('is-active');
+            heroPackageBg.classList.remove('is-active');
+            heroIntroPanel.classList.add('is-active');
+            heroPackagePanel.classList.remove('is-active');
+        };
+
+        const showPackages = () => {
+            heroEl.classList.add('is-packages', 'is-first-package');
+            heroIntroBg.classList.remove('is-active');
+            heroPackageBg.classList.add('is-active');
+            heroIntroPanel.classList.remove('is-active');
+            heroPackagePanel.classList.add('is-active');
+        };
+
+        const clearHeroTimers = () => {
+            clearTimeout(phaseTimer);
+            clearInterval(packageTimer);
+        };
+
+        const scheduleRestart = () => {
+            clearHeroTimers();
+            showIntro();
+            phaseTimer = setTimeout(startPackageShowcase, introDelay);
+        };
+
+        const startPackageRotation = () => {
+            clearInterval(packageTimer);
+            packageTimer = setInterval(() => {
+                const nextIndex = packageIndex + 1;
+                if (nextIndex >= packageCards.length) {
+                    scheduleRestart();
+                    return;
+                }
+
+                setPackage(nextIndex);
+            }, packageDelay);
+        };
+
+        const startPackageShowcase = () => {
+            clearHeroTimers();
+            showPackages();
+            setPackage(0);
+            startPackageRotation();
+        };
+
+        packageDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const nextIndex = Number(dot.dataset.packageIndex || 0);
+                clearHeroTimers();
+                showPackages();
+                setPackage(nextIndex);
+                startPackageRotation();
+            });
+        });
+
+        showIntro();
+        phaseTimer = setTimeout(startPackageShowcase, introDelay);
     }
 
     // category + live search filter
@@ -996,6 +1528,44 @@ body.modal-open { overflow:hidden; }
         });
         const form = document.getElementById('hp-search-form');
         if (form) form.addEventListener('submit', e => { if (!searchQuery) e.preventDefault(); });
+    }
+
+    // ticket packages marquee
+    const marquee = document.querySelector('.marquee');
+    const marqueeTrack = document.querySelector('.marquee-content');
+    if (marquee && marqueeTrack) {
+        let offset = 0;
+        let rafId = null;
+        let paused = false;
+        const gap = () => parseFloat(getComputedStyle(marqueeTrack).gap || '0');
+        const speed = () => window.innerWidth <= 640 ? 0.42 : 0.56;
+
+        const step = () => {
+            if (!paused) {
+                offset -= speed();
+                const first = marqueeTrack.firstElementChild;
+                if (first) {
+                    const firstWidth = first.getBoundingClientRect().width + gap();
+                    if (Math.abs(offset) >= firstWidth) {
+                        offset += firstWidth;
+                        marqueeTrack.appendChild(first);
+                    }
+                }
+                marqueeTrack.style.transform = `translateX(${offset}px)`;
+            }
+
+            rafId = window.requestAnimationFrame(step);
+        };
+
+        marquee.addEventListener('mouseenter', () => { paused = true; });
+        marquee.addEventListener('mouseleave', () => { paused = false; });
+        marquee.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+        marquee.addEventListener('touchend', () => { paused = false; }, { passive: true });
+
+        rafId = window.requestAnimationFrame(step);
+        window.addEventListener('beforeunload', () => {
+            if (rafId) window.cancelAnimationFrame(rafId);
+        });
     }
 
     // featured strip arrows

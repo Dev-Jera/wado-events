@@ -5,6 +5,7 @@ Allow: /events/*
 Allow: /login
 Allow: /register
 
+Disallow: /profile
 Disallow: /my-tickets
 Disallow: /my-tickets/*
 Disallow: /events/*/checkout

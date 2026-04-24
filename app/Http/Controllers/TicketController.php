@@ -125,15 +125,31 @@ class TicketController extends Controller
     {
         abort_unless($ticket->user_id === auth()->id(), 403);
 
-        $ticket->load(['event.category', 'ticketCategory']);
+        $ticket->load(['event.category', 'ticketCategory', 'paymentTransaction']);
         $this->ensureTicketQrCode($ticket);
 
         $view = request()->query('modal') === '1'
             ? 'pages.tickets.modal'
             : 'pages.tickets.show';
 
+        $payment = $ticket->paymentTransaction;
+        $canRequestRefund = $payment
+            && ! $ticket->dismissed_at
+            && ! $ticket->used_at
+            && $ticket->status !== Ticket::STATUS_USED
+            && $ticket->status !== Ticket::STATUS_CANCELLED
+            && ! $payment->refund_requested_at
+            && $payment->status !== PaymentTransaction::STATUS_REFUNDED
+            && in_array($payment->status, [
+                PaymentTransaction::STATUS_CONFIRMED,
+                PaymentTransaction::STATUS_PENDING,
+                PaymentTransaction::STATUS_INITIATED,
+            ], true);
+
         return view($view, [
-            'ticket' => $ticket,
+            'ticket'           => $ticket,
+            'payment'          => $payment,
+            'canRequestRefund' => $canRequestRefund,
         ]);
     }
 
