@@ -30,6 +30,11 @@ class HomeController extends Controller
         ]);
         
         $heroImages = array_map(function ($banner) {
+            // Check if $banner is an array and extract the first element, or use null
+            if (is_array($banner)) {
+                $banner = !empty($banner) ? reset($banner) : null; // Get the first element of the array
+            }
+
             return $banner ? Storage::url($banner) : asset('images/default-hero.jpg'); // Provide a default image
         }, $heroBanners);
 
