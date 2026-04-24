@@ -13,6 +13,27 @@ class HomeController extends Controller
 {
     public function __invoke()
     {
+        // Load site settings
+        $settingsPath = storage_path('app/site-settings.json');
+        $settings = file_exists($settingsPath)
+            ? (json_decode(file_get_contents($settingsPath), true) ?? [])
+            : [];
+
+        // Hero content
+        $heroTitle = $settings['hero_title'] ?? 'Discover Unforgettable Events Near You';
+        $heroSubtitle = $settings['hero_subtitle'] ?? 'Concerts, sports, workshops & more — book your spot in seconds.';
+        
+        $heroBanners = array_filter([
+            $settings['hero_banner_1'] ?? null,
+            $settings['hero_banner_2'] ?? null,
+            $settings['hero_banner_3'] ?? null,
+        ]);
+        
+        $heroBannerUrls = array_map(function ($banner) {
+            return $banner ? Storage::url($banner) : null;
+        }, $heroBanners);
+
+        // Featured events
         $featuredEvents = Cache::remember('home:featured_events', 300, function () {
             return Event::query()
                 ->with(['category', 'ticketCategories', 'artists'])
@@ -31,6 +52,7 @@ class HomeController extends Controller
             $featuredEvents = StaticEventCatalog::events();
         }
 
+        // Category pills
         $categoryPills = Cache::remember('home:category_pills', 3600, function () {
             return Category::query()
                 ->withCount('events')
@@ -46,48 +68,64 @@ class HomeController extends Controller
                 });
         });
 
-        // ── Site settings ─────────────────────────────────────────────
-        $settingsPath = storage_path('app/site-settings.json');
-        $s = file_exists($settingsPath)
-            ? (json_decode(file_get_contents($settingsPath), true) ?? [])
-            : [];
-
-        $heroTitle    = $s['hero_title']    ?? 'Discover Unforgettable Events Near You';
-        $heroSubtitle = $s['hero_subtitle'] ?? 'Concerts, sports, workshops & more — book your spot in seconds.';
-
-        $defaultBanners = [
-            asset('images/home-hero-bg.jpg'),
-            asset('images/hero-image2.jpg'),
-            asset('images/hero-image3.jfif'),
-        ];
-        $heroImages = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $stored = $s["hero_banner_{$i}"] ?? null;
-            $heroImages[] = $stored ? Storage::url($stored) : $defaultBanners[$i - 1];
-        }
-
+        // Package slides with array-to-string fix
         $defaultPackages = [
-            ['image' => asset('images/wrist-ticket.jpg'),  'label' => 'VIP Wristband Tickets',               'title' => 'Give your VIP guests a premium entry experience',          'copy' => 'With Our printed VIP wristbands, cleaner access control.'],
-            ['image' => asset('images/cutout-ticket.jpg'), 'label' => 'Gate-Sale Ticket Printing',            'title' => 'Print ticket batches for fast sales at the entrance',       'copy' => 'Generate tickets in bulk, and sell them at entry with optional scanner support when you need more control.'],
-            ['image' => asset('images/Online ticket.jpg'), 'label' => 'Online Ticketing & Event Management',  'title' => 'Sell online and let us manage your event..',                'copy' => 'Let customers buy tickets online while our team manages verification, attendance, and event flow from one organized system.'],
+            [
+                'image' => asset('images/VIP wristband.jpg'),
+                'label' => 'VIP Wristband Tickets',
+                'title' => 'Give your VIP guests a premium entry experience',
+                'copy' => 'With our printed VIP wristbands, cleaner access control.'
+            ],
+            [
+                'image' => asset('images/Gate-Sale Ticket.jpg'),
+                'label' => 'Gate-Sale Ticket Printing',
+                'title' => 'Print ticket batches for fast sales at the entrance',
+                'copy' => 'Generate tickets in bulk, and sell them at entry with optional scanner support.'
+            ],
+            [
+                'image' => asset('images/Online ticket.jpg'),
+                'label' => 'Online Ticketing & Event Management',
+                'title' => 'Sell online and let us manage your event.',
+                'copy' => 'Let customers buy tickets online while our team manages verification, attendance, and event flow from one organized system.'
+            ],
         ];
 
-        $packageSlides = isset($s['packages']) && count($s['packages'])
-            ? array_map(fn ($p) => [
-                'image' => !empty($p['image']) ? Storage::url($p['image']) : null,
-                'label' => $p['label'] ?? '',
-                'title' => $p['title'] ?? '',
-                'copy'  => $p['copy']  ?? '',
-            ], $s['packages'])
+        $packageSlides = isset($settings['packages']) && count($settings['packages'])
+            ? array_map(function ($p) {
+                // Fix for array to string conversion error
+                $imagePath = $p['image'] ?? null;
+                
+                // Handle if image is stored as an array
+                if (is_array($imagePath)) {
+                    $imagePath = !empty($imagePath) ? reset($imagePath) : null;
+                }
+                
+                // Handle if image is empty or null
+                if (empty($imagePath)) {
+                    $imageUrl = null;
+                } else {
+                    // Check if it's already a full URL or a storage path
+                    $imageUrl = filter_var($imagePath, FILTER_VALIDATE_URL) 
+                        ? $imagePath 
+                        : (is_string($imagePath) ? Storage::url($imagePath) : null);
+                }
+                
+                return [
+                    'image' => $imageUrl,
+                    'label' => $p['label'] ?? '',
+                    'title' => $p['title'] ?? '',
+                    'copy'  => $p['copy'] ?? '',
+                ];
+            }, $settings['packages'])
             : $defaultPackages;
 
         return view('pages.home', [
             'featuredEvents' => $featuredEvents,
-            'categoryPills'  => $categoryPills,
-            'heroTitle'      => $heroTitle,
-            'heroSubtitle'   => $heroSubtitle,
-            'heroImages'     => $heroImages,
-            'packageSlides'  => $packageSlides,
+            'categoryPills' => $categoryPills,
+            'heroTitle' => $heroTitle,
+            'heroSubtitle' => $heroSubtitle,
+            'heroBannerUrls' => $heroBannerUrls,
+            'packageSlides' => $packageSlides,
         ]);
     }
 }

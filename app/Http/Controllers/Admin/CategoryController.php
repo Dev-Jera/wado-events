@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Models\Category;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -29,5 +30,21 @@ class CategoryController extends Controller
         return redirect()
             ->route('admin.categories.index')
             ->with('success', 'Category created successfully.');
+    }
+
+    public function destroy(Category $category)
+    {
+        // Check if category has any events before deletion
+        if ($category->events()->count() > 0) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->with('error', 'Cannot delete category that has associated events. Please reassign or delete the events first.');
+        }
+
+        $category->delete();
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Category deleted successfully.');
     }
 }
