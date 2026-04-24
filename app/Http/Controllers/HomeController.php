@@ -29,9 +29,14 @@ class HomeController extends Controller
             $settings['hero_banner_3'] ?? null,
         ]);
         
-        $heroBannerUrls = array_map(function ($banner) {
-            return $banner ? Storage::url($banner) : null;
+        $heroImages = array_map(function ($banner) {
+            return $banner ? Storage::url($banner) : asset('images/default-hero.jpg'); // Provide a default image
         }, $heroBanners);
+
+        // Ensure there are at least 3 images
+        while (count($heroImages) < 3) {
+            $heroImages[] = asset('images/default-hero.jpg'); // Add default images if less than 3
+        }
 
         // Featured events
         $featuredEvents = Cache::remember('home:featured_events', 300, function () {
@@ -120,11 +125,11 @@ class HomeController extends Controller
             : $defaultPackages;
 
         return view('pages.home', [
-            'featuredEvents' => $featuredEvents,
-            'categoryPills' => $categoryPills,
+            'heroImages' => $heroImages,
             'heroTitle' => $heroTitle,
             'heroSubtitle' => $heroSubtitle,
-            'heroBannerUrls' => $heroBannerUrls,
+            'featuredEvents' => $featuredEvents,
+            'categoryPills' => $categoryPills,
             'packageSlides' => $packageSlides,
         ]);
     }
