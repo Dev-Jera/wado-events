@@ -63,7 +63,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->middleware('throttle:60,1')->name('tickets.verify.scan-json');
     Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
 
-    Route::get('/admin/payments', [PaymentController::class, 'adminIndex'])->name('payments.admin.index');
+    // Payment Monitor → Filament admin
+    Route::get('/admin/payments', fn () => redirect('/dashboard/payment-transactions'))->name('payments.admin.index');
     Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
     Route::post('/admin/payments/{paymentTransaction}/confirm', [PaymentController::class, 'adminConfirm'])->name('payments.admin.confirm');
     Route::post('/admin/payments/{paymentTransaction}/refund', [PaymentController::class, 'adminRefund'])->name('payments.admin.refund');
@@ -73,7 +74,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin/events/{event}', [AdminEventController::class, 'show'])->name('admin.events.show');
 
-    Route::get('/admin/finance', [FinanceController::class, 'index'])->name('admin.finance.index');
+    // Finance index → Filament admin; event detail kept for CSV export
+    Route::get('/admin/finance', fn () => redirect('/dashboard/finance'))->name('admin.finance.index');
     Route::get('/admin/finance/{event}', [FinanceController::class, 'show'])->name('admin.finance.show');
 
     Route::get('/admin/pdf-preview/{ticket}', function (\App\Models\Ticket $ticket) {
@@ -139,3 +141,8 @@ Route::post('/payments/marzepay/webhook', PaymentWebhookController::class)
     ->name('payments.webhook.marzepay');
 
 require __DIR__.'/ticket-packages.php';
+
+Route::middleware(['auth', 'is_super_admin'])->prefix('dashboard')->group(function () {
+    // Content management is now a Filament page at /dashboard/content-management-page
+    Route::get('/content-management', fn () => redirect('/dashboard/content-management-page'))->name('content-management.index');
+});

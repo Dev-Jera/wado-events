@@ -29,32 +29,7 @@
         'free'       => 'icon-free',
     ];
 
-    $heroImages = [
-        asset('images/home-hero-bg.jpg'),
-        asset('images/hero-image2.jpg'),
-        asset('images/hero-image3.jfif'),
-    ];
-
-    $packageSlides = [
-        [
-            'image' => asset('images/wrist-ticket.jpg'),
-            'label' => 'VIP Wristband Tickets',
-            'title' => 'Give your VIP guests a premium entry experience',
-            'copy'  => 'Use printed VIP wristbands for quick identification, cleaner access control, and a more organized premium gate setup.',
-        ],
-        [
-            'image' => asset('images/cutout-ticket.jpg'),
-            'label' => 'Gate-Sale Ticket Printing',
-            'title' => 'Print ticket batches for fast sales at the entrance',
-            'copy'  => 'Generate tickets in bulk, print them before the event, and sell them at entry with optional scanner support when you need more control.',
-        ],
-        [
-            'image' => asset('images/Online ticket.jpg'),
-            'label' => 'Online Ticketing & Event Management',
-            'title' => 'Sell online and manage your event with confidence',
-            'copy'  => 'Let customers buy tickets online while your team manages verification, attendance, and event flow from one organized system.',
-        ],
-    ];
+    // $heroImages, $packageSlides, $heroTitle, $heroSubtitle are passed by HomeController
 @endphp
 
 @section('content')
@@ -102,8 +77,8 @@
 
     <div class="hp-hero-body hp-hero-panel hp-hero-panel-intro is-active">
         <p class="hp-hero-eyebrow">WADO EVENTS</p>
-        <h1 class="hp-hero-heading">Discover Unforgettable<br>Events Near You</h1>
-        <p class="hp-hero-sub">Concerts, sports, workshops &amp; more — book your spot in seconds.</p>
+        <h1 class="hp-hero-heading">{!! nl2br(e($heroTitle)) !!}</h1>
+        <p class="hp-hero-sub">{{ $heroSubtitle }}</p>
 
         {{-- glass search bar --}}
         <form class="hp-search-bar" id="hp-search-form" role="search"
@@ -142,7 +117,9 @@
                 @foreach ($packageSlides as $i => $package)
                     <article class="hp-package-card {{ $i === 0 ? 'is-active' : 'hp-package-card--alt' }}">
                         <div class="hp-package-media">
-                            <img src="{{ $package['image'] }}" alt="{{ $package['label'] }}">
+                            @if(!empty($package['image']))
+                                <img src="{{ $package['image'] }}" alt="{{ $package['label'] }}">
+                            @endif
                         </div>
                         <div class="hp-package-copy">
                             <p class="hp-package-label">{{ $package['label'] }}</p>
@@ -169,15 +146,12 @@
 </section>
 
 {{-- Ticket Packages Marquee Section --}}
-<section class="ticket-packages-marquee">
+<section class="ticket-packages-marquee" style="margin-top: 0;">
     <div class="marquee">
         <div class="marquee-content">
-            <div class="marquee-label">
-                <span>TICKET PACKAGES</span>
-            </div>
             @foreach ($packageSlides as $package)
                 <div class="marquee-item">
-                    <img src="{{ $package['image'] }}" alt="{{ $package['label'] }}">
+                    @if(!empty($package['image']))<img src="{{ $package['image'] }}" alt="{{ $package['label'] }}" style="width: 100%; height: auto; object-fit: cover;">@endif
                     <div class="marquee-text">
                         <h3>{{ $package['title'] }}</h3>
                         <p>{{ $package['copy'] }}</p>
@@ -187,23 +161,6 @@
         </div>
     </div>
 </section>
-
-{{-- ─────────────────────── CATEGORY BAR ─────────────────────── --}}
-<div class="hp-cat-bar" role="navigation" aria-label="Filter by category">
-    <div class="hp-cat-bar-inner">
-        <button class="hp-cat is-active" data-category="all" aria-pressed="true">
-            <svg class="hp-cat-icon" aria-hidden="true"><use href="#icon-community"/></svg>
-            All
-        </button>
-        @foreach ($categoryPills as $key => $cat)
-            <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false">
-                <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
-                {{ $cat['label'] }}
-                <span class="hp-cat-count">{{ $cat['count'] }}</span>
-            </button>
-        @endforeach
-    </div>
-</div>
 
 {{-- ─────────────────────── FEATURED STRIP ─────────────────────── --}}
 <section class="hp-featured" aria-label="Featured events">
@@ -422,7 +379,8 @@ body {
 /* ── HERO ────────────────────────────────────────────────────────────── */
 .hp-hero {
     position: relative;
-    height: 100vh;
+    height: 60vh; /* Reduce the height of the hero section */
+    margin-top: -20px; /* Push the hero section up */
     min-height: 640px;
     overflow: hidden;
 }
@@ -779,7 +737,7 @@ body {
 }
 
 /* ── Shared section scaffolding ────────────────────────────────────── */
-.ticket-packages-marquee {
+ ticket-packages-marquee {
     padding: 0 1rem 1.1rem;
     overflow: hidden;
     background: #321318;
@@ -1248,148 +1206,121 @@ body {
 body.modal-open { overflow:hidden; }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
+
+/* tablet landscape */
 @media (max-width: 1100px) {
     .hp-grid { grid-template-columns: repeat(3,1fr); }
     .hp-package-card { grid-template-columns: 1fr; }
     .hp-package-media { min-height: 240px; transform: translateY(-24px); }
-    .hp-package-card.is-active .hp-package-media { transform: translateY(0); transition: transform .6s cubic-bezier(.22,.68,0,1.1), opacity .5s ease; }
-    /* alt cards: keep scale+fade at narrow widths (no translateY override) */
+    .hp-package-card.is-active .hp-package-media {
+        transform: translateY(0);
+        transition: transform .6s cubic-bezier(.22,.68,0,1.1), opacity .5s ease;
+    }
+    /* alt cards: scale+fade only (no translateY) */
     .hp-package-card--alt .hp-package-media { transform: scale(1.04); }
-    .hp-package-card--alt.is-active .hp-package-media { transform: scale(1); transition: transform .75s ease, opacity .55s ease; }
+    .hp-package-card--alt.is-active .hp-package-media {
+        transform: scale(1);
+        transition: transform .75s ease, opacity .55s ease;
+    }
     .hp-package-copy { text-align: center; transform: translateY(20px); }
-    .hp-package-card.is-active .hp-package-copy { transform: translateY(0); transition: transform .6s cubic-bezier(.22,.68,0,1.1) .07s, opacity .5s ease .07s; }
+    .hp-package-card.is-active .hp-package-copy {
+        transform: translateY(0);
+        transition: transform .6s cubic-bezier(.22,.68,0,1.1) .07s, opacity .5s ease .07s;
+    }
+    .hp-hero-panel-packages { padding: 7rem 1.5rem 1.5rem; }
 }
 
+/* tablet portrait */
 @media (max-width: 860px) {
-    .hp-hero-body { padding: 7.5rem 1.25rem 2.5rem; }
+    .hp-hero-body { padding: 7rem 1.25rem 2rem; }
+    .hp-hero-panel-packages { padding: 6rem 1.25rem 1.25rem; }
+    .hp-packages-heading { max-height: 12rem; }
     .hp-arrow { display: none; }
     .hp-grid { grid-template-columns: repeat(2,1fr); gap: .8rem; }
+    .hp-cat-bar { top: 3.9rem; }
+    .hp-cat-bar-inner { padding: .58rem 1rem; }
     .event-modal-card { grid-template-columns:1fr; grid-template-rows:220px 1fr; max-height:92vh; }
     .event-modal-meta-grid { grid-template-columns:1fr; }
 }
 
-/* ── Mobile ── */
+/* mobile */
 @media (max-width: 640px) {
-    /* hero */
-    .hp-hero { min-height: 600px; }
-    .hp-hero-body { padding: 6rem 1rem 2rem; text-align: center; }
+    .hp-hero { min-height: 580px; }
+    .hp-hero-body { padding: 5.8rem 1rem 1.5rem; text-align: center; }
+    .hp-hero-panel-packages { padding: 5.5rem 1rem 1rem; }
+    .hp-packages-heading { max-height: 14rem; }
     .hp-hero-heading { font-size: 1.75rem; letter-spacing: -.02em; }
     .hp-hero-sub { font-size: .85rem; margin-bottom: 1.4rem; }
-    .hp-package-track { min-height: 320px; }
-    .hp-package-card {
-        padding: .8rem;
-        border-radius: 22px;
-    }
-    .hp-package-media { min-height: 180px; }
-    .hp-package-label { font-size: .72rem; }
-    .hp-package-title { font-size: 1.28rem; }
-    .hp-package-text {
-        font-size: .88rem;
-        line-height: 1.6;
-    }
 
-    /* search bar — stack button below on very small screens */
-    .ticket-packages-marquee {
-        padding: 0 .75rem 1rem;
-    }
-    .marquee {
-        min-height: 212px;
-        mask-image: none;
-        -webkit-mask-image: none;
-    }
-    .marquee-content {
-        align-items: flex-start;
-        gap: .8rem;
-        padding-right: .8rem;
-    }
-    .marquee-label {
-        align-self: flex-start;
-        min-height: 40px;
-        padding: 0 .85rem;
-    }
-    .marquee-label span {
-        font-size: .68rem;
-        letter-spacing: .12em;
-    }
-    .marquee-item {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        width: min(76vw, 248px);
-        min-height: auto;
-        padding: .78rem;
-        text-align: center;
-        gap: .65rem;
-    }
-    .marquee-item img {
-        width: min(100%, 160px);
-        height: 112px;
-    }
-    .marquee-text h3 {
-        font-size: .84rem;
-        margin-bottom: .28rem;
-    }
-    .marquee-text p {
-        font-size: .72rem;
-        line-height: 1.45;
-    }
-    .hp-search-bar {
-        flex-wrap: wrap;
-        padding: .55rem .55rem .55rem 1rem;
-        border-radius: 16px;
-        gap: .4rem;
-    }
+    /* package card */
+    .hp-package-stage { margin-top: .4rem; }
+    .hp-package-track { min-height: 300px; }
+    .hp-package-card { padding: .8rem; border-radius: 20px; }
+    .hp-package-media { min-height: 160px; }
+    .hp-package-label { font-size: .72rem; margin-bottom: .5rem; }
+    .hp-package-title { font-size: 1.15rem; margin-bottom: .5rem; }
+    .hp-package-text { font-size: .82rem; line-height: 1.55; }
+    .hp-package-dots { margin-top: .55rem; }
+
+    /* search bar: stack */
+    .hp-search-bar { flex-wrap: wrap; padding: .55rem .55rem .55rem 1rem; border-radius: 16px; gap: .4rem; }
     .hp-search-input { width: 100%; order: 2; }
     .hp-search-icon  { order: 1; }
-    .hp-search-btn   {
-        order: 3;
-        width: 100%;
-        border-radius: 10px;
-        padding: .6rem 1rem;
-    }
+    .hp-search-btn   { order: 3; width: 100%; border-radius: 10px; padding: .6rem 1rem; }
 
-    /* category chips — single scrollable row, no wrap */
+    /* hero category chips: scrollable single row */
     .hp-cats {
-        flex-wrap: nowrap;
-        overflow-x: auto;
+        flex-wrap: nowrap; overflow-x: auto;
         justify-content: flex-start;
-        gap: .4rem;
-        padding-bottom: .4rem;
-        margin-top: 1.2rem;
-        /* hide scrollbar */
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+        gap: .4rem; padding-bottom: .35rem; margin-top: 1.1rem;
+        scrollbar-width: none; -ms-overflow-style: none;
     }
     .hp-cats::-webkit-scrollbar { display: none; }
-    .hp-cat {
-        flex-shrink: 0;
-        font-size: .76rem;
-        padding: .38rem .75rem;
-    }
+    .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
     .hp-cat-count { display: none; }
 
+    /* category bar */
+    .hp-cat-bar { top: 3.5rem; }
+    .hp-cat-bar-inner { padding: .5rem .75rem; gap: .35rem; }
+
     /* sections */
-    .hp-featured,
-    .hp-all { padding: 2rem .75rem 2.5rem; }
-    .hp-sec-head { margin-bottom: 1rem; }
-    .hp-sec-title { font-size: 1.2rem; }
+    .hp-featured, .hp-all { padding: 2rem .75rem 2.5rem; }
+    .hp-sec-head { flex-wrap: wrap; gap: .5rem; margin-bottom: .9rem; }
+    .hp-sec-title { font-size: 1.15rem; }
+    .hp-see-all { font-size: .8rem; }
 
     /* featured strip */
     .hp-fcard { flex: 0 0 80vw; }
 
-    /* grid — single column */
+    /* grid: single column */
     .hp-grid { grid-template-columns: 1fr; gap: .75rem; }
 
-    /* modal */
+    /* modal: bottom sheet */
     .event-modal { padding: 0; align-items: flex-end; }
     .event-modal-card {
-        width: 100%;
-        max-height: 95vh;
+        width: 100%; max-height: 95vh;
         border-radius: 20px 20px 0 0;
         grid-template-columns: 1fr;
         grid-template-rows: 200px 1fr;
     }
     .event-modal-card::before { display: none; }
     .event-modal-content { padding: 1rem; }
+}
+
+/* small phones */
+@media (max-width: 420px) {
+    .hp-hero { min-height: 560px; }
+    .hp-hero-panel-packages { padding: 5rem .75rem .75rem; }
+    .hp-packages-heading { max-height: 16rem; }
+    .hp-package-track { min-height: 280px; }
+    .hp-package-media { min-height: 140px; }
+    .hp-package-title { font-size: 1.05rem; }
+    .hp-package-text { font-size: .79rem; }
+    .hp-package-dot { width: 9px; height: 9px; }
+    .hp-cat-bar-inner { padding: .45rem .6rem; gap: .3rem; }
+    .hp-cat { font-size: .72rem; padding: .32rem .6rem; }
+    .hp-fcard { flex: 0 0 88vw; }
+    .hp-ecard-title { font-size: .88rem; }
 }
 </style>
 

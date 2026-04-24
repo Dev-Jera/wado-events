@@ -15,35 +15,21 @@
                     <span>Tickets sold this month</span>
                     <strong>{{ number_format($ticketsSoldThisMonth) }}</strong>
                 </div>
+                <div class="pc-hero-chip-row">
+                    <div class="pc-hero-chip pc-hero-chip-sm">
+                        <span>Unissued QR</span>
+                        <strong>{{ number_format($qrNotIssued) }}</strong>
+                    </div>
+                    <div class="pc-hero-chip pc-hero-chip-sm">
+                        <span>Gate left</span>
+                        <strong>{{ number_format($atGateUnscanned) }}</strong>
+                    </div>
+                    <div class="pc-hero-chip pc-hero-chip-sm">
+                        <span>{{ $opsMetricLabel }}</span>
+                        <strong>{{ number_format($opsMetricValue) }}</strong>
+                    </div>
+                </div>
             </div>
-        </section>
-
-        <section class="pc-stat-grid">
-            <article class="pc-stat-card">
-                <span>Pending Payments</span>
-                <strong>{{ number_format($pendingPayments) }}</strong>
-                <small>Awaiting provider confirmation</small>
-            </article>
-            <article class="pc-stat-card">
-                <span>Failed Payments</span>
-                <strong>{{ number_format($failedPayments) }}</strong>
-                <small>Need support follow-up</small>
-            </article>
-            <article class="pc-stat-card">
-                <span>Unissued QR</span>
-                <strong>{{ number_format($qrNotIssued) }}</strong>
-                <small>Confirmed without generated QR</small>
-            </article>
-            <article class="pc-stat-card">
-                <span>Gate Remaining</span>
-                <strong>{{ number_format($atGateUnscanned) }}</strong>
-                <small>Issued but not scanned</small>
-            </article>
-            <article class="pc-stat-card">
-                <span>{{ $opsMetricLabel }}</span>
-                <strong>{{ number_format($opsMetricValue) }}</strong>
-                <small>{{ $isEventOwner ? 'Events currently running' : 'Assigned gate agents' }}</small>
-            </article>
         </section>
 
         <section class="pc-main-grid">
@@ -203,39 +189,18 @@
             font-weight: 700;
         }
 
-        .pc-stat-grid {
+        .pc-hero-chip-row {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 0.7rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
         }
 
-        .pc-stat-card {
-            background: #ffffff;
-            border: 1px solid #dbe4f0;
-            border-radius: 12px;
-            padding: 0.72rem 0.78rem;
-            display: grid;
-            gap: 0.22rem;
+        .pc-hero-chip-sm {
+            padding: 0.45rem 0.55rem !important;
         }
 
-        .pc-stat-card span {
-            font-size: 0.69rem;
-            color: #51637f;
-            letter-spacing: 0.02em;
-            font-weight: 600;
-        }
-
-        .pc-stat-card strong {
-            color: #12233d;
-            font-size: 1.22rem;
-            line-height: 1;
-            font-weight: 700;
-        }
-
-        .pc-stat-card small {
-            color: #7d8da7;
-            font-size: 0.66rem;
-            line-height: 1.3;
+        .pc-hero-chip-sm strong {
+            font-size: 0.82rem !important;
         }
 
         .pc-main-grid {
@@ -440,13 +405,11 @@
         }
 
         @media (max-width: 1200px) {
-            .pc-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .pc-main-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 760px) {
             .pc-hero { grid-template-columns: 1fr; }
-            .pc-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .pc-panel-head {
                 align-items: flex-start;
                 flex-direction: column;
@@ -466,7 +429,7 @@
         }
 
         @media (max-width: 520px) {
-            .pc-stat-grid { grid-template-columns: 1fr; }
+            .pc-hero-chip-row { grid-template-columns: repeat(3, 1fr); }
             .pc-hero {
                 padding: 0.85rem;
             }

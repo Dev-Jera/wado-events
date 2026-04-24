@@ -38,6 +38,7 @@
                 <a href="{{ route('gate.portal') }}">Gate Portal</a>
                 <a href="{{ url('/dashboard/users') }}">Users & Roles</a>
                 <a href="{{ route('events.index') }}">Public events</a>
+                <a href="{{ url('/dashboard/content-management') }}">Content Management</a>
             </nav>
         </aside>
         <main class="admin-content">
