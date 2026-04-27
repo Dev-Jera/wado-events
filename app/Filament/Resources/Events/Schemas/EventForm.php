@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Schemas;
 
 use App\Models\Category;
+use App\Models\PaymentTransaction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -11,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -215,6 +217,71 @@ class EventForm
                                                 ? 'UGX ' . number_format(\App\Models\PaymentTransaction::where('event_id', $record->id)->where('status', 'CONFIRMED')->sum('total_amount')) : '—'),
                                     ]),
                             ]),
+
+                            Section::make('Revenue by category')
+                                ->description('Sales and revenue broken down per ticket tier.')
+                                ->icon('heroicon-o-chart-bar')
+                                ->collapsible()
+                                ->collapsed()
+                                ->schema([
+                                    Placeholder::make('category_revenue')
+                                        ->label('')
+                                        ->content(function ($record): HtmlString {
+                                            if (! $record) {
+                                                return new HtmlString('<p style="color:#64748b;font-size:.85rem;padding:.5rem 0;">Save the event first to see category stats.</p>');
+                                            }
+
+                                            $categories = $record->ticketCategories;
+
+                                            if ($categories->isEmpty()) {
+                                                return new HtmlString('<p style="color:#64748b;font-size:.85rem;padding:.5rem 0;">No ticket categories defined yet.</p>');
+                                            }
+
+                                            $rows        = '';
+                                            $grandSold   = 0;
+                                            $grandRevenue = 0.0;
+
+                                            foreach ($categories as $cat) {
+                                                $sold    = max((int) $cat->ticket_count - (int) $cat->tickets_remaining, 0);
+                                                $revenue = (float) PaymentTransaction::where('ticket_category_id', $cat->id)
+                                                    ->where('status', PaymentTransaction::STATUS_CONFIRMED)
+                                                    ->sum('total_amount');
+                                                $pct     = $cat->ticket_count > 0 ? round($sold / $cat->ticket_count * 100) : 0;
+
+                                                $grandSold    += $sold;
+                                                $grandRevenue += $revenue;
+
+                                                $bar = "<div style='height:4px;border-radius:2px;background:#e2e8f0;margin-top:2px;'>"
+                                                     . "<div style='height:4px;border-radius:2px;background:#2563eb;width:{$pct}%;'></div>"
+                                                     . "</div>";
+
+                                                $rows .= "<tr>"
+                                                    . "<td style='padding:.55rem .75rem;font-size:.83rem;color:#1e293b;'>{$cat->name}{$bar}</td>"
+                                                    . "<td style='padding:.55rem .75rem;font-size:.83rem;color:#64748b;text-align:center;'>" . number_format($cat->ticket_count) . "</td>"
+                                                    . "<td style='padding:.55rem .75rem;font-size:.83rem;font-weight:600;color:#1e293b;text-align:center;'>" . number_format($sold) . " <span style='font-weight:400;color:#94a3b8;font-size:.75rem;'>({$pct}%)</span></td>"
+                                                    . "<td style='padding:.55rem .75rem;font-size:.83rem;font-weight:700;color:#2563eb;text-align:right;'>UGX " . number_format($revenue, 0) . "</td>"
+                                                    . "</tr>";
+                                            }
+
+                                            $html = "<div style='overflow-x:auto;'>"
+                                                . "<table style='width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;font-family:inherit;'>"
+                                                . "<thead><tr style='background:#f8fafc;'>"
+                                                . "<th style='padding:.5rem .75rem;font-size:.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid #e2e8f0;'>Category</th>"
+                                                . "<th style='padding:.5rem .75rem;font-size:.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;text-align:center;border-bottom:1px solid #e2e8f0;'>Capacity</th>"
+                                                . "<th style='padding:.5rem .75rem;font-size:.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;text-align:center;border-bottom:1px solid #e2e8f0;'>Sold</th>"
+                                                . "<th style='padding:.5rem .75rem;font-size:.7rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;text-align:right;border-bottom:1px solid #e2e8f0;'>Revenue</th>"
+                                                . "</tr></thead>"
+                                                . "<tbody>{$rows}</tbody>"
+                                                . "<tfoot><tr style='background:#f8fafc;border-top:2px solid #e2e8f0;'>"
+                                                . "<td colspan='2' style='padding:.55rem .75rem;font-size:.82rem;font-weight:700;color:#1e293b;'>Total</td>"
+                                                . "<td style='padding:.55rem .75rem;font-size:.82rem;font-weight:700;color:#1e293b;text-align:center;'>" . number_format($grandSold) . "</td>"
+                                                . "<td style='padding:.55rem .75rem;font-size:.82rem;font-weight:700;color:#2563eb;text-align:right;'>UGX " . number_format($grandRevenue, 0) . "</td>"
+                                                . "</tr></tfoot>"
+                                                . "</table></div>";
+
+                                            return new HtmlString($html);
+                                        }),
+                                ]),
 
                             Section::make('Artists')
                                 ->description('Optional performers')

@@ -23,18 +23,21 @@ class TicketPackageController extends Controller
                 'label' => 'VIP Wristband Tickets',
                 'title' => 'Give your VIP guests a premium entry experience',
                 'copy'  => 'With our printed VIP wristbands, give your top-tier guests a cleaner, faster access experience from the moment they arrive. Colour-coded per category, tamper-proof, and printed on-demand.',
+                'price' => '',
             ],
             [
                 'image' => asset('images/cutout-ticket.jpg'),
                 'label' => 'Gate-Sale Ticket Printing',
                 'title' => 'Print ticket batches for fast sales at the entrance',
                 'copy'  => 'Generate tickets in bulk and sell them at entry with optional scanner support when you need more control. Perfect for walk-in audiences and last-minute sales without the tech overhead.',
+                'price' => '',
             ],
             [
                 'image' => asset('images/Online ticket.jpg'),
                 'label' => 'Online Ticketing & Event Management',
                 'title' => 'Sell online and let us manage your event',
                 'copy'  => 'Let customers buy tickets online while our team manages verification, attendance, and event flow from one organised system. Real-time dashboards, QR scanning, and refund handling included.',
+                'price' => '',
             ],
         ];
 
@@ -44,6 +47,7 @@ class TicketPackageController extends Controller
                 'label' => $p['label'] ?? '',
                 'title' => $p['title'] ?? '',
                 'copy'  => $p['copy']  ?? '',
+                'price' => $p['price'] ?? '',
             ], $s['packages'])
             : $defaultPackages;
 

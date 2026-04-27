@@ -82,19 +82,22 @@ class HomeController extends Controller
                 'image' => asset('images/VIP wristband.jpg'),
                 'label' => 'VIP Wristband Tickets',
                 'title' => 'Give your VIP guests a premium entry experience',
-                'copy' => 'With our printed VIP wristbands, cleaner access control.'
+                'copy'  => 'With our printed VIP wristbands, cleaner access control.',
+                'price' => '',
             ],
             [
                 'image' => asset('images/Gate-Sale Ticket.jpg'),
                 'label' => 'Gate-Sale Ticket Printing',
                 'title' => 'Print ticket batches for fast sales at the entrance',
-                'copy' => 'Generate tickets in bulk, and sell them at entry with optional scanner support.'
+                'copy'  => 'Generate tickets in bulk, and sell them at entry with optional scanner support.',
+                'price' => '',
             ],
             [
                 'image' => asset('images/Online ticket.jpg'),
                 'label' => 'Online Ticketing & Event Management',
                 'title' => 'Sell online and let us manage your event.',
-                'copy' => 'Let customers buy tickets online while our team manages verification, attendance, and event flow from one organized system.'
+                'copy'  => 'Let customers buy tickets online while our team manages verification, attendance, and event flow from one organized system.',
+                'price' => '',
             ],
         ];
 
@@ -125,6 +128,7 @@ class HomeController extends Controller
                     'label' => $p['label'] ?? '',
                     'title' => $p['title'] ?? '',
                     'copy'  => $p['copy'] ?? '',
+                    'price' => $p['price'] ?? '',
                 ];
             }, $settings['packages'])
             : $defaultPackages;

@@ -9,6 +9,7 @@ use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -81,17 +82,17 @@ class GatePrintTicketService
      */
     public function buildQrDataUri(string $qrPayload): string
     {
+        // Use SVG writer (doesn't need GD extension)
         $result = (new Builder(
-            writer: new PngWriter(),
+            writer: new SvgWriter(),
             data: $qrPayload,
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::Medium,
             size: 220,
             margin: 4,
-            roundBlockSizeMode: RoundBlockSizeMode::Margin,
         ))->build();
 
-        return 'data:image/png;base64,' . base64_encode($result->getString());
+        return 'data:image/svg+xml;base64,' . base64_encode($result->getString());
     }
 
     /**

@@ -28,6 +28,9 @@
                     <div class="tp-card-body">
                         <span class="tp-badge">{{ $pkg['label'] }}</span>
                         <h2 class="tp-card-title">{{ $pkg['title'] }}</h2>
+                        @if (!empty($pkg['price']))
+                        <div class="tp-price-tag">{{ $pkg['price'] }}</div>
+                        @endif
                         <p class="tp-card-copy">{{ $pkg['copy'] }}</p>
                         <button type="button" class="tp-card-cta"
                                 data-package="{{ $pkg['label'] }}"
@@ -187,6 +190,21 @@
         font-size: 0.93rem;
         line-height: 1.7;
         color: rgba(255,255,255,.68);
+    }
+
+    .tp-price-tag {
+        display: inline-flex;
+        align-self: flex-start;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(232,160,106,.3);
+        border-radius: 999px;
+        color: #e8a06a;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 0.28rem 0.85rem;
+        letter-spacing: 0.01em;
     }
 
     .tp-card-cta {

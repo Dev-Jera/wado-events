@@ -55,9 +55,9 @@ class ContentManagementPage extends Page
         $s = $this->loadSettings();
 
         $defaultPackages = [
-            ['image' => null, 'label' => 'VIP Wristband Tickets',           'title' => 'Give your VIP guests a premium entry experience',           'copy' => 'With Our printed VIP wristbands, cleaner access control.'],
-            ['image' => null, 'label' => 'Gate-Sale Ticket Printing',        'title' => 'Print ticket batches for fast sales at the entrance',        'copy' => 'Generate tickets in bulk, and sell them at entry with optional scanner support.'],
-            ['image' => null, 'label' => 'Online Ticketing & Event Management', 'title' => 'Sell online and let us manage your event.',               'copy' => 'Let customers buy tickets online while our team manages verification, attendance, and event flow.'],
+            ['image' => null, 'label' => 'VIP Wristband Tickets',              'title' => 'Give your VIP guests a premium entry experience',           'copy' => 'With Our printed VIP wristbands, cleaner access control.',                                                                                           'price' => ''],
+            ['image' => null, 'label' => 'Gate-Sale Ticket Printing',          'title' => 'Print ticket batches for fast sales at the entrance',        'copy' => 'Generate tickets in bulk, and sell them at entry with optional scanner support.',                                                                       'price' => ''],
+            ['image' => null, 'label' => 'Online Ticketing & Event Management','title' => 'Sell online and let us manage your event.',                 'copy' => 'Let customers buy tickets online while our team manages verification, attendance, and event flow.',                                                   'price' => ''],
         ];
 
         $this->data = [
@@ -72,6 +72,7 @@ class ContentManagementPage extends Page
                     'label' => $package['label'] ?? '',
                     'title' => $package['title'] ?? '',
                     'copy'  => $package['copy'] ?? '',
+                    'price' => $package['price'] ?? '',
                 ];
             }, $s['packages'] ?? $defaultPackages),
         ];
@@ -166,6 +167,11 @@ class ContentManagementPage extends Page
                                     ->maxLength(120)
                                     ->placeholder('Give your VIP guests a premium entry experience'),
 
+                                TextInput::make('price')
+                                    ->label('Starting price')
+                                    ->maxLength(60)
+                                    ->placeholder('e.g. From UGX 50,000 · Contact for pricing'),
+
                                 Textarea::make('copy')
                                     ->label('Body text')
                                     ->rows(2)
@@ -203,6 +209,7 @@ class ContentManagementPage extends Page
                 'label' => $package['label'] ?? '',
                 'title' => $package['title'] ?? '',
                 'copy'  => $package['copy'] ?? '',
+                'price' => $package['price'] ?? '',
             ];
         }
         $settings['packages'] = $packages;

@@ -18,6 +18,7 @@ class GateBatch extends Model
         'price',
         'quantity',
         'ticket_size',
+        'template',
         'notes',
         'status',
         'printed_at',
