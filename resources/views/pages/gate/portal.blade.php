@@ -34,10 +34,21 @@
                 <div class="gate-alert gate-alert-error">{{ session('error') }}</div>
             @endif
 
+            {{-- Live pending push requests panel --}}
+            <div class="gate-push-panel" id="pushPanel">
+                <div class="push-panel-head">
+                    <span>Mobile Money Push Requests</span>
+                    <span class="push-panel-sub">Last 3 hours · updates every 5 s</span>
+                </div>
+                <div id="pushList" class="push-list">
+                    <p class="push-empty">No recent push requests.</p>
+                </div>
+            </div>
+
             <form method="POST" action="{{ route('gate.portal.walkin.store') }}" class="gate-walkin-form">
                 @csrf
                 <h2>Walk-in Sale</h2>
-                <p>Create a customer and take payment at the gate. Mobile money sends an STK prompt. Cash/POS confirms instantly and issues ticket.</p>
+                <p>Mobile money (MTN / Airtel): enter the customer's phone number and submit — a payment prompt is pushed directly to their phone. They approve with their PIN and the ticket is issued automatically. Cash / POS confirms instantly.</p>
 
                 <div class="walkin-grid">
                     <label>
@@ -238,6 +249,23 @@
         .badge.warn { background: #fff6eb; color: #93540d; border-color: #ffd7a8; }
         .gate-sub { margin: 1rem 0 .4rem; color: #173b66; }
 
+        /* Push requests panel */
+        .gate-push-panel { margin-top: .8rem; background: #fff; border: 1px solid #d7e4f6; border-radius: 14px; padding: .85rem .9rem; }
+        .push-panel-head { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .55rem; }
+        .push-panel-head span:first-child { font-size: .88rem; font-weight: 700; color: #15345d; }
+        .push-panel-sub { font-size: .7rem; color: #7a9abf; }
+        .push-list { display: grid; gap: .35rem; }
+        .push-empty { margin: 0; color: #7a9abf; font-size: .78rem; }
+        .push-row { display: flex; align-items: center; gap: .5rem; padding: .42rem .55rem; border: 1px solid #e5edf7; border-radius: 9px; font-size: .75rem; flex-wrap: wrap; }
+        .push-row-name { font-weight: 600; color: #15345d; min-width: 120px; }
+        .push-row-phone { color: #4a6e93; font-size: .72rem; }
+        .push-row-amount { font-weight: 600; color: #214064; margin-left: auto; }
+        .push-row-age { color: #7a9abf; font-size: .69rem; }
+        .push-badge { border-radius: 999px; padding: .15rem .42rem; border: 1px solid; font-weight: 700; font-size: .65rem; text-transform: uppercase; letter-spacing: .02em; }
+        .push-badge.initiated, .push-badge.pending { background: #fff6eb; color: #93540d; border-color: #ffd7a8; }
+        .push-badge.confirmed { background: #edf9f2; color: #136f45; border-color: #bde8cb; }
+        .push-badge.failed, .push-badge.expired { background: #fff1f3; color: #9e2034; border-color: #f3c5cc; }
+
         @media (max-width: 1200px) {
             .walkin-grid { grid-template-columns: repeat(2, minmax(170px, 1fr)); }
         }
@@ -254,6 +282,47 @@
     </style>
 
     <script>
+        (function () {
+            const statusUrl = '{{ route('gate.portal.walkin.requests') }}';
+            const list = document.getElementById('pushList');
+
+            function statusLabel(row) {
+                if (row.expired) return 'expired';
+                return row.status;
+            }
+
+            function render(rows) {
+                if (!rows || rows.length === 0) {
+                    list.innerHTML = '<p class="push-empty">No recent push requests.</p>';
+                    return;
+                }
+                list.innerHTML = rows.map(function (r) {
+                    const lbl = statusLabel(r);
+                    return '<div class="push-row">'
+                        + '<span class="push-row-name">' + escHtml(r.holder_name) + '</span>'
+                        + '<span class="push-row-phone">' + escHtml(r.channel) + ' · ' + escHtml(r.phone) + '</span>'
+                        + '<span class="push-badge ' + escHtml(lbl) + '">' + escHtml(lbl) + '</span>'
+                        + '<span class="push-row-amount">' + escHtml(r.amount) + '</span>'
+                        + '<span class="push-row-age">' + escHtml(r.sent_ago) + '</span>'
+                        + '</div>';
+                }).join('');
+            }
+
+            function escHtml(s) {
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function poll() {
+                fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function (r) { return r.ok ? r.json() : []; })
+                    .then(render)
+                    .catch(function () {});
+            }
+
+            poll();
+            setInterval(poll, 5000);
+        }());
+
         setInterval(function () {
             window.location.reload();
         }, 15000);

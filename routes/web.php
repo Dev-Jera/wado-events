@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
     Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
+    Route::get('/gate-portal/walkin-requests', [GatePortalController::class, 'pendingWalkInRequests'])->name('gate.portal.walkin.requests');
 
     Route::get('/admin/events/{event}', [AdminEventController::class, 'show'])->name('admin.events.show');
 

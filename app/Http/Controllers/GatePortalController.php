@@ -282,6 +282,41 @@ class GatePortalController extends Controller
             ->with('success', 'Walk-in mobile money request sent. Ask customer to approve PIN prompt.');
     }
 
+    public function pendingWalkInRequests(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('accessGatePortal', Event::class);
+
+        $user = $request->user();
+
+        $rows = PaymentTransaction::query()
+            ->where('sales_channel', 'WALK_IN')
+            ->whereIn('payment_provider', ['mtn', 'airtel'])
+            ->whereIn('status', [
+                PaymentTransaction::STATUS_INITIATED,
+                PaymentTransaction::STATUS_PENDING,
+                PaymentTransaction::STATUS_CONFIRMED,
+                PaymentTransaction::STATUS_FAILED,
+                PaymentTransaction::STATUS_EXPIRED,
+            ])
+            ->when(! $user?->isSuperAdmin(), fn ($q) => $q->where('collected_by_user_id', $user?->id))
+            ->where('created_at', '>=', now()->subHours(3))
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get(['id', 'holder_name', 'phone_number', 'payment_provider', 'total_amount', 'status', 'created_at', 'expires_at'])
+            ->map(fn (PaymentTransaction $tx) => [
+                'id'          => $tx->id,
+                'holder_name' => (string) $tx->holder_name,
+                'phone'       => (string) $tx->phone_number,
+                'channel'     => strtoupper((string) $tx->payment_provider),
+                'amount'      => 'UGX ' . number_format((float) $tx->total_amount, 0),
+                'status'      => (string) $tx->status,
+                'sent_ago'    => $tx->created_at?->diffForHumans() ?? '',
+                'expired'     => $tx->expires_at?->isPast() && $tx->status === PaymentTransaction::STATUS_PENDING,
+            ]);
+
+        return response()->json($rows);
+    }
+
     protected function findOrCreateWalkInCustomer(string $name, string $email, string $phone): User
     {
         $normalizedEmail = strtolower(trim($email));
