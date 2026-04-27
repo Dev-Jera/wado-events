@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\PackageEnquiry;
 use App\Models\Enquiry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -68,9 +69,16 @@ class TicketPackageController extends Controller
 
         $enquiry = Enquiry::create($validated);
 
-        Mail::to('wadoconcepts@gmail.com')
-            ->cc('aloyobrendaojera@gmail.com')
-            ->send(new PackageEnquiry($validated));
+        try {
+            Mail::to('wadoconcepts@gmail.com')
+                ->cc('aloyobrendaojera@gmail.com')
+                ->send(new PackageEnquiry($validated));
+        } catch (\Throwable $e) {
+            Log::error('PackageEnquiry: failed to send admin notification email', [
+                'enquiry_id' => $enquiry->id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
 
         return response()->json(['success' => true]);
     }
