@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\PackageEnquiry;
 use App\Models\Enquiry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class TicketPackageController extends Controller
@@ -55,6 +54,54 @@ class TicketPackageController extends Controller
         return view('ticket-packages.index', compact('packages'));
     }
 
+    protected function sendEnquiryNotification(Enquiry $enquiry, array $data): void
+    {
+        $apiKey = (string) config('services.brevo.api_key', '');
+        if ($apiKey === '') {
+            Log::warning('PackageEnquiry: BREVO_API_KEY not set, skipping admin notification', [
+                'enquiry_id' => $enquiry->id,
+            ]);
+            return;
+        }
+
+        try {
+            $html = view('emails.package-enquiry', ['data' => $data])->render();
+
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'api-key'      => $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept'       => 'application/json',
+                ])
+                ->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender'      => [
+                        'name'  => 'WADO Enquiry Form',
+                        'email' => config('mail.from.address', 'wadoconcepts@gmail.com'),
+                    ],
+                    'to'          => [['email' => 'wadoconcepts@gmail.com']],
+                    'cc'          => [['email' => 'aloyobrendaojera@gmail.com']],
+                    'replyTo'     => ['email' => $data['email'], 'name' => $data['name']],
+                    'subject'     => 'New Package Enquiry — ' . $data['package'],
+                    'htmlContent' => $html,
+                ]);
+
+            if (! $response->successful()) {
+                Log::error('PackageEnquiry: Brevo API error', [
+                    'enquiry_id' => $enquiry->id,
+                    'status'     => $response->status(),
+                    'body'       => $response->body(),
+                ]);
+            } else {
+                Log::info('PackageEnquiry: admin notification sent', ['enquiry_id' => $enquiry->id]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('PackageEnquiry: failed to send admin notification', [
+                'enquiry_id' => $enquiry->id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function enquire(Request $request)
     {
         $validated = $request->validate([
@@ -69,16 +116,7 @@ class TicketPackageController extends Controller
 
         $enquiry = Enquiry::create($validated);
 
-        try {
-            Mail::to('wadoconcepts@gmail.com')
-                ->cc('aloyobrendaojera@gmail.com')
-                ->send(new PackageEnquiry($validated));
-        } catch (\Throwable $e) {
-            Log::error('PackageEnquiry: failed to send admin notification email', [
-                'enquiry_id' => $enquiry->id,
-                'error'      => $e->getMessage(),
-            ]);
-        }
+        $this->sendEnquiryNotification($enquiry, $validated);
 
         return response()->json(['success' => true]);
     }
