@@ -68,7 +68,9 @@ class TicketPackageController extends Controller
 
         $enquiry = Enquiry::create($validated);
 
-        Mail::to('wadoconcepts@gmail.com')->send(new PackageEnquiry($validated));
+        Mail::to('wadoconcepts@gmail.com')
+            ->cc('aloyobrendaojera@gmail.com')
+            ->send(new PackageEnquiry($validated));
 
         return response()->json(['success' => true]);
     }
