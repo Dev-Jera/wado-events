@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TicketVerifyRequest;
 use App\Models\Event;
+use App\Models\GateTicket;
 use App\Models\Ticket;
 use App\Models\TicketScanLog;
 use App\Services\Admin\AdminIncidentNotificationService;
+use App\Services\GatePrint\GatePrintTicketService;
 use App\Services\Ticket\TicketQrService;
 use App\Events\TicketScanned;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -24,6 +26,7 @@ class TicketVerificationController extends Controller
 {
     public function __construct(
         protected TicketQrService $ticketQrService,
+        protected GatePrintTicketService $gatePrintService,
         protected AdminIncidentNotificationService $incidentNotifications
     )
     {
@@ -111,6 +114,11 @@ class TicketVerificationController extends Controller
 
         $rawPayload  = trim((string) ($data['scanned_payload'] ?? ''));
         $payload     = $rawPayload !== '' ? $this->ticketQrService->parsePayload($rawPayload) : null;
+
+        // Route gate-print tickets to their own handler
+        if (isset($payload['type']) && $payload['type'] === 'gate_print') {
+            return $this->scanGatePrintJson($request, $payload, $rawPayload, $selectedEventId);
+        }
 
         // Signature check
         if ($payload && ! $this->ticketQrService->verifyPayloadSignature($payload)) {
@@ -532,6 +540,143 @@ class TicketVerificationController extends Controller
                 'ticket'  => $markedTicket,
                 'payload' => $payload,
             ]);
+    }
+
+    /**
+     * Handle a scanned QR that carries a gate-print payload (type=gate_print).
+     * Uses the gate_tickets table and HMAC from GatePrintTicketService.
+     */
+    protected function scanGatePrintJson(
+        Request $request,
+        array $payload,
+        string $rawPayload,
+        int $selectedEventId
+    ): \Illuminate\Http\JsonResponse {
+        // Verify HMAC
+        if (! $this->gatePrintService->verifyPayload($payload)) {
+            $code = strtoupper((string) ($payload['code'] ?? ''));
+            $this->logScan($request, null, $code, 'fake', 'Invalid gate-print QR signature', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
+        }
+
+        // Event mismatch
+        if (isset($payload['event_id']) && (int) $payload['event_id'] !== $selectedEventId) {
+            $code = strtoupper((string) ($payload['code'] ?? ''));
+            $this->logScan($request, null, $code, 'rejected', 'Gate-print QR belongs to another event', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'reason' => 'wrong_event', 'message' => 'Does not belong to this event.']);
+        }
+
+        $ticketCode = $this->normalizeTicketCode((string) ($payload['code'] ?? ''));
+
+        if ($ticketCode === '') {
+            return response()->json(['ok' => false, 'message' => 'No ticket code found. Try scanning again.']);
+        }
+
+        $gateTicket = GateTicket::query()
+            ->with(['batch', 'event'])
+            ->where('ticket_code', $ticketCode)
+            ->first();
+
+        if (! $gateTicket) {
+            $this->logScan($request, null, $ticketCode, 'rejected', 'Gate ticket not found', $rawPayload, $selectedEventId);
+            return response()->json([
+                'ok'     => false,
+                'reason' => 'fake',
+                'message' => 'Fake ticket.',
+                'detail'  => 'This code does not match any gate ticket in the system.',
+            ]);
+        }
+
+        if ((int) $gateTicket->event_id !== $selectedEventId) {
+            $this->logScan($request, null, $ticketCode, 'rejected', 'Gate ticket belongs to another event', $rawPayload, $selectedEventId);
+            return response()->json([
+                'ok'     => false,
+                'reason' => 'wrong_event',
+                'message' => 'Does not belong to this event.',
+                'detail'  => 'This ticket is for: ' . ($gateTicket->event?->title ?? 'another event'),
+            ]);
+        }
+
+        if ($gateTicket->status === 'void') {
+            $this->logScan($request, null, $ticketCode, 'rejected', 'Gate ticket is voided', $rawPayload, $selectedEventId);
+            return response()->json([
+                'ok'     => false,
+                'reason' => 'fake',
+                'message' => 'Fake ticket.',
+                'detail'  => 'This ticket has been voided and is not valid for entry.',
+            ]);
+        }
+
+        if ($gateTicket->status === 'used') {
+            $usedAt = $gateTicket->used_at ? $gateTicket->used_at->format('d M H:i') : null;
+            $this->logScan($request, null, $ticketCode, 'already-used', 'Gate ticket already used', $rawPayload, $selectedEventId);
+            return response()->json([
+                'ok'     => false,
+                'reason' => 'already_used',
+                'message' => 'Ticket already used.',
+                'detail'  => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
+            ]);
+        }
+
+        try {
+            $jsonResponse = Cache::lock('scan:gate:' . $ticketCode, 10)->block(5, function () use (
+                $request, $ticketCode, $rawPayload, $selectedEventId
+            ): \Illuminate\Http\JsonResponse {
+                return DB::transaction(function () use (
+                    $request, $ticketCode, $rawPayload, $selectedEventId
+                ): \Illuminate\Http\JsonResponse {
+                    $locked = GateTicket::query()
+                        ->with(['batch', 'event'])
+                        ->where('ticket_code', $ticketCode)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $locked) {
+                        return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Ticket not found.']);
+                    }
+
+                    if ($locked->status === 'used') {
+                        $usedAt = $locked->used_at ? $locked->used_at->format('d M H:i') : null;
+                        $this->logScan($request, null, $ticketCode, 'already-used', 'Gate ticket already used', $rawPayload, $selectedEventId);
+                        return response()->json([
+                            'ok'     => false,
+                            'reason' => 'already_used',
+                            'message' => 'Ticket already used.',
+                            'detail'  => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
+                        ]);
+                    }
+
+                    $locked->forceFill([
+                        'status'  => 'used',
+                        'used_at' => now(),
+                        'used_by' => $request->user()?->id,
+                    ])->save();
+
+                    $this->logScan($request, null, $ticketCode, 'valid', 'Gate ticket verified and marked used', $rawPayload, $selectedEventId);
+
+                    $label = $locked->batch?->label ?? 'Gate';
+
+                    return response()->json([
+                        'ok'       => true,
+                        'reason'   => 'valid',
+                        'message'  => 'Ticket verified for ' . ($locked->event?->title ?? 'this event') . '.',
+                        'detail'   => $label . ' · Gate Sale',
+                        'holder'   => 'Gate Sale',
+                        'event'    => $locked->event?->title ?? '',
+                        'category' => $label,
+                        'code'     => $locked->ticket_code,
+                    ]);
+                });
+            });
+
+            return $jsonResponse;
+
+        } catch (LockTimeoutException) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Scanner is busy. Wait a moment and try again.',
+            ], 429);
+        }
     }
 
     protected function logScan(

@@ -1,7 +1,7 @@
 # WADO Events Tickets — Technical Implementation Guide
 
-**Version:** 1.0  
-**Date:** April 23, 2026  
+**Version:** 1.1  
+**Date:** April 27, 2026  
 **Project:** WADO Events Tickets  
 **Framework:** Laravel 12 (PHP 8.2)  
 **Prepared by:** Engineering Team
@@ -31,6 +31,7 @@
 13. [Troubleshooting](#13-troubleshooting)
 14. [Package Reference](#14-package-reference)
 15. [Files Changed in This Implementation](#15-files-changed-in-this-implementation)
+16. [Feature Additions — April 2026](#16-feature-additions--april-2026)
 
 ---
 
@@ -41,8 +42,8 @@ WADO Events Tickets is a full-stack event ticketing platform built on Laravel 12
 The platform supports three types of users:
 
 - **Public buyers** — browse events, check out tickets, receive confirmation emails and SMS, download PDF tickets, request refunds
-- **Gate agents** — scan QR codes at the entrance using the gate portal, process walk-in cash sales
-- **Administrators** — manage events, categories, users, view finance reports, manually confirm or refund payments, monitor queues and system health
+- **Gate agents** — scan QR codes at the entrance using the gate portal, process walk-in cash sales, scan physically-printed gate-sale tickets
+- **Administrators** — manage events, categories, users, view finance reports, manually confirm or refund payments, monitor queues and system health, manage site content, handle package enquiries, generate and print batches of physical gate-sale tickets
 
 The system is designed to handle real-time concurrent ticket sales with race condition protection, background job processing, WebSocket-based live updates at the gate, and Redis-backed caching and queuing throughout.
 
@@ -53,7 +54,7 @@ The system is designed to handle real-time concurrent ticket sales with race con
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Backend framework | Laravel 12 (PHP 8.2) | Application logic, routing, ORM |
-| Admin panel | Filament 3 | Dashboard, resource management |
+| Admin panel | Filament 5.4 | Dashboard, resource management |
 | Database | MySQL (production) / SQLite (local dev) | Primary data store |
 | Cache & Queue | Redis (Memurai on Windows, Railway Redis on production) | Fast key-value store for queues, cache, locks |
 | Queue monitoring | Laravel Horizon | Production queue dashboard and process supervisor |
@@ -204,22 +205,26 @@ Scans QR code (camera or manual entry)
     ↓
 POST /ticket-verification/scan (JSON endpoint, 60 req/min limit)
     ↓
-Redis distributed lock acquired: Cache::lock('scan:{code}', 10s)
+QR payload decoded — check payload['type']
     ↓
-DB transaction begins
-    ↓
-Ticket located by QR payload, HMAC signature verified
-    ↓
-If valid and unused: ticket marked as used, scan log created
-    ↓
-TicketScanned event broadcast via Reverb WebSocket
-    ↓
-DB transaction commits, Redis lock released
+    ├─ type missing or 'online' → online ticket path (queries tickets table)
+    │       HMAC verified via TicketQrService (v2 payload)
+    │       Redis lock: Cache::lock('scan:{code}', 10s)
+    │       DB transaction + lockForUpdate()
+    │       Ticket marked used, TicketScanned broadcast via Reverb
+    │
+    └─ type = 'gate_print' → gate-sale ticket path (queries gate_tickets table)
+            HMAC verified via GatePrintTicketService (gate_print payload)
+            Redis lock: Cache::lock('scan:gate:{code}', 10s)
+            DB transaction + lockForUpdate()
+            GateTicket status → 'used', used_at + used_by stamped
     ↓
 JSON response returned to gate app
     ↓
 [Live] Admin dashboard receives WebSocket push — scan appears in real time
 ```
+
+Both paths share the same distributed-lock + DB-transaction pattern to prevent double-scan race conditions. The `type` field in the QR payload is what differentiates an online ticket from a gate-sale printed ticket. Gate-sale payloads carry `batch_id` in addition to `code` and `event_id`.
 
 ---
 
@@ -506,11 +511,11 @@ Processes a ticket verification (non-JSON, web form). Looks up a ticket by code,
 JSON endpoint used by the live scan interface. Called when a QR code is scanned via camera.
 
 **Rate limit:** 60 per minute  
-**Response:** JSON with `status` (`valid`, `already_used`, `invalid`), ticket holder name, event name, and timestamp.
+**Response:** JSON with `ok` (bool), `reason`, holder name, event name, and timestamp.
 
-**Security:** Acquires a Redis distributed lock on the ticket code for 10 seconds before processing. Verifies the QR payload HMAC signature using `TICKET_SIGNING_KEY`. Runs inside a DB transaction.
+**Security:** Acquires a Redis distributed lock on the ticket code for 10 seconds before processing. Verifies the QR payload HMAC signature. Runs inside a DB transaction. Dispatches to one of two sub-handlers depending on the `type` field in the QR payload — see Section 16 for the gate-print ticket path.
 
-**Fields:** `ticket_code`, `event_id`
+**Fields:** `selected_event_id`, `ticket_code` (optional), `scanned_payload` (signed JSON string), `device_id` (optional)
 
 #### `GET /ticket-verification/export`
 Exports the scan audit log for the selected event as a CSV file. Includes ticket code, holder name, scan time, and gate agent.
@@ -532,6 +537,29 @@ Processes a refund for a confirmed payment. Updates the transaction status to `r
 
 #### `POST /admin/payments/{paymentTransaction}/resend`
 Resends the confirmation email and SMS for an already-confirmed payment. Used when a buyer claims they did not receive their ticket.
+
+---
+
+### Ticket Packages
+
+#### `GET /ticket-packages`
+Public page listing WADO's ticket printing and event management service packages (VIP wristbands, gate-sale printing, online ticketing). Content is editable from the admin content management page.
+
+#### `POST /ticket-packages/enquire`
+Submits a package enquiry from the public contact form. Validates contact details and the selected package, stores the enquiry in the `enquiries` table, and sends a notification email to `wadoconcepts@gmail.com` with reply-to set to the enquirer's address.
+
+**Fields:** `name`, `email`, `phone` (optional), `package`, `event_date` (optional), `attendance` (optional), `message` (optional)  
+**Response:** JSON `{ "success": true }`
+
+---
+
+### Gate Ticket Batches
+
+#### `GET /gate-batches/{batchId}/download-pdf`
+Downloads a printable PDF of all tickets in a gate-sale batch. Requires authentication and admin/event-owner role. If the batch is still in `draft` status (tickets not yet generated), ticket codes are auto-generated before the PDF is rendered. Each ticket's HMAC signature is verified before inclusion — tampered records are silently excluded.
+
+**Access:** `super_admin`, `admin`, or `event_owner` (event owners restricted to their own events)  
+**Response:** PDF file download
 
 ---
 
@@ -1111,3 +1139,248 @@ The following files were created or modified during the scaling and infrastructu
 | `resources/views/scribe/index.blade.php` | New | Generated docs Blade view |
 | `public/vendor/scribe/` | New | Docs CSS and JS assets |
 | `docs/scaling-and-redis-implementation.md` | New | This document |
+
+> Section 16 lists all files added or modified in the April 2026 feature sprint.
+
+---
+
+## 16. Feature Additions — April 2026
+
+This section documents every feature built in the April 2026 sprint, the reasoning behind each design decision, and how the pieces fit together.
+
+---
+
+### 16.1 Home Content Management — File Upload Fix
+
+**Problem:** Content saved from the Filament `ContentManagementPage` (hero banners, package images) was not appearing on the home page. Two bugs caused this:
+
+1. The `save()` method in `ContentManagementPage` read from `$this->data` directly. Filament's `FileUpload` component stores temporary Livewire UUIDs in `$this->data` — the actual file move to permanent storage is only triggered by `$this->form->getState()`. So uploaded files never left the temp folder.
+
+2. `FileUpload` components defaulted to the `local` disk (maps to `storage/app/private/` in Laravel 11), which is not web-accessible. All image requests returned `403 Forbidden`.
+
+**Fix:**
+- `save()` now calls `$this->form->getState()` which triggers `saveUploadedFiles()` internally.
+- All four `FileUpload` components received `->disk('public')`.
+- `HomeController` and `TicketPackageController` changed from `Storage::url()` to `Storage::disk('public')->url()`.
+
+**Files changed:**
+- `app/Filament/Pages/ContentManagementPage.php`
+- `app/Http/Controllers/HomeController.php`
+- `app/Http/Controllers/ContentManagementController.php`
+
+---
+
+### 16.2 PWA Manifest
+
+**Problem:** The app's `<link rel="manifest">` pointed to `manifest.webmanifest`, which was the scanner app's manifest (`"name": "Wado Scanner"`, `start_url` pointing to the scanner). When installed to a phone home screen from the main site, users got the scanner app identity.
+
+**Fix:** Created a separate `public/site.webmanifest` for the main site with correct name, theme colour, start URL, and icons. Updated `app.blade.php` to point to `site.webmanifest` and added the correct `theme-color` meta tag and Apple touch icon. The scanner's own manifest (`manifest.webmanifest`) was left untouched.
+
+**Files changed:**
+- `public/site.webmanifest` — new, main site PWA manifest
+- `resources/views/layouts/app.blade.php` — manifest link, theme-color, apple-touch-icon
+
+---
+
+### 16.3 Ticket Packages Enquiry System
+
+**What was built:** A contact modal on the `/ticket-packages` page and an admin Enquiries dashboard.
+
+#### Public-facing modal
+
+When a visitor clicks "Get in Touch" on a ticket package, a modal opens pre-selecting that package in a dropdown. The form collects name, email, phone, event date, estimated attendance, and a free-text message. On submit it fires a `fetch()` to `POST /ticket-packages/enquire`. No page reload.
+
+#### Server-side handling
+
+`TicketPackageController::enquire()` validates the 7 fields, creates an `Enquiry` record, and sends a branded HTML email to `wadoconcepts@gmail.com` with `->replyTo()` set to the enquirer's address. Clicking "Reply" in Gmail threads directly back to the enquirer.
+
+#### Admin Enquiries resource
+
+`EnquiryResource` in the Filament dashboard (group: Content, sort: 55) shows all incoming enquiries. A blue badge on the sidebar item shows the unread count (`is_read = false`). Per-row actions:
+- **View** — opens a modal with all enquiry details; marks the record as read.
+- **Reply** — opens a textarea modal; sends a `PackageEnquiryReply` email to the enquirer and stamps `replied_at`.
+
+Status is derived from a model accessor (`getStatusAttribute`): `New` → `Read` → `Replied`.
+
+**Database table:** `enquiries` — `name`, `email`, `phone`, `package`, `event_date`, `attendance`, `message`, `is_read` (bool), `replied_at` (nullable timestamp).
+
+**Files changed/created:**
+- `database/migrations/2026_04_27_062052_create_enquiries_table.php`
+- `app/Models/Enquiry.php`
+- `app/Mail/PackageEnquiry.php`
+- `app/Mail/PackageEnquiryReply.php`
+- `resources/views/emails/package-enquiry.blade.php`
+- `resources/views/emails/package-enquiry-reply.blade.php`
+- `app/Http/Controllers/TicketPackageController.php`
+- `routes/ticket-packages.php`
+- `app/Filament/Resources/Enquiries/EnquiryResource.php`
+- `app/Filament/Resources/Enquiries/Pages/ListEnquiries.php`
+- `resources/views/filament/modals/enquiry-detail.blade.php`
+- `resources/views/ticket-packages/index.blade.php`
+
+---
+
+### 16.4 Navbar Cleanup
+
+Removed "My Tickets" from the profile dropdown (it already exists as a persistent navbar link for logged-in users). Removed "Ticket Packages" from the dropdown entirely — it is a public page accessible from the footer, not a user account action.
+
+**Files changed:**
+- `resources/views/components/navbar.blade.php`
+
+---
+
+### 16.5 Gate-Sale Bulk Ticket Printing System
+
+This is the largest feature in this sprint. It allows admins and event owners to generate hundreds or thousands of physical, verifiable, hard-to-fake tickets for sale at the event entrance.
+
+#### How it works end-to-end
+
+```
+Admin creates a batch (event, label, price, quantity, size)  →  status: draft
+    ↓
+Admin clicks "Generate" in dashboard
+    ↓
+GatePrintTicketService::generateTickets() runs inside a DB transaction
+    — acquires lockForUpdate() on the batch row to prevent double-generation
+    — generates N unique codes (format: GP-{eventId}-{8 random chars})
+    — builds an HMAC-SHA256 signed JSON payload for each code
+    — bulk-inserts into gate_tickets in chunks of 500
+    — sets batch status → 'active', records printed_at
+    ↓
+Admin clicks "Print PDF"  →  GET /gate-batches/{id}/download-pdf
+    ↓
+GateBatchController::downloadPdf()
+    — verifies HMAC of every ticket's stored payload (tamper detection)
+    — generates QR PNG data URIs in-memory (not stored to disk)
+    — renders PDF via dompdf from resources/views/pdf/gate-tickets.blade.php
+    — streams PDF as file download
+    ↓
+Admin prints PDF, cuts tickets, sells at gate
+    ↓
+At the gate: scanner reads QR code
+    ↓
+TicketVerificationController::scanJson() detects type = 'gate_print'
+    — delegates to scanGatePrintJson()
+    — HMAC re-verified
+    — Redis lock: Cache::lock('scan:gate:{code}', 10s)
+    — DB transaction + lockForUpdate() on gate_tickets row
+    — status → 'used', used_at + used_by stamped
+    — duplicate scan caught and rejected
+```
+
+#### QR payload structure
+
+Each gate-sale ticket encodes a signed JSON payload in its QR code:
+
+```json
+{
+  "v": 1,
+  "type": "gate_print",
+  "code": "GP-12-ABCDEF01",
+  "batch_id": 4,
+  "event_id": 12,
+  "sig": "<hmac-sha256>"
+}
+```
+
+The `type` field is how `TicketVerificationController` routes the scan to the correct handler. The HMAC is computed over `gate_print|GP-12-ABCDEF01|12|4` using the same `TICKET_SIGNING_KEY` used for online tickets. Changing the code, event_id, or batch_id in the QR data invalidates the signature — the ticket is rejected as fake.
+
+#### Ticket sizes
+
+Three sizes are supported, controlled by the `ticket_size` field on the batch:
+
+| Size | Dimensions | Per A4 page |
+|------|-----------|-------------|
+| small | ~90 × 42 mm | 4 across × 5 rows = 20 per page |
+| standard | ~140 × 55 mm | 2 across × 4 rows = 8 per page |
+| large | ~190 × 70 mm | 1 across × 3 rows = 3 per page |
+
+The ticket design is a two-column layout: left column (65–72% width) holds event name, category label, date, venue, and price; right column is a torn-stub section with the QR code and ticket code. A red accent stripe runs across the top.
+
+#### Security layers
+
+| Layer | Mechanism |
+|-------|----------|
+| Code uniqueness | Checked against `gate_tickets.ticket_code` (unique index) before insert |
+| Forgery prevention | HMAC-SHA256 signature on each QR payload; verified at both PDF generation and scan time |
+| Double-scan prevention | Redis distributed lock + `lockForUpdate()` inside DB transaction |
+| Double-generation prevention | `lockForUpdate()` on batch row re-checks `status = 'draft'` before generating; concurrent requests bail silently |
+| PDF tamper detection | Controller re-verifies every ticket's HMAC before rendering; corrupted rows excluded |
+| Access control — dashboard | `canViewAny()` restricted to `super_admin`, `admin`, `event_owner` (not gate agents) |
+| Access control — query scope | Event owners' Eloquent query scoped to `event.user_id = auth()->id()` |
+| Access control — actions | `generate` and `void` call `abort_unless(userCanModifyBatch($record), 403)` server-side, regardless of what the UI shows |
+| Access control — PDF download | Controller checks role and event ownership; voided batches return 422 |
+| Ownership on create | `mutateFormDataBeforeCreate` verifies the selected event belongs to the user before saving |
+
+#### Database tables
+
+**`gate_batches`**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK |
+| `event_id` | FK → events | Cascades on delete |
+| `created_by` | FK → users | Who created the batch |
+| `label` | varchar | e.g. "VIP", "General Entry" |
+| `price` | decimal(12,2) | Face value per ticket |
+| `quantity` | unsigned int | Number of tickets to generate |
+| `ticket_size` | enum(small, standard, large) | Controls PDF layout |
+| `notes` | text nullable | Internal notes |
+| `status` | enum(draft, active, closed, voided) | Lifecycle state |
+| `printed_at` | timestamp nullable | Set when generation completes |
+
+Index: `(event_id, status)`
+
+**`gate_tickets`**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | bigint | PK |
+| `batch_id` | FK → gate_batches | Cascades on delete |
+| `event_id` | FK → events | Denormalised for fast lookup at scan time |
+| `ticket_code` | varchar unique | e.g. `GP-12-ABCDEF01` |
+| `qr_payload` | text | Signed JSON string encoded in the QR code |
+| `status` | enum(unprinted, sold, used, void) | Lifecycle state |
+| `sold_at` | timestamp nullable | When ticket was sold at gate |
+| `used_at` | timestamp nullable | When QR was scanned for entry |
+| `used_by` | FK → users nullable | Gate agent who scanned it |
+
+Indexes: `(batch_id, status)`, `(event_id, status)`
+
+**Files created:**
+- `database/migrations/2026_04_27_064640_create_gate_batches_table.php`
+- `database/migrations/2026_04_27_064645_create_gate_tickets_table.php`
+- `app/Models/GateBatch.php`
+- `app/Models/GateTicket.php`
+- `app/Services/GatePrint/GatePrintTicketService.php`
+- `app/Filament/Resources/GateBatches/GateBatchResource.php`
+- `app/Filament/Resources/GateBatches/Pages/ListGateBatches.php`
+- `app/Filament/Resources/GateBatches/Pages/CreateGateBatch.php`
+- `app/Http/Controllers/GateBatchController.php`
+- `resources/views/pdf/gate-tickets.blade.php`
+
+**Files modified:**
+- `app/Http/Controllers/TicketVerificationController.php` — added `GatePrintTicketService` injection and `scanGatePrintJson()` method; routed `type=gate_print` payloads to it
+- `routes/web.php` — added `GET /gate-batches/{batchId}/download-pdf`
+
+---
+
+### 16.6 Admin Panel Primary Color
+
+The Filament admin panel primary color was changed from amber/brown (`#f8b26a`) to blue (`#2563eb`). This affects all primary buttons, active sidebar states, badge highlights, and form focus rings.
+
+**File changed:**
+- `app/Providers/Filament/AdminPanelProvider.php`
+
+---
+
+### 16.7 Deployment Script Updates (`start.sh`)
+
+The Railway startup script was updated to harden deployments:
+
+| Change | Why |
+|--------|-----|
+| Added `php artisan cache:clear` before rebuilding caches | Prevents stale Redis application cache (old event data, old settings) from persisting across deploys |
+| Added `php artisan filament:cache-components` | Caches Filament's resource/page/widget discovery so the admin panel does not scan the filesystem on every request in production |
+| Added `php artisan queue:restart` | Signals any lingering queue worker to stop cleanly after its current job, preventing stale autoloader issues from a prior container |
+| Added inline comments explaining the `--queue=` flag | Makes it clear that any new job class's queue name must be added here or its jobs will never run |

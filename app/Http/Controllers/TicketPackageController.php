@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PackageEnquiry;
+use App\Models\Enquiry;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class TicketPackageController extends Controller
@@ -36,7 +40,7 @@ class TicketPackageController extends Controller
 
         $packages = isset($s['packages']) && count($s['packages'])
             ? array_map(fn ($p) => [
-                'image' => !empty($p['image']) ? Storage::url($p['image']) : null,
+                'image' => !empty($p['image']) ? Storage::disk('public')->url($p['image']) : null,
                 'label' => $p['label'] ?? '',
                 'title' => $p['title'] ?? '',
                 'copy'  => $p['copy']  ?? '',
@@ -44,5 +48,24 @@ class TicketPackageController extends Controller
             : $defaultPackages;
 
         return view('ticket-packages.index', compact('packages'));
+    }
+
+    public function enquire(Request $request)
+    {
+        $validated = $request->validate([
+            'name'       => 'required|string|max:100',
+            'email'      => 'required|email|max:150',
+            'phone'      => 'nullable|string|max:30',
+            'package'    => 'required|string|max:100',
+            'event_date' => 'nullable|date',
+            'attendance' => 'nullable|string|max:50',
+            'message'    => 'nullable|string|max:1000',
+        ]);
+
+        $enquiry = Enquiry::create($validated);
+
+        Mail::to('wadoconcepts@gmail.com')->send(new PackageEnquiry($validated));
+
+        return response()->json(['success' => true]);
     }
 }

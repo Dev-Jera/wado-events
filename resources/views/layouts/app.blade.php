@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <title>Wado Events</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a4fbe">
+    <meta name="theme-color" content="#c0283c">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logos/logo-no-bg.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -45,14 +45,6 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7"/></svg>
                             Profile
                         </a>
-                        <a href="{{ route('tickets.index') }}" class="nav-dd-item" role="menuitem">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8zm5 0v10m5-10v10"/></svg>
-                            My Tickets
-                        </a>
-                        <a href="{{ route('ticket-packages.index') }}" class="nav-dd-item" role="menuitem">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8zm5 0v10m5-10v10"/></svg>
-                            Ticket Packages
-                        </a>
                         <div class="nav-dd-divider"></div>
                         <form method="POST" action="{{ route('logout') }}" class="nav-dd-form">
                             @csrf

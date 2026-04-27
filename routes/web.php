@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GateBatchController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SocialAuthController;
@@ -68,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
     Route::post('/admin/payments/{paymentTransaction}/confirm', [PaymentController::class, 'adminConfirm'])->name('payments.admin.confirm');
     Route::post('/admin/payments/{paymentTransaction}/refund', [PaymentController::class, 'adminRefund'])->name('payments.admin.refund');
+
+    Route::get('/gate-batches/{batchId}/download-pdf', [GateBatchController::class, 'downloadPdf'])->name('gate-batches.download-pdf');
 
     Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
     Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
