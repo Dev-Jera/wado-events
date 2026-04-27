@@ -1,0 +1,27 @@
+{
+    "hero_title": "Discover Unforgettable Events Near You",
+    "hero_subtitle": "Concerts, sports, workshops & more — book your spot in seconds.",
+    "hero_banner_1": "hero-banners\/01KQ6QQ4A0ZDXSQJNEM1Q7YC82.jpg",
+    "hero_banner_2": "hero-banners\/01KQ6QQ4A5YZEFTMGGZEEW41C4.jpg",
+    "hero_banner_3": "hero-banners\/01KQ6QQ4A71CVNPV8RVGRGZZCQ.jfif",
+    "packages": [
+        {
+            "image": "packages\/01KQ6QQ4A9SJ0ZH9ZJPXPDAB6K.jpg",
+            "label": "VIP Wristband Tickets",
+            "title": "Give your VIP guests a premium entry experience",
+            "copy": "With Our printed VIP wristbands, cleaner access control."
+        },
+        {
+            "image": "packages\/01KQ6QQ4ACYSCMR9GJ0AA57J17.jpg",
+            "label": "Gate-Sale Ticket Printing",
+            "title": "Print ticket batches for fast sales at the entrance",
+            "copy": "Generate tickets in bulk, and sell them at entry with optional scanner support."
+        },
+        {
+            "image": "packages\/01KQ6RAGGMEZ7WSMT7C62CXDW7.jpg",
+            "label": "Sell tickers online",
+            "title": "Let us manage all the verifiation and access for you.",
+            "copy": ""
+        }
+    ]
+}

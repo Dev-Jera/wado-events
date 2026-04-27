@@ -1,2 +1,10 @@
 *
 !.gitignore
+
+# Persist CMS-uploaded assets across Railway deploys
+!event-images/
+!event-images/**
+!hero-banners/
+!hero-banners/**
+!packages/
+!packages/**
