@@ -146,6 +146,6 @@ class EnquiryResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return (bool) auth()->user()?->isSuperAdmin();
+        return (bool) auth()->user()?->isAdmin();
     }
 }
