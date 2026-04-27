@@ -63,11 +63,24 @@ class ContentManagementPage extends Page
         $this->data = [
             'hero_title'    => $s['hero_title']    ?? 'Discover Unforgettable Events Near You',
             'hero_subtitle' => $s['hero_subtitle'] ?? 'Concerts, sports, workshops & more — book your spot in seconds.',
-            'hero_banner_1' => $s['hero_banner_1'] ?? null,
-            'hero_banner_2' => $s['hero_banner_2'] ?? null,
-            'hero_banner_3' => $s['hero_banner_3'] ?? null,
-            'packages'      => $s['packages']      ?? $defaultPackages,
+            'hero_banner_1' => $this->resolveStoredPath($s['hero_banner_1'] ?? null),
+            'hero_banner_2' => $this->resolveStoredPath($s['hero_banner_2'] ?? null),
+            'hero_banner_3' => $this->resolveStoredPath($s['hero_banner_3'] ?? null),
+            'packages'      => array_map(function ($package) {
+                return [
+                    'image' => $this->resolveStoredPath($package['image'] ?? null),
+                    'label' => $package['label'] ?? '',
+                    'title' => $package['title'] ?? '',
+                    'copy'  => $package['copy'] ?? '',
+                ];
+            }, $s['packages'] ?? $defaultPackages),
         ];
+    }
+
+    protected function resolveStoredPath($value): ?string
+    {
+        // Accept only plain string paths — reject UUID objects and arrays left by broken saves
+        return is_string($value) && !empty($value) ? $value : null;
     }
 
     public function form(Schema $form): Schema
@@ -96,26 +109,32 @@ class ContentManagementPage extends Page
                         FileUpload::make('hero_banner_1')
                             ->label('Banner 1')
                             ->image()
+                            ->disk('public')
                             ->directory('hero-banners')
                             ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                             ->maxSize(5120)
-                            ->nullable(),
+                            ->nullable()
+                            ->multiple(false),
 
                         FileUpload::make('hero_banner_2')
                             ->label('Banner 2')
                             ->image()
+                            ->disk('public')
                             ->directory('hero-banners')
                             ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                             ->maxSize(5120)
-                            ->nullable(),
+                            ->nullable()
+                            ->multiple(false),
 
                         FileUpload::make('hero_banner_3')
                             ->label('Banner 3')
                             ->image()
+                            ->disk('public')
                             ->directory('hero-banners')
                             ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                             ->maxSize(5120)
-                            ->nullable(),
+                            ->nullable()
+                            ->multiple(false),
                     ])
                     ->columns(3),
 
@@ -128,6 +147,7 @@ class ContentManagementPage extends Page
                                 FileUpload::make('image')
                                     ->label('Photo')
                                     ->image()
+                                    ->disk('public')
                                     ->directory('packages')
                                     ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                                     ->maxSize(5120)
@@ -164,22 +184,28 @@ class ContentManagementPage extends Page
 
     public function save(): void
     {
-        $this->validate([
-            'data.hero_title'          => 'required|string|max:120',
-            'data.hero_subtitle'       => 'nullable|string|max:200',
-            'data.packages.*.label'    => 'required|string|max:60',
-            'data.packages.*.title'    => 'required|string|max:120',
-            'data.packages.*.copy'     => 'nullable|string|max:300',
-        ]);
+        // getState() validates the form AND moves uploaded files from temp to permanent storage,
+        // returning proper string paths instead of Livewire UUID references.
+        $data = $this->form->getState();
 
         $settings = $this->loadSettings();
 
-        $settings['hero_title']    = $this->data['hero_title']    ?? '';
-        $settings['hero_subtitle'] = $this->data['hero_subtitle'] ?? '';
-        $settings['hero_banner_1'] = $this->data['hero_banner_1'] ?? null;
-        $settings['hero_banner_2'] = $this->data['hero_banner_2'] ?? null;
-        $settings['hero_banner_3'] = $this->data['hero_banner_3'] ?? null;
-        $settings['packages']      = array_values($this->data['packages'] ?? []);
+        $settings['hero_title']    = $data['hero_title']    ?? '';
+        $settings['hero_subtitle'] = $data['hero_subtitle'] ?? '';
+        $settings['hero_banner_1'] = $this->resolveStoredPath($data['hero_banner_1'] ?? null);
+        $settings['hero_banner_2'] = $this->resolveStoredPath($data['hero_banner_2'] ?? null);
+        $settings['hero_banner_3'] = $this->resolveStoredPath($data['hero_banner_3'] ?? null);
+
+        $packages = [];
+        foreach ($data['packages'] ?? [] as $package) {
+            $packages[] = [
+                'image' => $this->resolveStoredPath($package['image'] ?? null),
+                'label' => $package['label'] ?? '',
+                'title' => $package['title'] ?? '',
+                'copy'  => $package['copy'] ?? '',
+            ];
+        }
+        $settings['packages'] = $packages;
 
         $this->saveSettings($settings);
 

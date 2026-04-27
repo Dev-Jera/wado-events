@@ -23,24 +23,23 @@ class HomeController extends Controller
         $heroTitle = $settings['hero_title'] ?? 'Discover Unforgettable Events Near You';
         $heroSubtitle = $settings['hero_subtitle'] ?? 'Concerts, sports, workshops & more — book your spot in seconds.';
         
-        $heroBanners = array_filter([
-            $settings['hero_banner_1'] ?? null,
-            $settings['hero_banner_2'] ?? null,
-            $settings['hero_banner_3'] ?? null,
-        ]);
-        
-        $heroImages = array_map(function ($banner) {
-            // Check if $banner is an array and extract the first element, or use null
+        // Fix hero banners - properly handle array values from file uploads
+        $heroImages = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $bannerKey = "hero_banner_{$i}";
+            $banner = $settings[$bannerKey] ?? null;
+            
+            // Normalize if it's an array (from file upload)
             if (is_array($banner)) {
-                $banner = !empty($banner) ? reset($banner) : null; // Get the first element of the array
+                $banner = !empty($banner) ? reset($banner) : null;
             }
-
-            return $banner ? Storage::url($banner) : asset('images/default-hero.jpg'); // Provide a default image
-        }, $heroBanners);
-
-        // Ensure there are at least 3 images
-        while (count($heroImages) < 3) {
-            $heroImages[] = asset('images/default-hero.jpg'); // Add default images if less than 3
+            
+            // Convert storage path to URL
+            if ($banner && is_string($banner) && !empty($banner)) {
+                $heroImages[] = Storage::disk('public')->url($banner);
+            } else {
+                $heroImages[] = asset('images/default-hero.jpg');
+            }
         }
 
         // Featured events
@@ -53,7 +52,6 @@ class HomeController extends Controller
                 ->map(function (Event $event) {
                     $event->category_label = $event->category?->name ?? 'Uncategorized';
                     $event->url = route('events.show', $event);
-
                     return $event;
                 });
         });
@@ -70,7 +68,7 @@ class HomeController extends Controller
                 ->get()
                 ->mapWithKeys(function (Category $category) {
                     return [
-                        Str::lower($category->name) => [
+                        Str::slug($category->name) => [
                             'label' => $category->name,
                             'count' => (int) $category->events_count,
                         ],
@@ -78,7 +76,7 @@ class HomeController extends Controller
                 });
         });
 
-        // Package slides with array-to-string fix
+        // Package slides with comprehensive array-to-string fix
         $defaultPackages = [
             [
                 'image' => asset('images/VIP wristband.jpg'),
@@ -100,24 +98,26 @@ class HomeController extends Controller
             ],
         ];
 
-        $packageSlides = isset($settings['packages']) && count($settings['packages'])
+        $packageSlides = isset($settings['packages']) && is_array($settings['packages']) && count($settings['packages']) > 0
             ? array_map(function ($p) {
                 // Fix for array to string conversion error
                 $imagePath = $p['image'] ?? null;
                 
                 // Handle if image is stored as an array
                 if (is_array($imagePath)) {
-                    $imagePath = !empty($imagePath) ? reset($imagePath) : null;
+                    // Check if array has at least one element before accessing index 0
+                    $imagePath = !empty($imagePath) && isset($imagePath[0]) ? $imagePath[0] : null;
                 }
                 
                 // Handle if image is empty or null
-                if (empty($imagePath)) {
-                    $imageUrl = null;
-                } else {
+                $imageUrl = null;
+                if ($imagePath && is_string($imagePath) && !empty($imagePath)) {
                     // Check if it's already a full URL or a storage path
-                    $imageUrl = filter_var($imagePath, FILTER_VALIDATE_URL) 
-                        ? $imagePath 
-                        : (is_string($imagePath) ? Storage::url($imagePath) : null);
+                    if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
+                        $imageUrl = $imagePath;
+                    } else {
+                        $imageUrl = Storage::disk('public')->url($imagePath);
+                    }
                 }
                 
                 return [
