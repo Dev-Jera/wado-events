@@ -39,9 +39,9 @@
     <div class="tkd-hero">
         <div class="tkd-hero-bg" aria-hidden="true">
             <svg width="100%" height="100%" viewBox="0 0 720 240" preserveAspectRatio="xMidYMid slice">
-                <circle cx="580" cy="-40" r="200" fill="#2563EB" opacity=".18"/>
-                <circle cx="660" cy="260" r="160" fill="#7C3AED" opacity=".13"/>
-                <circle cx="-20" cy="220" r="140" fill="#DC2626" opacity=".1"/>
+                <circle cx="580" cy="-40" r="200" fill="#c0283c" opacity=".18"/>
+                <circle cx="660" cy="260" r="160" fill="#8a1525" opacity=".13"/>
+                <circle cx="-20" cy="220" r="140" fill="#e8241a" opacity=".1"/>
                 <line x1="0" y1="55"  x2="460" y2="55"  stroke="white" stroke-width=".4" opacity=".05"/>
                 <line x1="0" y1="110" x2="460" y2="110" stroke="white" stroke-width=".4" opacity=".05"/>
                 <line x1="0" y1="165" x2="460" y2="165" stroke="white" stroke-width=".4" opacity=".05"/>
@@ -83,15 +83,15 @@
                 <div class="tkd-img-placeholder">
                     <svg class="tkd-placeholder-bg" width="100%" height="100%" viewBox="0 0 260 240" preserveAspectRatio="xMidYMid slice">
                         <rect width="260" height="240" fill="#0a1540"/>
-                        <circle cx="200" cy="40"  r="110" fill="#2563EB" opacity=".28"/>
-                        <circle cx="40"  cy="210" r="90"  fill="#7C3AED" opacity=".2"/>
-                        <circle cx="130" cy="120" r="55"  fill="#DC2626" opacity=".1"/>
+                        <circle cx="200" cy="40"  r="110" fill="#c0283c" opacity=".28"/>
+                        <circle cx="40"  cy="210" r="90"  fill="#8a1525" opacity=".2"/>
+                        <circle cx="130" cy="120" r="55"  fill="#e8241a" opacity=".1"/>
                     </svg>
                     <svg width="52" height="52" viewBox="0 0 24 24" fill="none" style="position:relative;z-index:1;">
-                        <rect x="1" y="6" width="22" height="14" rx="3" stroke="#2563EB" stroke-width="1.3" fill="rgba(37,99,235,.12)"/>
-                        <path d="M7 6V5a5 5 0 0110 0v1" stroke="#2563EB" stroke-width="1.3" opacity=".6"/>
-                        <circle cx="12" cy="13" r="2.5" fill="#2563EB" opacity=".9"/>
-                        <path d="M8 17h8" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round" opacity=".4"/>
+                        <rect x="1" y="6" width="22" height="14" rx="3" stroke="#c0283c" stroke-width="1.3" fill="rgba(192,40,60,.12)"/>
+                        <path d="M7 6V5a5 5 0 0110 0v1" stroke="#c0283c" stroke-width="1.3" opacity=".6"/>
+                        <circle cx="12" cy="13" r="2.5" fill="#c0283c" opacity=".9"/>
+                        <path d="M8 17h8" stroke="#c0283c" stroke-width="1.3" stroke-linecap="round" opacity=".4"/>
                     </svg>
                     <span class="tkd-placeholder-label">{{ $ticket->ticketCategory->name }}</span>
                 </div>
@@ -206,14 +206,14 @@
 
 <style>
 .tkd-back{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:#dbe7ff;text-decoration:none;font-family:var(--site-font);margin:1.2rem 0 .8rem max(1rem,calc((100% - 740px)/2));transition:color .15s;}
-.tkd-back:hover{color:#1d67d6;}
+.tkd-back:hover{color:#c0283c;}
 .tkd-wrap{font-family:var(--site-font);max-width:740px;margin:0 auto 3rem;padding:0 1rem;}
 .tkd-wrap button,.tkd-wrap input,.tkd-wrap select,.tkd-wrap textarea{font-family:inherit;}
 .tkd-modal-mode{padding:0;margin:0 auto;max-width:100%;}
 .tkd-card{border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.06);box-shadow:0 32px 64px rgba(8,20,48,.35);}
 .tkd-card-cancelled{border-color:rgba(220,38,38,.25);}
-.tkd-top-band{height:5px;background:linear-gradient(90deg,#2563EB 0%,#7C3AED 50%,#DC2626 100%);}
-.tkd-bottom-band{height:3px;background:linear-gradient(90deg,#2563EB,#7C3AED,#DC2626);opacity:.55;}
+.tkd-top-band{height:5px;background:linear-gradient(90deg,#c0283c 0%,#8a1525 50%,#e8241a 100%);}
+.tkd-bottom-band{height:3px;background:linear-gradient(90deg,#c0283c,#8a1525,#e8241a);opacity:.55;}
 .tkd-band-danger{background:linear-gradient(90deg,#DC2626,#991B1B) !important;}
 .tkd-alert{display:flex;align-items:center;gap:10px;background:rgba(220,38,38,.12);border-bottom:1px solid rgba(220,38,38,.2);color:#f87171;font-size:.76rem;font-weight:600;padding:10px 20px;}
 .tkd-hero{background:#0c1b5e;display:grid;grid-template-columns:1fr 240px;min-height:230px;position:relative;overflow:hidden;}
@@ -234,7 +234,7 @@
 .tkd-placeholder-bg{position:absolute;inset:0;}
 .tkd-placeholder-label{position:relative;z-index:1;font-size:.72rem;font-weight:600;color:rgba(255,255,255,.4);}
 .tkd-strip{background:#111827;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
-.tkd-strip-code{font-family:'Courier New',monospace;font-size:.82rem;font-weight:700;color:#60A5FA;letter-spacing:.08em;}
+.tkd-strip-code{font-family:'Courier New',monospace;font-size:.82rem;font-weight:700;color:#f08090;letter-spacing:.08em;}
 .tkd-strip-type{font-size:.65rem;font-weight:700;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.1em;}
 .tkd-tear{background:#111827;display:flex;align-items:center;padding:0 14px;}
 .tkd-tear-circle{width:22px;height:22px;border-radius:50%;background:#0F172A;flex-shrink:0;margin:0 -11px;border:1px solid rgba(255,255,255,.06);}
@@ -243,7 +243,7 @@
 .tkd-details-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 14px;}
 .tkd-dl{font-size:.58rem;font-weight:700;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
 .tkd-dv{font-size:.82rem;font-weight:600;color:#E2E8F0;}
-.tkd-mono{font-family:'Courier New',monospace;font-size:.75rem;color:#60A5FA;}
+.tkd-mono{font-family:'Courier New',monospace;font-size:.75rem;color:#f08090;}
 .tkd-badge{display:inline-flex;align-items:center;gap:5px;font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid;}
 .tkd-badge-green{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25);color:#4ade80;}
 .tkd-badge-gray{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.5);}
@@ -255,18 +255,18 @@
 .tkd-qr-info{flex:1;}
 .tkd-qr-title{font-size:.78rem;font-weight:700;color:#E2E8F0;margin-bottom:4px;}
 .tkd-qr-sub{font-size:.68rem;color:rgba(255,255,255,.32);line-height:1.55;}
-.tkd-zone-box{background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);border-radius:10px;padding:10px 16px;text-align:center;flex-shrink:0;}
+.tkd-zone-box{background:rgba(192,40,60,.1);border:1px solid rgba(192,40,60,.25);border-radius:10px;padding:10px 16px;text-align:center;flex-shrink:0;}
 .tkd-zone-label{font-size:.58rem;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-.tkd-zone-val{font-size:1rem;font-weight:700;color:#60A5FA;}
+.tkd-zone-val{font-size:1rem;font-weight:700;color:#f08090;}
 .tkd-zone-sub{font-size:.62rem;color:rgba(255,255,255,.28);margin-top:2px;}
 .tkd-footer{background:#0D1321;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap;gap:10px;}
 .tkd-footer-route{display:flex;align-items:center;gap:8px;font-size:.72rem;color:rgba(255,255,255,.38);}
 .tkd-footer-route strong{color:rgba(255,255,255,.72);font-weight:700;}
-.tkd-route-dot{width:7px;height:7px;border-radius:50%;background:#2563EB;flex-shrink:0;}
+.tkd-route-dot{width:7px;height:7px;border-radius:50%;background:#c0283c;flex-shrink:0;}
 .tkd-footer-actions{display:flex;gap:8px;}
 .tkd-btn{display:inline-block;text-decoration:none;border-radius:9px;padding:8px 16px;font-size:.72rem;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:all .15s;}
-.tkd-btn-primary{background:#2563EB;color:#fff;}
-.tkd-btn-primary:hover{background:#1D4ED8;color:#fff;}
+.tkd-btn-primary{background:#c0283c;color:#fff;}
+.tkd-btn-primary:hover{background:#8a1525;color:#fff;}
 .tkd-btn-ghost{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.12);}
 .tkd-btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
 .tkd-btn-danger{background:#DC2626;color:#fff;}
@@ -296,7 +296,7 @@
 .tkd-refund-form-wrap{margin-top:.9rem;}
 .tkd-refund-hint{margin:0 0 .75rem;color:#8a9ab8;font-size:.8rem;line-height:1.4;}
 .tkd-refund-textarea{width:100%;border:1px solid #1e3050;border-radius:8px;background:#0d1929;color:#fff;padding:.6rem .8rem;font-size:.86rem;font-family:inherit;resize:vertical;transition:border-color .15s,box-shadow .15s;}
-.tkd-refund-textarea:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.12);}
+.tkd-refund-textarea:focus{outline:none;border-color:#c0283c;box-shadow:0 0 0 3px rgba(192,40,60,.12);}
 .tkd-refund-actions{display:flex;gap:.6rem;margin-top:.7rem;justify-content:flex-end;}
 .tkd-btn-refund{background:rgba(232,36,26,.15);border:1px solid rgba(232,36,26,.4);color:#f87171;height:38px;padding:0 1rem;border-radius:8px;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;}
 .tkd-btn-refund:hover{background:rgba(232,36,26,.25);}

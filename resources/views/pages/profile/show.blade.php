@@ -152,7 +152,7 @@
 
 <style>
     :root {
-        --prof-blue: #1a73e8;
+        --prof-blue: #c0283c;
         --prof-red: #e8241a;
         --prof-bg: #07101c;
         --prof-surface: #111d2e;
@@ -188,7 +188,7 @@
         height: 64px;
         border-radius: 50%;
         background: var(--prof-blue);
-        border: 2px solid rgba(26,115,232,0.4);
+        border: 2px solid rgba(192,40,60,0.4);
         display: grid;
         place-items: center;
         flex-shrink: 0;
@@ -263,7 +263,7 @@
     .prof-field input:focus {
         outline: none;
         border-color: var(--prof-blue);
-        box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+        box-shadow: 0 0 0 3px rgba(192,40,60,0.12);
     }
 
     .prof-err { color: var(--prof-red); font-size: 0.75rem; font-weight: 600; }
@@ -333,8 +333,8 @@
         width: 36px;
         height: 36px;
         border-radius: 10px;
-        background: rgba(26,115,232,0.15);
-        border: 1px solid rgba(26,115,232,0.2);
+        background: rgba(192,40,60,0.15);
+        border: 1px solid rgba(192,40,60,0.2);
         display: grid;
         place-items: center;
         flex-shrink: 0;

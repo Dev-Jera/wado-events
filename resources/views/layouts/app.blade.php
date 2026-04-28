@@ -80,9 +80,9 @@
         }
 
         .site-flash-info {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #93c5fd;
+            background: #fff1f3;
+            color: #8a1525;
+            border: 1px solid #f0a0a8;
         }
 
         .site-footer {
