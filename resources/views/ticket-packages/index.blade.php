@@ -212,8 +212,8 @@
         align-self: flex-start;
         padding: 0.6rem 1.4rem;
         border-radius: 999px;
-        background: #e8a06a;
-        color: #1a0a0e;
+        background: #1255c0;
+        color: #fff;
         font-size: 0.88rem;
         font-weight: 700;
         text-decoration: none;
@@ -222,7 +222,7 @@
     }
 
     .tp-card-cta:hover {
-        background: #f5b87a;
+        background: #0e3fa0;
         transform: translateY(-1px);
     }
 
@@ -263,17 +263,18 @@
         justify-self: center;
         padding: 0.75rem 2rem;
         border-radius: 999px;
-        background: #fff;
-        color: #1a0a0e;
+        background: #1255c0;
+        color: #fff;
         font-size: 0.95rem;
         font-weight: 700;
         text-decoration: none;
         margin-top: 0.5rem;
         transition: background .15s, transform .15s;
+        box-shadow: 0 4px 16px rgba(18,85,192,.35);
     }
 
     .tp-cta-btn:hover {
-        background: #f0f0f0;
+        background: #0e3fa0;
         transform: translateY(-1px);
     }
 
@@ -687,16 +688,16 @@
         padding: .8rem 1.5rem;
         border-radius: 999px;
         border: none;
-        background: #c0283c;
+        background: #1255c0;
         color: #fff;
         font-size: .95rem;
         font-weight: 700;
         font-family: inherit;
         cursor: pointer;
-        box-shadow: 0 4px 16px rgba(192,40,60,.35);
+        box-shadow: 0 4px 16px rgba(18,85,192,.35);
         transition: background .15s, transform .15s, box-shadow .15s;
     }
-    .enq-submit:hover:not(:disabled) { background: #a01e2e; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(192,40,60,.45); }
+    .enq-submit:hover:not(:disabled) { background: #0e3fa0; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(18,85,192,.45); }
     .enq-submit:disabled { opacity: .6; cursor: not-allowed; }
 
     /* ── Spinner ── */
