@@ -114,8 +114,8 @@
         .auth-eye-btn .eye-off { opacity: 1; }
         .auth-eye-btn.is-visible .eye-off { opacity: 0; }
 
-        .auth-btn { height: 44px; border: none; border-radius: 8px; background: var(--brand-red); color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; width: 100%; }
-        .auth-btn:hover { background: var(--brand-red-dark); }
+        .auth-btn { height: 44px; border: none; border-radius: 8px; background: #1255c0; color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; width: 100%; }
+        .auth-btn:hover { background: #0e3fa0; }
 
         .auth-switch { margin: 0.95rem 0 0; text-align: center; color: #8a9ab8; font-size: 0.92rem; }
         .auth-switch a { color: var(--brand-blue); font-weight: 700; text-decoration: none; }

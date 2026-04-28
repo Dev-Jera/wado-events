@@ -327,12 +327,12 @@
         .auth-eye-btn .eye-off { opacity: 1; }
         .auth-eye-btn.is-visible .eye-off { opacity: 0; }
 
-        /* ── Submit button — red CTA ── */
+        /* ── Submit button ── */
         .auth-btn {
             height: 44px;
             border: none;
             border-radius: 8px;
-            background: var(--brand-red);
+            background: #1255c0;
             color: #fff;
             font-size: 0.92rem;
             font-weight: 700;
@@ -341,7 +341,7 @@
         }
 
         .auth-btn:hover {
-            background: var(--brand-red-dark);
+            background: #0e3fa0;
         }
 
         /* ── Divider ── */

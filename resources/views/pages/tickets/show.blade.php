@@ -265,8 +265,8 @@
 .tkd-route-dot{width:7px;height:7px;border-radius:50%;background:#c0283c;flex-shrink:0;}
 .tkd-footer-actions{display:flex;gap:8px;}
 .tkd-btn{display:inline-block;text-decoration:none;border-radius:9px;padding:8px 16px;font-size:.72rem;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:all .15s;}
-.tkd-btn-primary{background:#c0283c;color:#fff;}
-.tkd-btn-primary:hover{background:#8a1525;color:#fff;}
+.tkd-btn-primary{background:#1255c0;color:#fff;}
+.tkd-btn-primary:hover{background:#0e3fa0;color:#fff;}
 .tkd-btn-ghost{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.12);}
 .tkd-btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
 .tkd-btn-danger{background:#DC2626;color:#fff;}

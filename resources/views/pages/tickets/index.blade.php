@@ -719,14 +719,14 @@
     font-family: inherit;
     transition: background .15s, color .15s;
 }
-.db-btn-solid { background: #c0283c; color: #ffffff; }
-.db-btn-solid:hover { background: #8a1525; }
+.db-btn-solid { background: #1255c0; color: #ffffff; }
+.db-btn-solid:hover { background: #0e3fa0; }
 .db-btn-outline {
-    background: rgba(192,40,60,.08);
-    border: 1px solid rgba(192,40,60,.35);
-    color: #f08090;
+    background: rgba(18,85,192,.08);
+    border: 1px solid rgba(18,85,192,.35);
+    color: #7ab3f5;
 }
-.db-btn-outline:hover { background: rgba(192,40,60,.15); }
+.db-btn-outline:hover { background: rgba(18,85,192,.15); }
 
 /* ═══════════════════════════════════════
    TWO-COL LAYOUT

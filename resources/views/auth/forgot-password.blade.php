@@ -80,8 +80,8 @@
         .auth-form input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(192,40,60,0.12); }
         .auth-form small { color: var(--brand-red); font-size: 0.75rem; font-weight: 600; }
 
-        .auth-btn { height: 44px; border: none; border-radius: 8px; background: var(--brand-red); color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; width: 100%; }
-        .auth-btn:hover { background: var(--brand-red-dark); }
+        .auth-btn { height: 44px; border: none; border-radius: 8px; background: #1255c0; color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; width: 100%; }
+        .auth-btn:hover { background: #0e3fa0; }
 
         .auth-switch { margin: 0.95rem 0 0; text-align: center; color: #8a9ab8; font-size: 0.92rem; }
         .auth-switch a { color: var(--brand-blue); font-weight: 700; text-decoration: none; }

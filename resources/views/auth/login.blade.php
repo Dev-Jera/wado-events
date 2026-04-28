@@ -153,8 +153,8 @@
         .auth-check-box { height: 42px; border-radius: 8px; border: 1px solid #3a1520; background: #150508; display: flex; align-items: center; justify-content: center; }
         .auth-check-box input { width: 18px; height: 18px; accent-color: var(--brand-blue); }
 
-        .auth-btn { height: 44px; border: none; border-radius: 8px; background: var(--brand-red); color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-        .auth-btn:hover { background: var(--brand-red-dark); }
+        .auth-btn { height: 44px; border: none; border-radius: 8px; background: #1255c0; color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+        .auth-btn:hover { background: #0e3fa0; }
 
         .auth-divider { display: flex; align-items: center; gap: 0.8rem; margin: 1rem 0; }
         .auth-divider hr { flex: 1; border: none; border-top: 1px solid #3a1520; }
