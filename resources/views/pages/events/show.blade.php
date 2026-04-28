@@ -153,7 +153,7 @@
             border: 0.5px solid rgba(255,255,255,0.2);
         }
         .btn-buy {
-            background: #e8241a;
+            background: #1255c0;
             color: #fff;
             font-size: 13px;
             font-weight: 700;
@@ -161,7 +161,7 @@
             border-radius: 999px;
             text-decoration: none;
         }
-        .btn-buy:hover { opacity: 0.9; }
+        .btn-buy:hover { background: #0e3fa0; }
 
         /* ── Detail cards ── */
         .details-row {
@@ -253,7 +253,7 @@
             color: #6b7ea0;
         }
         .ti-btn {
-            background: #e8241a;
+            background: #1255c0;
             color: #fff;
             font-size: 12px;
             font-weight: 700;
@@ -262,7 +262,7 @@
             text-decoration: none;
             white-space: nowrap;
         }
-        .ti-btn:hover { background: #c01e15; }
+        .ti-btn:hover { background: #0e3fa0; }
 
         /* ── Artists ── */
         .artists-wrap {

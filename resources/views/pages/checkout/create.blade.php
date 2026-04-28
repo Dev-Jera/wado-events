@@ -464,13 +464,13 @@
 
         .checkout-btn {
             height: 48px; border: none; border-radius: 12px;
-            background: var(--brand-red); color: #fff;
+            background: #1255c0; color: #fff;
             font-size: 14px; font-weight: 700; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: background 0.15s;
         }
 
-        .checkout-btn:hover { background: var(--brand-red-dark); }
+        .checkout-btn:hover { background: #0e3fa0; }
 
         .secure-note {
             text-align: center; font-size: 11px; color: #2a4060;
