@@ -5,6 +5,7 @@ namespace App\Services\Payment;
 use App\Models\EmailLog;
 use App\Models\PaymentTransaction;
 use App\Models\Ticket;
+use App\Services\Ticket\TicketQrService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Storage;
 
 class PaymentNotificationService
 {
+    public function __construct(protected TicketQrService $ticketQrService) {}
+
     public function sendTicketConfirmed(Ticket $ticket, PaymentTransaction $payment): void
     {
         $this->sendEmail($ticket, $payment);
@@ -47,11 +50,9 @@ class PaymentNotificationService
             // Generate PNG QR code for email (SVG data URIs are blocked by Gmail)
             $qrCodeDataUri = null;
             try {
-                $qrPayload = json_encode([
-                    'v'        => 2,
-                    'code'     => (string) $ticket->ticket_code,
-                    'event_id' => (int) $ticket->event_id,
-                ], JSON_UNESCAPED_SLASHES);
+                $qrPayload = $this->ticketQrService->encryptPayload(
+                    $this->ticketQrService->buildSignedPayload($ticket)
+                );
 
                 $qrResult = (new Builder(
                     writer: new PngWriter(),

@@ -31,7 +31,7 @@ class TicketQrService
         $result = (new Builder(
             writer: new SvgWriter(),
             writerOptions: [],
-            data: json_encode($payload, JSON_UNESCAPED_SLASHES),
+            data: $this->encryptPayload($payload),
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::Medium,
             size: 600,
@@ -68,9 +68,69 @@ class TicketQrService
         return $payload;
     }
 
+    public function encryptPayload(array $payload): string
+    {
+        $json  = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $key   = $this->deriveEncryptionKey();
+        $nonce = random_bytes(12);
+        $tag   = '';
+
+        $ciphertext = openssl_encrypt($json, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $nonce, $tag);
+
+        if ($ciphertext === false) {
+            throw new \RuntimeException('QR payload encryption failed.');
+        }
+
+        return 'WADOv3:' . base64_encode($nonce . $tag . $ciphertext);
+    }
+
+    protected function decryptPayload(string $raw): ?array
+    {
+        try {
+            $binary = base64_decode(substr($raw, 7), true); // strip 'WADOv3:'
+            if ($binary === false || strlen($binary) < 29) {
+                return null;
+            }
+
+            $nonce      = substr($binary, 0, 12);
+            $tag        = substr($binary, 12, 16);
+            $ciphertext = substr($binary, 28);
+            $key        = $this->deriveEncryptionKey();
+
+            $json = openssl_decrypt($ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $nonce, $tag);
+            if ($json === false) {
+                return null; // tampered or wrong key
+            }
+
+            $decoded = json_decode($json, true);
+            if (! is_array($decoded) || ! Arr::has($decoded, ['code', 'sig'])) {
+                return null;
+            }
+
+            return $decoded;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    protected function deriveEncryptionKey(): string
+    {
+        // Derive a 32-byte AES key from the signing secret using a different context
+        // so the encryption key is always distinct from the HMAC signing key
+        return hash_hmac('sha256', 'wado-qr-aes-v3', $this->resolveSigningSecret(), true);
+    }
+
     public function parsePayload(string $raw): ?array
     {
-        $decoded = json_decode(trim($raw), true);
+        $raw = trim($raw);
+
+        // Encrypted v3 format — new tickets
+        if (str_starts_with($raw, 'WADOv3:')) {
+            return $this->decryptPayload($raw);
+        }
+
+        // Legacy plain-JSON format — tickets issued before encryption was added
+        $decoded = json_decode($raw, true);
         if (! is_array($decoded)) {
             return null;
         }
