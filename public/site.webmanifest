@@ -1,25 +1,31 @@
 {
-  "name": "WADO Events",
-  "short_name": "WADO",
+  "name": "Wado Ticketing",
+  "short_name": "Wado",
   "description": "Discover and book tickets for events near you — concerts, sports, workshops & more.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#2a1015",
+  "background_color": "#ffffff",
   "theme_color": "#c0283c",
   "icons": [
     {
       "src": "/images/logos/logo-no-bg.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/images/logos/logo-no-bg.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logos/logo-no-bg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

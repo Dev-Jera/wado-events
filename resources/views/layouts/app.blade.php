@@ -9,10 +9,23 @@
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logos/logo-no-bg.png') }}">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Hide page until all styles are parsed — prevents flash of unstyled content --}}
+    <style>html{opacity:0;}</style>
+
+    {{-- Warm up font connections before anything else --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Reveal page with a fade once all render-blocking styles are applied --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.documentElement.style.transition = 'opacity 0.18s ease';
+            document.documentElement.style.opacity   = '1';
+        });
+    </script>
 
     <style>
         :root {
