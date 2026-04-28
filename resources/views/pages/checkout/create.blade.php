@@ -89,6 +89,18 @@
                     </div>
                 @endguest
 
+                @auth
+                    @if (!auth()->user()->hasVerifiedEmail())
+                        <div class="guest-warning" role="alert" style="border-left-color:#c0283c;">
+                            <p class="guest-warning-title" style="color:#c0283c;">Email not verified</p>
+                            <p class="guest-warning-text">
+                                Your ticket confirmation and QR code will be sent to <strong>{{ auth()->user()->email }}</strong>. Please verify your email so delivery doesn't fail.
+                                <a href="{{ route('verification.notice') }}" style="color:#c0283c;font-weight:600;white-space:nowrap;">Verify now →</a>
+                            </p>
+                        </div>
+                    @endif
+                @endauth
+
                 <label class="field">
                     <span>Ticket category</span>
                     <select name="ticket_category_id" id="ticket_category_id" required>

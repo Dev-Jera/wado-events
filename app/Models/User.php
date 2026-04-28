@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,8 +15,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -79,6 +80,49 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return $this->belongsToMany(Event::class, 'event_gate_agent', 'user_id', 'event_id')
             ->withTimestamps();
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $apiKey = (string) config('services.brevo.api_key', '');
+
+        if ($apiKey === '') {
+            Log::warning('Email verification: BREVO_API_KEY not set', ['user_id' => $this->id]);
+            return;
+        }
+
+        $verifyUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())]
+        );
+
+        try {
+            $html = view('emails.verify-email', [
+                'user'      => $this,
+                'verifyUrl' => $verifyUrl,
+            ])->render();
+
+            Http::timeout(15)
+                ->withHeaders([
+                    'api-key'      => $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept'       => 'application/json',
+                ])
+                ->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender'      => [
+                        'name'  => 'WADO Events',
+                        'email' => config('mail.from.address', 'wadoconcepts@gmail.com'),
+                    ],
+                    'to'          => [['email' => $this->email, 'name' => $this->name]],
+                    'subject'     => 'Verify your email — WADO Events',
+                    'htmlContent' => $html,
+                ]);
+
+            Log::info('Verification email sent via Brevo', ['user_id' => $this->id]);
+        } catch (\Throwable $e) {
+            Log::error('Verification email failed', ['user_id' => $this->id, 'error' => $e->getMessage()]);
+        }
     }
 
     public function isAdmin(): bool

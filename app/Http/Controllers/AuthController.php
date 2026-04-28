@@ -91,6 +91,8 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        $user->sendEmailVerificationNotification();
+
         return redirect()->to($this->resolvePostAuthRedirect($request));
     }
 
@@ -142,6 +144,41 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home');
+    }
+
+    public function verifyNotice(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('tickets.index');
+        }
+
+        return view('auth.verify-email');
+    }
+
+    public function verifyEmail(Request $request, string $id, string $hash)
+    {
+        $user = User::findOrFail($id);
+
+        abort_unless(hash_equals(sha1($user->getEmailForVerification()), $hash), 403);
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+
+        Auth::login($user);
+
+        return redirect()->route('tickets.index')->with('status', 'Email verified! You\'re all set.');
+    }
+
+    public function resendVerification(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return back()->with('status', 'Your email is already verified.');
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'Verification link sent — check your inbox.');
     }
 
     protected function resolvePostAuthRedirect(Request $request): string
