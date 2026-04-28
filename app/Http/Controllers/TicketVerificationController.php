@@ -120,6 +120,12 @@ class TicketVerificationController extends Controller
             return $this->scanGatePrintJson($request, $payload, $rawPayload, $selectedEventId);
         }
 
+        // Foreign / unrecognised QR — not our format at all
+        if ($rawPayload !== '' && $payload === null) {
+            $this->logScan($request, null, 'UNKNOWN', 'fake', 'Unrecognised QR — not a WADO ticket', $rawPayload, $selectedEventId);
+            return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
+        }
+
         // Signature check
         if ($payload && ! $this->ticketQrService->verifyPayloadSignature($payload)) {
             $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'fake', 'Invalid QR signature', $rawPayload, $selectedEventId);
@@ -135,7 +141,8 @@ class TicketVerificationController extends Controller
         $ticketCode = $this->normalizeTicketCode((string) ($payload['code'] ?? ($data['ticket_code'] ?? '')));
 
         if ($ticketCode === '') {
-            return response()->json(['ok' => false, 'message' => 'No ticket code found. Try scanning again.']);
+            $this->logScan($request, null, 'UNKNOWN', 'fake', 'QR yielded no ticket code', $rawPayload ?: null, $selectedEventId);
+            return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
         }
 
         // Find ticket
