@@ -23,7 +23,7 @@ echo "==> Creating storage symlink..."
 php artisan storage:link --force 2>/dev/null || true
 
 echo "==> Clearing stale caches from previous deploy..."
-php artisan cache:clear
+php artisan cache:clear || echo "Warning: cache:clear failed (Redis may not be ready yet), continuing..."
 
 echo "==> Rebuilding bootstrap caches..."
 php artisan config:cache
@@ -38,7 +38,7 @@ echo "==> Signalling any lingering queue workers to stop after their current job
 # This writes a restart token into Redis. Any worker from a prior container
 # that is somehow still alive will drain its current job and exit cleanly.
 # On fresh containers this is a safe no-op.
-php artisan queue:restart
+php artisan queue:restart || echo "Warning: queue:restart failed (Redis may not be ready yet), continuing..."
 
 echo "==> Starting queue worker (tickets → notifications → default)..."
 # Queue priority order matters — tickets first (ticket issuance after payment),
