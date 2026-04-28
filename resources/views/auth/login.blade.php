@@ -74,7 +74,7 @@
 
                     {{-- Facebook coming soon modal --}}
                     <div id="fb-coming-soon" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
-                        <div style="background:#111d2e;border:1px solid #1e3050;border-radius:20px;padding:2rem 1.75rem;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+                        <div style="background:#1e0b0e;border:1px solid #3a1520;border-radius:20px;padding:2rem 1.75rem;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
                             <div style="width:52px;height:52px;background:#1877f2;border-radius:14px;display:grid;place-items:center;margin:0 auto 1rem;"><img src="{{ asset('images/facebook-logo.png') }}" style="width:30px;height:30px;object-fit:contain;" alt=""></div>
                             <h3 style="color:#fff;margin:0 0 0.5rem;font-size:1.2rem;font-weight:800;">Facebook Login — Coming Soon</h3>
                             <p style="color:#8a9ab8;font-size:0.9rem;line-height:1.5;margin:0 0 1.5rem;">Facebook login is being set up and will be available shortly. In the meantime, use your email and password to log in.</p>
@@ -100,19 +100,19 @@
 
     <style>
         :root {
-            --brand-blue: #1a73e8;
-            --brand-blue-dark: #1558c0;
+            --brand-blue: #c0283c;
+            --brand-blue-dark: #8a1525;
             --brand-red: #e8241a;
             --brand-red-dark: #c01e15;
         }
 
-        .auth-page { min-height: 100vh; background: #07101c; }
+        .auth-page { min-height: 100vh; background: #150508; }
 
         .auth-shell { min-height: 100vh; width: min(1120px, 100%); margin: 0 auto; display: grid; grid-template-columns: 0.96fr 1.04fr; }
 
-        .auth-visual { background: #0a1525; padding: clamp(6rem, 15vh, 8.4rem) 0.9rem 2rem 1rem; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; text-align: left; }
+        .auth-visual { background: #1a0508; padding: clamp(6rem, 15vh, 8.4rem) 0.9rem 2rem 1rem; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; text-align: left; }
 
-        .auth-logo-mark { width: 58px; height: 58px; border-radius: 14px; background: var(--brand-blue); display: grid; place-items: center; overflow: hidden; box-shadow: 0 10px 24px rgba(26, 115, 232, 0.25); }
+        .auth-logo-mark { width: 58px; height: 58px; border-radius: 14px; background: var(--brand-blue); display: grid; place-items: center; overflow: hidden; box-shadow: 0 10px 24px rgba(192, 40, 60, 0.25); }
         .auth-logo-mark img { width: 38px; height: 38px; object-fit: contain; }
 
         .auth-logo-name { margin-top: 0.85rem; color: var(--brand-blue); font-size: 1.05rem; font-weight: 900; text-decoration: none; width: min(360px, 100%); }
@@ -122,9 +122,9 @@
 
         .auth-tagline { margin: 1rem 0 0; color: #8a9ab8; font-size: 1rem; width: min(360px, 100%); }
 
-        .auth-card { background: #0a1525; padding: 2rem 0.6rem 2rem 0; display: flex; align-items: flex-start; justify-content: flex-start; position: relative; }
+        .auth-card { background: #1a0508; padding: 2rem 0.6rem 2rem 0; display: flex; align-items: flex-start; justify-content: flex-start; position: relative; }
 
-        .auth-card-panel { width: min(405px, 100%); margin-left: -10px; background: #111d2e; border: 1px solid #1e3050; border-radius: 20px; padding: 1.5rem 1.35rem 1.2rem; box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+        .auth-card-panel { width: min(405px, 100%); margin-left: -10px; background: #1e0b0e; border: 1px solid #3a1520; border-radius: 20px; padding: 1.5rem 1.35rem 1.2rem; box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
 
         .auth-card h1 { margin: 0; color: #fff; font-size: clamp(1.55rem, 2.2vw, 1.85rem); line-height: 1.08; font-weight: 800; text-align: center; }
 
@@ -134,9 +134,9 @@
         .auth-form label { display: grid; gap: 0.4rem; color: #c0cfe8; font-size: 0.86rem; font-weight: 700; }
 
         .auth-form input[type="email"],
-        .auth-form input[type="password"] { width: 100%; height: 42px; border: 1px solid #1e3050; border-radius: 8px; background: #0d1929; color: #fff; padding: 0 0.8rem; font-size: 0.9rem; transition: border-color 0.15s, box-shadow 0.15s; }
+        .auth-form input[type="password"] { width: 100%; height: 42px; border: 1px solid #3a1520; border-radius: 8px; background: #150508; color: #fff; padding: 0 0.8rem; font-size: 0.9rem; transition: border-color 0.15s, box-shadow 0.15s; }
 
-        .auth-form input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12); }
+        .auth-form input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(192, 40, 60, 0.12); }
 
         .auth-form small { color: var(--brand-red); font-size: 0.75rem; font-weight: 600; }
 
@@ -150,20 +150,20 @@
         .auth-eye-btn .eye-off { opacity: 1; }
         .auth-eye-btn.is-visible .eye-off { opacity: 0; }
 
-        .auth-check-box { height: 42px; border-radius: 8px; border: 1px solid #1e3050; background: #0d1929; display: flex; align-items: center; justify-content: center; }
+        .auth-check-box { height: 42px; border-radius: 8px; border: 1px solid #3a1520; background: #150508; display: flex; align-items: center; justify-content: center; }
         .auth-check-box input { width: 18px; height: 18px; accent-color: var(--brand-blue); }
 
         .auth-btn { height: 44px; border: none; border-radius: 8px; background: var(--brand-red); color: #fff; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
         .auth-btn:hover { background: var(--brand-red-dark); }
 
         .auth-divider { display: flex; align-items: center; gap: 0.8rem; margin: 1rem 0; }
-        .auth-divider hr { flex: 1; border: none; border-top: 1px solid #1e3050; }
+        .auth-divider hr { flex: 1; border: none; border-top: 1px solid #3a1520; }
         .auth-divider span { color: #8a9ab8; font-size: 0.86rem; }
 
         .auth-social { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-        .auth-social-btn { height: 42px; border-radius: 8px; border: 1px solid #1e3050; background: #0d1929; color: #c0cfe8; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: border-color 0.15s; }
+        .auth-social-btn { height: 42px; border-radius: 8px; border: 1px solid #3a1520; background: #150508; color: #c0cfe8; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: border-color 0.15s; }
         .auth-social-btn:hover { border-color: var(--brand-blue); }
-        .auth-social-icon { width: 30px; height: 30px; border-radius: 999px; background: #1a2d45; border: 1px solid #2a4060; display: inline-flex; align-items: center; justify-content: center; }
+        .auth-social-icon { width: 30px; height: 30px; border-radius: 999px; background: #2a1015; border: 1px solid #3a1520; display: inline-flex; align-items: center; justify-content: center; }
         .auth-social-btn img { width: 20px; height: 20px; object-fit: contain; }
 
         .auth-switch { margin: 0.95rem 0 0; text-align: center; color: #8a9ab8; font-size: 0.92rem; }
@@ -179,9 +179,9 @@
         .auth-art-curve { position: absolute; right: 58px; top: -150px; width: 150px; height: 150px; border-right: 2px dashed var(--brand-red); border-bottom: 2px dashed var(--brand-red); border-radius: 0 0 150px 0; }
         .auth-art-curve::after { content: ''; position: absolute; right: -8px; bottom: -8px; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 12px solid var(--brand-red); transform: rotate(18deg); }
         .auth-art-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; }
-        .auth-art-dot-top { right: 190px; top: -158px; background: var(--brand-blue); box-shadow: 0 0 0 6px rgba(26, 115, 232, 0.18); }
+        .auth-art-dot-top { right: 190px; top: -158px; background: var(--brand-blue); box-shadow: 0 0 0 6px rgba(192, 40, 60, 0.18); }
         .auth-art-dot-bottom { right: 16px; top: -22px; background: var(--brand-red); box-shadow: 0 0 0 6px rgba(232, 36, 26, 0.18); }
-        .auth-art-alert { background: #111d2e; border: 1px solid #1e3050; border-radius: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.4); padding: 0.7rem 0.75rem 0.6rem; }
+        .auth-art-alert { background: #1e0b0e; border: 1px solid #3a1520; border-radius: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.4); padding: 0.7rem 0.75rem 0.6rem; }
         .auth-art-alert-input { border: 1px solid rgba(232,36,26,0.3); border-radius: 8px; min-height: 36px; display: flex; align-items: center; padding: 0 0.6rem; color: #8a9ab8; font-size: 0.85rem; letter-spacing: 0.04em; font-family: ui-monospace, monospace; }
         .auth-art-alert p { margin: 0.45rem 0 0; color: var(--brand-red); font-size: 0.72rem; line-height: 1.25; }
 

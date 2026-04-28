@@ -94,7 +94,7 @@
 
                     {{-- Facebook coming soon modal --}}
                     <div id="fb-coming-soon" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
-                        <div style="background:#111d2e;border:1px solid #1e3050;border-radius:20px;padding:2rem 1.75rem;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+                        <div style="background:#1e0b0e;border:1px solid #3a1520;border-radius:20px;padding:2rem 1.75rem;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
                             <div style="width:52px;height:52px;background:#1877f2;border-radius:14px;display:grid;place-items:center;margin:0 auto 1rem;"><img src="{{ asset('images/facebook-logo.png') }}" style="width:30px;height:30px;object-fit:contain;" alt=""></div>
                             <h3 style="color:#fff;margin:0 0 0.5rem;font-size:1.2rem;font-weight:800;">Facebook Login — Coming Soon</h3>
                             <p style="color:#8a9ab8;font-size:0.9rem;line-height:1.5;margin:0 0 1.5rem;">Facebook login is being set up and will be available shortly. In the meantime, create your account using your email below.</p>
@@ -130,9 +130,9 @@
     <style>
         /* ── Brand tokens ── */
         :root {
-            --brand-blue: #1a73e8;
-            --brand-blue-dark: #1558c0;
-            --brand-blue-light: #e8f0fe;
+            --brand-blue: #c0283c;
+            --brand-blue-dark: #8a1525;
+            --brand-blue-light: #fdf0f1;
             --brand-red: #e8241a;
             --brand-red-dark: #c01e15;
         }
@@ -140,7 +140,7 @@
         /* ── Page ── */
         .auth-page {
             min-height: 100vh;
-            background: #07101c;
+            background: #150508;
         }
 
         .auth-shell {
@@ -153,7 +153,7 @@
 
         /* ── Left panel ── */
         .auth-visual {
-            background: #0a1525;
+            background: #1a0508;
             padding: clamp(6rem, 15vh, 8.4rem) 0.9rem 2rem 1rem;
             display: flex;
             flex-direction: column;
@@ -170,7 +170,7 @@
             display: grid;
             place-items: center;
             overflow: hidden;
-            box-shadow: 0 10px 24px rgba(26, 115, 232, 0.25);
+            box-shadow: 0 10px 24px rgba(192, 40, 60, 0.25);
         }
 
         .auth-logo-mark img {
@@ -210,7 +210,7 @@
 
         /* ── Right panel ── */
         .auth-card {
-            background: #0a1525;
+            background: #1a0508;
             padding: 2rem 0.6rem 2rem 0;
             display: flex;
             align-items: flex-start;
@@ -221,8 +221,8 @@
         .auth-card-panel {
             width: min(405px, 100%);
             margin-left: -10px;
-            background: #111d2e;
-            border: 1px solid #1e3050;
+            background: #1e0b0e;
+            border: 1px solid #3a1520;
             border-radius: 20px;
             padding: 1.5rem 1.35rem 1.2rem;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
@@ -262,9 +262,9 @@
         .auth-form input {
             width: 100%;
             height: 42px;
-            border: 1px solid #1e3050;
+            border: 1px solid #3a1520;
             border-radius: 8px;
-            background: #0d1929;
+            background: #150508;
             color: #fff;
             padding: 0 0.8rem;
             font-size: 0.9rem;
@@ -274,7 +274,7 @@
         .auth-form input:focus {
             outline: none;
             border-color: var(--brand-blue);
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+            box-shadow: 0 0 0 3px rgba(192, 40, 60, 0.12);
         }
 
         .auth-form small {
@@ -355,7 +355,7 @@
         .auth-divider hr {
             flex: 1;
             border: none;
-            border-top: 1px solid #1e3050;
+            border-top: 1px solid #3a1520;
         }
 
         .auth-divider span {
@@ -373,8 +373,8 @@
         .auth-social-btn {
             height: 42px;
             border-radius: 8px;
-            border: 1px solid #1e3050;
-            background: #0d1929;
+            border: 1px solid #3a1520;
+            background: #150508;
             color: #c0cfe8;
             font-size: 0.88rem;
             font-weight: 700;
@@ -394,8 +394,8 @@
             width: 30px;
             height: 30px;
             border-radius: 999px;
-            background: #1a2d45;
-            border: 1px solid #2a4060;
+            background: #2a1015;
+            border: 1px solid #3a1520;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -461,7 +461,7 @@
             right: 190px;
             top: -158px;
             background: var(--brand-blue);
-            box-shadow: 0 0 0 6px rgba(26, 115, 232, 0.18);
+            box-shadow: 0 0 0 6px rgba(192, 40, 60, 0.18);
         }
 
         .auth-art-dot-bottom {
@@ -472,8 +472,8 @@
         }
 
         .auth-art-alert {
-            background: #111d2e;
-            border: 1px solid #1e3050;
+            background: #1e0b0e;
+            border: 1px solid #3a1520;
             border-radius: 14px;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
             padding: 0.7rem 0.75rem 0.6rem;
@@ -577,7 +577,7 @@
 
                     if (score <= 1) return { color: '#e8241a', detail: 'Password is too simple or there are not enough characters in it' };
                     if (score === 2) return { color: '#e39a35', detail: 'Password is fair. Add uppercase, lowercase and numbers.' };
-                    if (score === 3) return { color: '#1a73e8', detail: 'Password strength is good.' };
+                    if (score === 3) return { color: '#c0283c', detail: 'Password strength is good.' };
                     return { color: '#16a34a', detail: 'Password strength is strong.' };
                 };
 
