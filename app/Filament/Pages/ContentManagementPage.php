@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -27,6 +28,9 @@ class ContentManagementPage extends Page
     protected string $view = 'filament.pages.content-management-page';
 
     public array $data = [];
+
+    /** Holds the existing stored file paths so we can preserve them when no new upload is made. */
+    public array $currentPaths = [];
 
     protected function getSettingsPath(): string
     {
@@ -60,21 +64,33 @@ class ContentManagementPage extends Page
             ['image' => null, 'label' => 'Online Ticketing & Event Management','title' => 'Sell online and let us manage your event.',                 'copy' => 'Let customers buy tickets online while our team manages verification, attendance, and event flow.',                                                   'price' => ''],
         ];
 
-        $this->data = [
-            'hero_title'    => $s['hero_title']    ?? 'Discover Unforgettable Events Near You',
-            'hero_subtitle' => $s['hero_subtitle'] ?? 'Concerts, sports, workshops & more — book your spot in seconds.',
+        // Keep existing paths in a separate property so we can fall back to them on save.
+        // We must NOT put plain string paths into FileUpload state — Filament 5 tries to
+        // foreach() over the state and crashes when it finds a string instead of an array.
+        $this->currentPaths = [
             'hero_banner_1' => $this->resolveStoredPath($s['hero_banner_1'] ?? null),
             'hero_banner_2' => $this->resolveStoredPath($s['hero_banner_2'] ?? null),
             'hero_banner_3' => $this->resolveStoredPath($s['hero_banner_3'] ?? null),
+        ];
+
+        $packages = $s['packages'] ?? $defaultPackages;
+
+        $this->data = [
+            'hero_title'    => $s['hero_title']    ?? 'Discover Unforgettable Events Near You',
+            'hero_subtitle' => $s['hero_subtitle'] ?? 'Concerts, sports, workshops & more — book your spot in seconds.',
+            'hero_banner_1' => null,
+            'hero_banner_2' => null,
+            'hero_banner_3' => null,
             'packages'      => array_map(function ($package) {
                 return [
-                    'image' => $this->resolveStoredPath($package['image'] ?? null),
+                    'image' => null,   // same fix for package images
                     'label' => $package['label'] ?? '',
                     'title' => $package['title'] ?? '',
                     'copy'  => $package['copy'] ?? '',
                     'price' => $package['price'] ?? '',
+                    '_existing_image' => $this->resolveStoredPath($package['image'] ?? null),
                 ];
-            }, $s['packages'] ?? $defaultPackages),
+            }, $packages),
         ];
     }
 
@@ -115,7 +131,10 @@ class ContentManagementPage extends Page
                             ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                             ->maxSize(5120)
                             ->nullable()
-                            ->multiple(false),
+                            ->multiple(false)
+                            ->hint(fn () => $this->currentPaths['hero_banner_1']
+                                ? 'Current: ' . basename($this->currentPaths['hero_banner_1'])
+                                : 'No file set'),
 
                         FileUpload::make('hero_banner_2')
                             ->label('Banner 2')
@@ -125,7 +144,10 @@ class ContentManagementPage extends Page
                             ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                             ->maxSize(5120)
                             ->nullable()
-                            ->multiple(false),
+                            ->multiple(false)
+                            ->hint(fn () => $this->currentPaths['hero_banner_2']
+                                ? 'Current: ' . basename($this->currentPaths['hero_banner_2'])
+                                : 'No file set'),
 
                         FileUpload::make('hero_banner_3')
                             ->label('Banner 3')
@@ -135,7 +157,10 @@ class ContentManagementPage extends Page
                             ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'])
                             ->maxSize(5120)
                             ->nullable()
-                            ->multiple(false),
+                            ->multiple(false)
+                            ->hint(fn () => $this->currentPaths['hero_banner_3']
+                                ? 'Current: ' . basename($this->currentPaths['hero_banner_3'])
+                                : 'No file set'),
                     ])
                     ->columns(3),
 
@@ -145,6 +170,8 @@ class ContentManagementPage extends Page
                         Repeater::make('packages')
                             ->label('')
                             ->schema([
+                                Hidden::make('_existing_image'),
+
                                 FileUpload::make('image')
                                     ->label('Photo')
                                     ->image()
@@ -190,22 +217,28 @@ class ContentManagementPage extends Page
 
     public function save(): void
     {
-        // getState() validates the form AND moves uploaded files from temp to permanent storage,
-        // returning proper string paths instead of Livewire UUID references.
         $data = $this->form->getState();
 
         $settings = $this->loadSettings();
 
         $settings['hero_title']    = $data['hero_title']    ?? '';
         $settings['hero_subtitle'] = $data['hero_subtitle'] ?? '';
-        $settings['hero_banner_1'] = $this->resolveStoredPath($data['hero_banner_1'] ?? null);
-        $settings['hero_banner_2'] = $this->resolveStoredPath($data['hero_banner_2'] ?? null);
-        $settings['hero_banner_3'] = $this->resolveStoredPath($data['hero_banner_3'] ?? null);
+
+        // If no new file was uploaded keep the previously stored path.
+        $settings['hero_banner_1'] = $this->resolveStoredPath($data['hero_banner_1'] ?? null)
+            ?? $this->currentPaths['hero_banner_1'];
+        $settings['hero_banner_2'] = $this->resolveStoredPath($data['hero_banner_2'] ?? null)
+            ?? $this->currentPaths['hero_banner_2'];
+        $settings['hero_banner_3'] = $this->resolveStoredPath($data['hero_banner_3'] ?? null)
+            ?? $this->currentPaths['hero_banner_3'];
 
         $packages = [];
-        foreach ($data['packages'] ?? [] as $package) {
+        foreach ($data['packages'] ?? [] as $i => $package) {
+            $newImage      = $this->resolveStoredPath($package['image'] ?? null);
+            $existingImage = $package['_existing_image'] ?? null;
+
             $packages[] = [
-                'image' => $this->resolveStoredPath($package['image'] ?? null),
+                'image' => $newImage ?? $existingImage,
                 'label' => $package['label'] ?? '',
                 'title' => $package['title'] ?? '',
                 'copy'  => $package['copy'] ?? '',
