@@ -76,7 +76,7 @@
         /* ── Page shell ── */
         .events-page {
             padding: 9rem 1rem 5rem;
-            background: linear-gradient(180deg, #07101c 0%, #0b1627 100%);
+            background: linear-gradient(180deg, #150508 0%, #1e0b0e 100%);
             min-height: 100vh;
         }
         .events-shell {
@@ -129,7 +129,7 @@
             transition: border-color 0.15s, transform 0.15s;
         }
         .event-card:hover {
-            border-color: #f8b26a;
+            border-color: #c0283c;
             transform: translateY(-2px);
         }
         .event-card-img-link { display: block; }
@@ -141,7 +141,7 @@
             aspect-ratio: 16 / 9;
             background-size: cover;
             background-position: center;
-            background-color: #1f2d3d;
+            background-color: #2a1015;
         }
 
         /* ── Live badge ── */
@@ -181,9 +181,9 @@
             border: 0.5px solid rgba(110, 231, 183, 0.3);
         }
         .price-badge.paid {
-            background: rgba(248, 178, 106, 0.15);
-            color: #f8b26a;
-            border: 0.5px solid rgba(248, 178, 106, 0.3);
+            background: rgba(192, 40, 60, 0.15);
+            color: #c0283c;
+            border: 0.5px solid rgba(192, 40, 60, 0.3);
         }
 
         /* ── Card body ── */
@@ -212,7 +212,7 @@
             text-decoration: none;
             flex: 1;
         }
-        .event-title:hover { color: #f8b26a; }
+        .event-title:hover { color: #c0283c; }
 
         /* ── Bookmark button ── */
         .bookmark-btn {
@@ -225,9 +225,9 @@
             line-height: 1;
             transition: color 0.15s, transform 0.15s;
         }
-        .bookmark-btn:hover { color: #f8b26a; transform: scale(1.15); }
-        .bookmark-btn.is-bookmarked { color: #f8b26a; }
-        .bookmark-btn.is-bookmarked svg { fill: #f8b26a; }
+        .bookmark-btn:hover { color: #c0283c; transform: scale(1.15); }
+        .bookmark-btn.is-bookmarked { color: #c0283c; }
+        .bookmark-btn.is-bookmarked svg { fill: #c0283c; }
 
         /* ── Meta ── */
         .event-meta {

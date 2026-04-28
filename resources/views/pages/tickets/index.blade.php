@@ -492,7 +492,7 @@
 ═══════════════════════════════════════ */
 .db-page {
     min-height: 100vh;
-    background: #07101c;
+    background: #150508;
     padding-top: 0;
     font-family: var(--site-font, system-ui, sans-serif);
     color: #e2ecf8;
@@ -503,8 +503,8 @@
    HERO
 ═══════════════════════════════════════ */
 .db-hero {
-    background: linear-gradient(140deg, #08172e 0%, #0a1e3a 60%, #071629 100%);
-    border-bottom: 1px solid #1a2d45;
+    background: linear-gradient(140deg, #1a0508 0%, #220b0e 60%, #150407 100%);
+    border-bottom: 1px solid #3a1520;
     padding: 7rem 0 0;
     position: relative;
     overflow: hidden;

@@ -84,7 +84,7 @@
         /* ── Page ── */
         .event-show {
             padding: 9rem 1rem 4rem;
-            background: linear-gradient(180deg, #07101c 0%, #0b1627 100%);
+            background: linear-gradient(180deg, #150508 0%, #1e0b0e 100%);
             min-height: 100vh;
         }
         .event-show-shell {

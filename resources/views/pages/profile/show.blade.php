@@ -154,9 +154,9 @@
     :root {
         --prof-blue: #c0283c;
         --prof-red: #e8241a;
-        --prof-bg: #07101c;
-        --prof-surface: #111d2e;
-        --prof-border: #1e3050;
+        --prof-bg: #150508;
+        --prof-surface: #1e0b0e;
+        --prof-border: #3a1520;
         --prof-muted: #8a9ab8;
         --prof-label: #c0cfe8;
     }
@@ -170,7 +170,7 @@
 
     /* ── Header ── */
     .prof-header {
-        background: linear-gradient(135deg, #0a1525 0%, #0d1e38 100%);
+        background: linear-gradient(135deg, #1a0508 0%, #220b0e 100%);
         border-bottom: 1px solid var(--prof-border);
         padding: 2rem 1rem 1.75rem;
     }
