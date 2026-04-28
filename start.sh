@@ -1,6 +1,21 @@
 #!/bin/bash
 set -e
 
+echo "==> Ensuring required storage directories exist..."
+# When a Railway volume is mounted at /app/storage it starts empty.
+# Laravel cannot boot at all without these directories, so create them
+# with raw mkdir before any php artisan command is attempted.
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/logs
+mkdir -p storage/app/public
+mkdir -p bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+
+echo "==> Creating storage symlink..."
+php artisan storage:link --force 2>/dev/null || true
+
 echo "==> Running database migrations..."
 php artisan migrate --force
 
@@ -8,8 +23,6 @@ echo "==> Creating storage symlink..."
 php artisan storage:link --force 2>/dev/null || true
 
 echo "==> Clearing stale caches from previous deploy..."
-# Clear the Redis application cache so no old event listings, settings, or
-# gate portal data bleed across from the previous container.
 php artisan cache:clear
 
 echo "==> Rebuilding bootstrap caches..."
