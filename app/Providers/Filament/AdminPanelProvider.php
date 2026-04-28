@@ -292,6 +292,31 @@ textarea.fi-fo-textarea:focus { border-color: #0d1b3e !important; background: #f
 </style>
 ')
 
+            // ── Sidebar footer: user info + logout ────────
+            ->renderHook('panels::sidebar.footer', function () {
+                $user = auth()->user();
+                return '
+<div style="padding:.5rem .75rem .8rem">
+    <div class="wado-sidebar-foot">
+        <div class="wado-sidebar-user">
+            <strong>' . e($user?->name ?? '') . '</strong>
+            <span>' . e($user?->email ?? '') . '</span>
+        </div>
+        <form method="POST" action="' . route('filament.admin.auth.logout') . '">
+            <input type="hidden" name="_token" value="' . csrf_token() . '">
+            <button type="submit" class="wado-sidebar-logout">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sign out
+            </button>
+        </form>
+    </div>
+</div>';
+            })
+
             // ── Resources / Pages / Widgets ────────────────
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
