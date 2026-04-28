@@ -109,7 +109,7 @@
         }
         .eyebrow {
             font-size: 12px;
-            color: #c0283c;
+            color: #1a73e8;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             margin-bottom: 6px;
@@ -136,7 +136,7 @@
             align-items: center;
         }
         .pill-price {
-            background: #c0283c;
+            background: #1a73e8;
             color: #fff;
             font-size: 13px;
             font-weight: 700;
@@ -170,14 +170,14 @@
             gap: 10px;
         }
         .detail-card {
-            background: rgba(192,40,60,0.08);
-            border: 0.5px solid rgba(192,40,60,0.2);
+            background: rgba(26,115,232,0.08);
+            border: 0.5px solid rgba(26,115,232,0.2);
             border-radius: 14px;
             padding: 16px 18px;
         }
         .dc-label {
             font-size: 11px;
-            color: #c0283c;
+            color: #1a73e8;
             text-transform: uppercase;
             letter-spacing: 0.07em;
             margin-bottom: 6px;
@@ -196,14 +196,14 @@
 
         /* ── Section cards (tickets, artists) ── */
         .section-card {
-            background: rgba(192,40,60,0.06);
-            border: 0.5px solid rgba(192,40,60,0.15);
+            background: rgba(26,115,232,0.06);
+            border: 0.5px solid rgba(26,115,232,0.15);
             border-radius: 14px;
             padding: 18px 20px;
         }
         .section-title {
             font-size: 11px;
-            color: #c0283c;
+            color: #1a73e8;
             text-transform: uppercase;
             letter-spacing: 0.07em;
             margin-bottom: 14px;
@@ -218,7 +218,7 @@
         }
         .ticket-item {
             background: rgba(255,255,255,0.04);
-            border: 0.5px solid rgba(192,40,60,0.15);
+            border: 0.5px solid rgba(26,115,232,0.15);
             border-radius: 12px;
             padding: 14px 16px;
             display: flex;
@@ -246,7 +246,7 @@
         .ti-price {
             font-size: 14px;
             font-weight: 700;
-            color: #c0283c;
+            color: #1a73e8;
         }
         .ti-left {
             font-size: 12px;
@@ -271,13 +271,13 @@
             gap: 8px;
         }
         .artist-tag {
-            background: rgba(192,40,60,0.12);
-            color: #f08090;
+            background: rgba(26,115,232,0.12);
+            color: #7ab3f5;
             font-size: 12px;
             font-weight: 500;
             padding: 5px 12px;
             border-radius: 999px;
-            border: 0.5px solid rgba(192,40,60,0.3);
+            border: 0.5px solid rgba(26,115,232,0.3);
         }
 
         /* ── Responsive ── */

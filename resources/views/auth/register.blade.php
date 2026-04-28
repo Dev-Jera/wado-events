@@ -130,9 +130,9 @@
     <style>
         /* ── Brand tokens ── */
         :root {
-            --brand-blue: #c0283c;
-            --brand-blue-dark: #8a1525;
-            --brand-blue-light: #fdf0f1;
+            --brand-blue: #1a73e8;
+            --brand-blue-dark: #1558c0;
+            --brand-blue-light: #e8f0fe;
             --brand-red: #e8241a;
             --brand-red-dark: #c01e15;
         }
@@ -170,7 +170,7 @@
             display: grid;
             place-items: center;
             overflow: hidden;
-            box-shadow: 0 10px 24px rgba(192, 40, 60, 0.25);
+            box-shadow: 0 10px 24px rgba(26, 115, 232, 0.25);
         }
 
         .auth-logo-mark img {
@@ -274,7 +274,7 @@
         .auth-form input:focus {
             outline: none;
             border-color: var(--brand-blue);
-            box-shadow: 0 0 0 3px rgba(192, 40, 60, 0.12);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
         }
 
         .auth-form small {
@@ -461,7 +461,7 @@
             right: 190px;
             top: -158px;
             background: var(--brand-blue);
-            box-shadow: 0 0 0 6px rgba(192, 40, 60, 0.18);
+            box-shadow: 0 0 0 6px rgba(26, 115, 232, 0.18);
         }
 
         .auth-art-dot-bottom {

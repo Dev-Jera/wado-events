@@ -100,8 +100,8 @@
 
     <style>
         :root {
-            --brand-blue: #c0283c;
-            --brand-blue-dark: #8a1525;
+            --brand-blue: #1a73e8;
+            --brand-blue-dark: #1558c0;
             --brand-red: #e8241a;
             --brand-red-dark: #c01e15;
         }
@@ -112,7 +112,7 @@
 
         .auth-visual { background: #1a0508; padding: clamp(6rem, 15vh, 8.4rem) 0.9rem 2rem 1rem; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; text-align: left; }
 
-        .auth-logo-mark { width: 58px; height: 58px; border-radius: 14px; background: var(--brand-blue); display: grid; place-items: center; overflow: hidden; box-shadow: 0 10px 24px rgba(192, 40, 60, 0.25); }
+        .auth-logo-mark { width: 58px; height: 58px; border-radius: 14px; background: var(--brand-blue); display: grid; place-items: center; overflow: hidden; box-shadow: 0 10px 24px rgba(26, 115, 232, 0.25); }
         .auth-logo-mark img { width: 38px; height: 38px; object-fit: contain; }
 
         .auth-logo-name { margin-top: 0.85rem; color: var(--brand-blue); font-size: 1.05rem; font-weight: 900; text-decoration: none; width: min(360px, 100%); }
@@ -136,7 +136,7 @@
         .auth-form input[type="email"],
         .auth-form input[type="password"] { width: 100%; height: 42px; border: 1px solid #3a1520; border-radius: 8px; background: #150508; color: #fff; padding: 0 0.8rem; font-size: 0.9rem; transition: border-color 0.15s, box-shadow 0.15s; }
 
-        .auth-form input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(192, 40, 60, 0.12); }
+        .auth-form input:focus { outline: none; border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12); }
 
         .auth-form small { color: var(--brand-red); font-size: 0.75rem; font-weight: 600; }
 
@@ -179,7 +179,7 @@
         .auth-art-curve { position: absolute; right: 58px; top: -150px; width: 150px; height: 150px; border-right: 2px dashed var(--brand-red); border-bottom: 2px dashed var(--brand-red); border-radius: 0 0 150px 0; }
         .auth-art-curve::after { content: ''; position: absolute; right: -8px; bottom: -8px; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 12px solid var(--brand-red); transform: rotate(18deg); }
         .auth-art-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; }
-        .auth-art-dot-top { right: 190px; top: -158px; background: var(--brand-blue); box-shadow: 0 0 0 6px rgba(192, 40, 60, 0.18); }
+        .auth-art-dot-top { right: 190px; top: -158px; background: var(--brand-blue); box-shadow: 0 0 0 6px rgba(26, 115, 232, 0.18); }
         .auth-art-dot-bottom { right: 16px; top: -22px; background: var(--brand-red); box-shadow: 0 0 0 6px rgba(232, 36, 26, 0.18); }
         .auth-art-alert { background: #1e0b0e; border: 1px solid #3a1520; border-radius: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.4); padding: 0.7rem 0.75rem 0.6rem; }
         .auth-art-alert-input { border: 1px solid rgba(232,36,26,0.3); border-radius: 8px; min-height: 36px; display: flex; align-items: center; padding: 0 0.6rem; color: #8a9ab8; font-size: 0.85rem; letter-spacing: 0.04em; font-family: ui-monospace, monospace; }

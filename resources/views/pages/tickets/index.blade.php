@@ -513,7 +513,7 @@
     position: absolute;
     top: -80px; right: -80px;
     width: 480px; height: 360px;
-    background: radial-gradient(ellipse, rgba(192,40,60,.14) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(26,115,232,.14) 0%, transparent 70%);
     pointer-events: none;
 }
 .db-hero-inner {
@@ -530,7 +530,7 @@
     font-size: 0.68rem;
     letter-spacing: 0.12em;
     font-weight: 700;
-    color: #f08090;
+    color: #60a5fa;
 }
 .db-hero h1 {
     margin: 0;
@@ -556,7 +556,7 @@
 }
 .db-stat { padding: 0 1.4rem; }
 .db-stat:first-child { padding-left: 0; }
-.db-stat strong { display: block; font-size: 1.6rem; font-weight: 800; color: #f08090; line-height: 1; }
+.db-stat strong { display: block; font-size: 1.6rem; font-weight: 800; color: #60a5fa; line-height: 1; }
 .db-stat span { font-size: 0.68rem; color: #4a6480; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
 .db-stat-green strong { color: #34d399; }
 .db-stat-red strong   { color: #f87171; }
@@ -589,7 +589,7 @@
     font-family: inherit;
 }
 .db-tab:hover { color: #c0d0e8; }
-.db-tab.active { color: #f08090; border-bottom-color: #f08090; }
+.db-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
 .db-tab em {
     display: inline-flex;
     align-items: center;
@@ -597,8 +597,8 @@
     min-width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: rgba(192,40,60,.18);
-    color: #f08090;
+    background: rgba(26,115,232,.18);
+    color: #60a5fa;
     font-style: normal;
     font-size: 0.65rem;
     font-weight: 800;
@@ -650,7 +650,7 @@
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.12em;
-    color: #f08090;
+    color: #60a5fa;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -677,14 +677,14 @@
 .db-next-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.7rem; flex-shrink: 0; }
 .db-days {
     text-align: center;
-    background: rgba(192,40,60,.12);
-    border: 1px solid rgba(192,40,60,.3);
+    background: rgba(26,115,232,.12);
+    border: 1px solid rgba(26,115,232,.3);
     border-radius: 14px;
     padding: 0.7rem 1.2rem;
     min-width: 80px;
 }
-.db-days strong { display: block; font-size: 2rem; line-height: 1; font-weight: 800; color: #f08090; }
-.db-days span { font-size: 0.6rem; letter-spacing: 0.1em; color: #f08090; font-weight: 700; text-transform: uppercase; }
+.db-days strong { display: block; font-size: 2rem; line-height: 1; font-weight: 800; color: #60a5fa; }
+.db-days span { font-size: 0.6rem; letter-spacing: 0.1em; color: #60a5fa; font-weight: 700; text-transform: uppercase; }
 .db-days-live strong { font-size: 1rem; letter-spacing: 0.06em; }
 
 .db-next-empty {
@@ -700,7 +700,7 @@
     gap: 0.6rem;
 }
 .db-next-empty p { margin: 0; font-size: 0.88rem; }
-.db-next-empty a { color: #f08090; text-decoration: none; }
+.db-next-empty a { color: #60a5fa; text-decoration: none; }
 
 /* ═══════════════════════════════════════
    BUTTONS
@@ -766,7 +766,7 @@
 }
 .db-link {
     background: none; border: none; cursor: pointer;
-    color: #f08090; font-size: 0.74rem; font-weight: 700;
+    color: #60a5fa; font-size: 0.74rem; font-weight: 700;
     font-family: inherit; padding: 0;
 }
 .db-link:hover { text-decoration: underline; }
@@ -812,7 +812,7 @@
 .db-metric { padding: 0.8rem 1.1rem; border-right: 1px solid #1a2d45; border-bottom: 1px solid #1a2d45; }
 .db-metric:nth-child(2n) { border-right: none; }
 .db-metric-wide { grid-column: span 2; border-right: none; }
-.db-metric strong { display: block; font-size: 1.1rem; font-weight: 800; color: #f08090; }
+.db-metric strong { display: block; font-size: 1.1rem; font-weight: 800; color: #60a5fa; }
 .db-metric span   { font-size: 0.7rem; color: #3d5574; }
 .db-prog-label {
     display: flex; justify-content: space-between;
@@ -947,7 +947,7 @@
 }
 .db-saved-info strong { display: block; font-size: 0.88rem; color: #fff; font-weight: 700; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
 .db-saved-info small  { display: flex; align-items: center; gap: 3px; font-size: 0.68rem; color: rgba(200,220,255,.8); margin-top: 3px; }
-.db-saved-price { display: block; margin-top: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: #f08090; }
+.db-saved-price { display: block; margin-top: 5px; font-style: normal; font-size: 0.72rem; font-weight: 700; color: #60a5fa; }
 .db-unbookmark-form { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 3; }
 .db-unbookmark-btn {
     width: 26px; height: 26px; border-radius: 50%;
@@ -967,7 +967,7 @@
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.db-activity-booked   { background: rgba(192,40,60,.12); color: #f08090; border: 1px solid rgba(192,40,60,.25); }
+.db-activity-booked   { background: rgba(26,115,232,.12); color: #60a5fa; border: 1px solid rgba(26,115,232,.25); }
 
 .db-refund-card { margin-bottom: 0.9rem; }
 .db-refund-form {

@@ -43,8 +43,8 @@
 
     <style>
         :root {
-            --brand-blue: #c0283c;
-            --brand-blue-dark: #8a1525;
+            --brand-blue: #1a73e8;
+            --brand-blue-dark: #1558c0;
             --brand-red: #e8241a;
             --brand-red-dark: #c01e15;
         }
