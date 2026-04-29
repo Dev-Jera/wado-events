@@ -37,6 +37,8 @@ class SuperAdminOverviewWidget extends Widget
         // ── Needs Attention ──────────────────────────────────────────────────
         $pendingPayments    = (clone $paymentsBase)->where('status', PaymentTransaction::STATUS_PENDING)->count();
         $failedPayments     = (clone $paymentsBase)->where('status', PaymentTransaction::STATUS_FAILED)->count();
+        $confirmedNoTicket  = (clone $paymentsBase)->where('status', PaymentTransaction::STATUS_CONFIRMED)->whereNull('ticket_id')->count();
+        $confirmedToday     = (clone $paymentsBase)->where('status', PaymentTransaction::STATUS_CONFIRMED)->whereDate('created_at', today())->count();
         $qrNotIssued        = (int) (clone $ticketsBase)->whereNull('qr_code_path')->sum('quantity');
 
         $issuedQr           = (int) (clone $ticketsBase)->whereNotNull('qr_code_path')->sum('quantity');
@@ -151,7 +153,8 @@ class SuperAdminOverviewWidget extends Widget
             });
 
         return compact(
-            'pendingPayments', 'failedPayments', 'qrNotIssued', 'atGateUnscanned', 'inventoryRemaining',
+            'pendingPayments', 'failedPayments', 'confirmedNoTicket', 'confirmedToday',
+            'qrNotIssued', 'atGateUnscanned', 'inventoryRemaining',
             'totalEvents', 'newEventsThisMonth',
             'ticketsSoldThisMonth', 'ticketsSoldLastMonth', 'ticketsSoldTotal', 'ticketsPctChange',
             'revenueThisMonth', 'revenueLastMonth', 'revenueTotal', 'revenuePctChange',

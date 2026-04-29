@@ -7,13 +7,19 @@
                 <p class="pc-sub">{{ $dashboardSubtitle }}</p>
             </div>
             <div class="pc-hero-side">
-                <div class="pc-hero-chip">
-                    <span>Revenue this month</span>
-                    <strong>UGX {{ number_format($revenueThisMonth, 0) }}</strong>
-                </div>
-                <div class="pc-hero-chip">
-                    <span>Tickets sold this month</span>
-                    <strong>{{ number_format($ticketsSoldThisMonth) }}</strong>
+                <div class="pc-hero-chip-row">
+                    <div class="pc-hero-chip pc-hero-chip-sm {{ $failedPayments > 0 ? 'pc-hero-chip-warn' : '' }}">
+                        <span>Failed payments</span>
+                        <strong>{{ number_format($failedPayments) }}</strong>
+                    </div>
+                    <div class="pc-hero-chip pc-hero-chip-sm {{ $confirmedNoTicket > 0 ? 'pc-hero-chip-warn' : '' }}">
+                        <span>Confirmed, no ticket</span>
+                        <strong>{{ number_format($confirmedNoTicket) }}</strong>
+                    </div>
+                    <div class="pc-hero-chip pc-hero-chip-sm">
+                        <span>Confirmed today</span>
+                        <strong>{{ number_format($confirmedToday) }}</strong>
+                    </div>
                 </div>
                 <div class="pc-hero-chip-row">
                     <div class="pc-hero-chip pc-hero-chip-sm">
@@ -201,6 +207,15 @@
 
         .pc-hero-chip-sm strong {
             font-size: 0.82rem !important;
+        }
+
+        .pc-hero-chip-warn {
+            background: rgba(239, 68, 68, 0.18) !important;
+            border-color: rgba(239, 68, 68, 0.45) !important;
+        }
+
+        .pc-hero-chip-warn strong {
+            color: #fca5a5 !important;
         }
 
         .pc-main-grid {

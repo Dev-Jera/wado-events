@@ -27,31 +27,6 @@
             </form>
         </section>
 
-        <section class="pay-stats-row">
-            <article class="pay-stat-card pay-stat-card-primary">
-                <h4>Pending payments</h4>
-                <strong>{{ number_format($pendingPayments) }}</strong>
-                <p>Awaiting provider confirmation callbacks.</p>
-            </article>
-
-            <article class="pay-stat-card">
-                <h4>Failed payments</h4>
-                <strong>{{ number_format($failedPayments) }}</strong>
-                <p>Needs customer retry or support follow-up.</p>
-            </article>
-
-            <article class="pay-stat-card">
-                <h4>Confirmed, no ticket</h4>
-                <strong>{{ number_format($confirmedNoTicket) }}</strong>
-                <p>{{ number_format($ticketsPendingIssue) }} tickets still pending issuance.</p>
-            </article>
-
-            <article class="pay-stat-card">
-                <h4>Confirmed today</h4>
-                <strong>{{ number_format($confirmedToday) }}</strong>
-                <p>{{ number_format($eventsWithOpenPayments) }} {{ \Illuminate\Support\Str::plural('event', $eventsWithOpenPayments) }} with open payment issues.</p>
-            </article>
-        </section>
     </div>
 
     <style>
