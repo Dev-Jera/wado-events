@@ -93,7 +93,7 @@ class CheckoutFlowTest extends TestCase
             'idempotency_key' => strtoupper((string) Str::uuid()),
         ]);
 
-        $response->assertRedirect(route('events.show', $event));
+        $response->assertRedirect(route('checkout.confirmed'));
         $this->assertDatabaseHas('users', [
             'email' => 'guest@example.com',
             'role' => 'customer',
