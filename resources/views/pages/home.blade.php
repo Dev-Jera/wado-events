@@ -370,12 +370,86 @@
         </div>
 
         <div class="hp-empty" id="hp-grid-empty" hidden>
-            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                <circle cx="22" cy="22" r="14"/>
-                <path d="M33 33l9 9M16 22h12M22 16v12" stroke-linecap="round"/>
-            </svg>
-            <p>No events found.</p>
-            <span>Try a different search or category.</span>
+            {{-- radial glow behind illustration --}}
+            <div class="hp-empty-glow" aria-hidden="true"></div>
+
+            <div class="hp-empty-art" aria-hidden="true">
+                <svg viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- dashed orbit rings --}}
+                    <circle cx="140" cy="90" r="82" stroke="rgba(192,40,60,.13)" stroke-width="1" stroke-dasharray="3 6"/>
+                    <circle cx="140" cy="90" r="60" stroke="rgba(192,40,60,.09)" stroke-width="1" stroke-dasharray="2 7"/>
+
+                    {{-- ticket body --}}
+                    <rect x="30" y="52" width="220" height="76" rx="13"
+                          fill="rgba(192,40,60,.13)" stroke="rgba(192,40,60,.45)" stroke-width="1.6"/>
+
+                    {{-- left notch cutout --}}
+                    <circle cx="30" cy="90" r="11" fill="#2a1015"/>
+                    {{-- right notch cutout --}}
+                    <circle cx="250" cy="90" r="11" fill="#2a1015"/>
+
+                    {{-- perforated tear line --}}
+                    <line x1="68" y1="54" x2="68" y2="126"
+                          stroke="rgba(192,40,60,.35)" stroke-width="1.3" stroke-dasharray="4 5"/>
+
+                    {{-- stub area: small star --}}
+                    <path d="M49 90 L50.4 86 L54.5 86 L51.3 88.5 L52.7 92.5 L49 90.3 L45.3 92.5 L46.7 88.5 L43.5 86 L47.6 86 Z"
+                          fill="rgba(255,180,185,.55)"/>
+
+                    {{-- main body: faint calendar card --}}
+                    <rect x="98" y="63" width="82" height="54" rx="9"
+                          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.11)" stroke-width="1.2"/>
+                    {{-- calendar top bar --}}
+                    <rect x="98" y="63" width="82" height="16" rx="9"
+                          fill="rgba(192,40,60,.22)"/>
+                    <rect x="98" y="70" width="82" height="9" fill="rgba(192,40,60,.22)"/>
+                    {{-- calendar pin lines --}}
+                    <line x1="119" y1="60" x2="119" y2="68" stroke="rgba(255,180,185,.75)" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="161" y1="60" x2="161" y2="68" stroke="rgba(255,180,185,.75)" stroke-width="2" stroke-linecap="round"/>
+                    {{-- large "?" --}}
+                    <text x="139" y="108" text-anchor="middle" fill="rgba(255,180,185,.4)"
+                          font-size="22" font-weight="900" font-family="system-ui,sans-serif">?</text>
+
+                    {{-- sparkle top-left --}}
+                    <path d="M18 28 L19.5 23 L24 23 L20.5 26 L22 31 L18 28.5 L14 31 L15.5 26 L12 23 L16.5 23 Z"
+                          fill="rgba(192,40,60,.5)"/>
+                    {{-- sparkle top-right (smaller) --}}
+                    <path d="M232 20 L233.2 16.5 L237 16.5 L234.2 18.7 L235.4 22.2 L232 20.2 L228.6 22.2 L229.8 18.7 L227 16.5 L230.8 16.5 Z"
+                          fill="rgba(255,180,185,.55)"/>
+                    {{-- cross sparkle right --}}
+                    <path d="M262 68 L264 68 M263 66 L263 70 M261.5 66.5 L264.5 69.5 M264.5 66.5 L261.5 69.5"
+                          stroke="rgba(255,180,185,.5)" stroke-width="1.6" stroke-linecap="round"/>
+                    {{-- cross sparkle left --}}
+                    <path d="M14 65 L16 65 M15 63 L15 67 M13.5 63.5 L16.5 66.5 M16.5 63.5 L13.5 66.5"
+                          stroke="rgba(192,40,60,.45)" stroke-width="1.6" stroke-linecap="round"/>
+                    {{-- floating dots --}}
+                    <circle cx="256" cy="130" r="4"   fill="rgba(192,40,60,.32)"/>
+                    <circle cx="268" cy="118" r="2.2" fill="rgba(192,40,60,.22)"/>
+                    <circle cx="18"  cy="132" r="3"   fill="rgba(192,40,60,.28)"/>
+                    <circle cx="9"   cy="118" r="1.8" fill="rgba(255,180,185,.28)"/>
+                    <circle cx="140" cy="14"  r="2.5" fill="rgba(255,180,185,.35)"/>
+                    <circle cx="72"  cy="148" r="2"   fill="rgba(192,40,60,.22)"/>
+                    <circle cx="208" cy="148" r="2"   fill="rgba(192,40,60,.22)"/>
+                </svg>
+            </div>
+
+            <div class="hp-empty-body">
+                <h3 class="hp-empty-heading" id="hp-empty-heading">No events in this category</h3>
+                <p class="hp-empty-sub" id="hp-empty-sub">
+                    We're working on bringing more events to you.<br>
+                    Try another category or come back soon.
+                </p>
+                <div class="hp-empty-actions">
+                    <button type="button" class="hp-empty-clear" id="hp-empty-clear">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                        All categories
+                    </button>
+                    <a href="{{ route('events.index') }}" class="hp-empty-browse">
+                        Browse all events
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="hp-grid-footer">
@@ -1081,14 +1155,93 @@ body {
 }
 .hp-ecard-btn:hover { background: var(--blue-hover); }
 
-/* empty state */
+/* ── Empty state ─────────────────────────────────────────────────────── */
 .hp-empty {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: .75rem; padding: 4rem 1rem; text-align: center; color: var(--muted);
+    grid-column: 1 / -1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 3rem 1.5rem 3.5rem;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid rgba(192,40,60,.2);
+    background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(192,40,60,.09) 0%, transparent 70%),
+                rgba(255,255,255,.03);
+    backdrop-filter: blur(8px);
 }
-.hp-empty svg { width: 3rem; height: 3rem; opacity: .35; }
-.hp-empty p { margin: 0; font-size: .98rem; font-weight: 600; color: rgba(220,232,255,.7); }
-.hp-empty span { font-size: .84rem; opacity: .7; }
+.hp-empty-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 55% 45% at 50% 35%, rgba(192,40,60,.13) 0%, transparent 65%);
+    pointer-events: none;
+}
+.hp-empty-art {
+    position: relative;
+    z-index: 1;
+    animation: hp-empty-float 3.8s ease-in-out infinite;
+    margin-bottom: .4rem;
+}
+@keyframes hp-empty-float {
+    0%,100% { transform: translateY(0px); }
+    50%      { transform: translateY(-10px); }
+}
+.hp-empty-art svg { width: 220px; height: auto; display: block; }
+.hp-empty-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .6rem;
+}
+.hp-empty-heading {
+    margin: 0;
+    font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.02em;
+}
+.hp-empty-sub {
+    margin: 0;
+    font-size: .86rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 340px;
+}
+.hp-empty-actions {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: .5rem;
+}
+.hp-empty-clear {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .52rem 1.15rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.16);
+    color: rgba(220,232,255,.85);
+    font-size: .8rem; font-weight: 700;
+    font-family: var(--site-font); cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.hp-empty-clear:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.28); }
+.hp-empty-browse {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .52rem 1.2rem;
+    border-radius: 999px;
+    background: var(--maroon);
+    color: #fff;
+    font-size: .8rem; font-weight: 700; text-decoration: none;
+    box-shadow: 0 4px 16px var(--maroon-glow);
+    transition: background .15s, box-shadow .15s;
+}
+.hp-empty-browse:hover { background: var(--maroon-hover); box-shadow: 0 6px 22px var(--maroon-glow); }
 
 /* browse button */
 .hp-grid-footer { text-align: center; margin-top: 2.4rem; }
@@ -1453,6 +1606,22 @@ body.modal-open { overflow:hidden; }
     let activeCategory = 'all';
     let searchQuery    = '';
 
+    const catLabels = {
+        'all':        'events',
+        'music':      'music events',
+        'sports':     'sports events',
+        'theater':    'theater shows',
+        'conference': 'conferences',
+        'workshop':   'workshops',
+        'community':  'community events',
+        'comedy':     'comedy shows',
+        'film':       'film screenings',
+        'cinema':     'cinema screenings',
+        'social':     'social events',
+        'free event': 'free events',
+        'free':       'free events',
+    };
+
     const applyFilters = () => {
         let visible = 0;
         gridCards.forEach(card => {
@@ -1462,28 +1631,43 @@ body.modal-open { overflow:hidden; }
             card.classList.toggle('is-hidden', !show);
             if (show) visible++;
         });
-        if (gridEmpty) gridEmpty.hidden = visible > 0;
+
+        if (gridEmpty) {
+            gridEmpty.hidden = visible > 0;
+            if (visible === 0) {
+                const label = catLabels[activeCategory] || (activeCategory + ' events');
+                const heading = document.getElementById('hp-empty-heading');
+                const sub     = document.getElementById('hp-empty-sub');
+                if (heading) heading.textContent = `No ${label} right now`;
+                if (sub) sub.innerHTML = searchQuery
+                    ? `No events match <strong style="color:#fff">"${searchQuery}"</strong>.<br>Try a different search or clear the filter.`
+                    : `We're working on bringing more events to you.<br>Try another category or come back soon.`;
+            }
+        }
+
         featCards.forEach(card => {
             card.style.display = (activeCategory === 'all' || card.dataset.category === activeCategory) ? '' : 'none';
         });
     };
 
-    catBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const cat = btn.dataset.category || 'all';
-            // Sync active state across hero chips AND sticky bar chips
-            catBtns.forEach(b => {
-                const active = (b.dataset.category || 'all') === cat;
-                b.classList.toggle('is-active', active);
-                b.setAttribute('aria-pressed', active ? 'true' : 'false');
-            });
-            activeCategory = cat;
-            applyFilters();
-            // Scroll to featured section so filtered results are visible
-            const target = document.querySelector('.hp-featured');
-            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const setCategory = (cat) => {
+        activeCategory = cat;
+        catBtns.forEach(b => {
+            const active = (b.dataset.category || 'all') === cat;
+            b.classList.toggle('is-active', active);
+            b.setAttribute('aria-pressed', active ? 'true' : 'false');
         });
+        applyFilters();
+        const target = document.querySelector('.hp-featured');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    catBtns.forEach(btn => {
+        btn.addEventListener('click', () => setCategory(btn.dataset.category || 'all'));
     });
+
+    const clearBtn = document.getElementById('hp-empty-clear');
+    if (clearBtn) clearBtn.addEventListener('click', () => setCategory('all'));
 
     if (searchInput) {
         searchInput.addEventListener('input', () => {
