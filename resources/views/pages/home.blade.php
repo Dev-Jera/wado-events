@@ -1,58 +1,3 @@
-<style>
-.hp-cats {
-    display: flex; flex-wrap: wrap;
-    justify-content: center;
-    gap: .45rem;
-    margin-top: 1.6rem;
-}
-.hp-cat {
-    display: inline-flex; align-items: center; gap: .38rem;
-    padding: .42rem .95rem;
-    border-radius: 999px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur-sm);
-    -webkit-backdrop-filter: var(--glass-blur-sm);
-    color: rgba(220,232,255,.82);
-    font-size: .8rem; font-weight: 600;
-    font-family: var(--site-font); cursor: pointer;
-    transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
-}
-.hp-cat:hover {
-    background: var(--maroon-glass);
-    border-color: rgba(160,32,46,.5);
-    color: #fff;
-}
-.hp-cat.is-active {
-    background: var(--maroon);
-    border-color: var(--maroon);
-    color: #fff;
-    box-shadow: 0 4px 16px var(--maroon-glow);
-}
-.hp-cat-icon {
-    width: .88rem; height: .88rem;
-    stroke: currentColor; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    flex-shrink: 0;
-}
-.hp-cat-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 1.3rem; height: 1.3rem;
-    border-radius: 999px;
-    background: rgba(255,255,255,.14);
-    font-size: .63rem; font-weight: 700;
-    padding: 0 .3rem;
-}
-.hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
-</style>
-    <style>
-    /* hero chips hidden on mobile — sticky bar takes over */
-    .hp-cats { display: none; }
-    /* show the sticky scrollable bar on mobile */
-    .hp-cat-bar { display: block; }
-    .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
-    .hp-cat-count { display: none; }
-    </style>
 @extends('layouts.app')
 
 @php
@@ -693,6 +638,45 @@ body {
 .hp-search-btn:hover { background: var(--blue-hover); box-shadow: 0 6px 20px var(--blue-glow); }
 
 /* ── category chips ── */
+.hp-cat {
+    display: inline-flex; align-items: center; gap: .38rem;
+    padding: .42rem .95rem;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    color: rgba(220,232,255,.82);
+    font-size: .8rem; font-weight: 600;
+    font-family: var(--site-font); cursor: pointer;
+    transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+}
+.hp-cat:hover {
+    background: var(--maroon-glass);
+    border-color: rgba(160,32,46,.5);
+    color: #fff;
+}
+.hp-cat.is-active {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--maroon-glow);
+}
+.hp-cat-icon {
+    width: .88rem; height: .88rem;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
+.hp-cat-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.3rem; height: 1.3rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    font-size: .63rem; font-weight: 700;
+    padding: 0 .3rem;
+}
+.hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
 
 /* ── Category bar (mobile only — replaces hero chips on small screens) ── */
 .hp-cat-bar {
@@ -1437,8 +1421,8 @@ body.modal-open { overflow:hidden; }
 
 /* mobile */
 @media (max-width: 640px) {
-    .hp-hero { min-height: 580px; }
-    .hp-hero-body { padding: 5.8rem 1rem 1.5rem; text-align: center; }
+    .hp-hero { min-height: 440px; }
+    .hp-hero-body { padding: 5.8rem 1rem 2rem; text-align: center; }
     .hp-hero-panel-packages { padding: 5.5rem 1rem 1rem; }
     .hp-packages-heading { max-height: 14rem; }
     .hp-hero-heading { font-size: 1.75rem; letter-spacing: -.02em; }
@@ -1461,9 +1445,13 @@ body.modal-open { overflow:hidden; }
     .hp-search-btn   { order: 3; width: 100%; border-radius: 10px; padding: .6rem 1rem; }
 
 
-    /* category bar */
-    .hp-cat-bar { top: 3.5rem; }
+    /* hero chips hidden on mobile — sticky bar takes over */
+    .hp-cats { display: none; }
+    .hp-cat-count { display: none; }
+    /* category bar — shown on mobile only */
+    .hp-cat-bar { display: block; top: 3.5rem; }
     .hp-cat-bar-inner { padding: .5rem .75rem; gap: .35rem; }
+    .hp-cat-bar .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
 
     /* sections */
     .hp-featured, .hp-all { padding: 2rem .75rem 2.5rem; }
@@ -1491,7 +1479,7 @@ body.modal-open { overflow:hidden; }
 
 /* small phones */
 @media (max-width: 420px) {
-    .hp-hero { min-height: 560px; }
+    .hp-hero { min-height: 420px; }
     .hp-hero-panel-packages { padding: 5rem .75rem .75rem; }
     .hp-packages-heading { max-height: 16rem; }
     .hp-package-track { min-height: 280px; }
