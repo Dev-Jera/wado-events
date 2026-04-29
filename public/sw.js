@@ -64,13 +64,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Fonts & icons from Google Fonts CDN
-  if (url.hostname.includes('fonts.g')) {
-    event.respondWith(cacheFirst(request, SHELL_CACHE));
-    return;
-  }
-
   // HTML pages — network-first, fall back to cache, then offline page
+  // Note: Google Fonts are cross-origin and exit above; the browser caches
+  // them natively via their long-lived Cache-Control headers — no SW needed.
   if (request.headers.get('Accept')?.includes('text/html')) {
     event.respondWith(networkFirstWithOfflineFallback(request));
     return;
@@ -94,7 +90,7 @@ async function cacheFirst(request, cacheName) {
     }
     return response;
   } catch {
-    return cached ?? new Response('', { status: 503 });
+    return new Response('', { status: 503 });
   }
 }
 
