@@ -124,46 +124,62 @@ class CheckoutController extends Controller
         $isFree = $unitPrice <= 0;
 
         if ($isFree) {
-            $ticket = DB::transaction(function () use ($data, $event, $quantity, $ticketCategory, $unitPrice, $user) {
-                $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
-                $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
+            try {
+                $ticket = DB::transaction(function () use ($data, $event, $quantity, $ticketCategory, $unitPrice, $user) {
+                    $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
+                    $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
-                if ($lockedCategory->tickets_remaining < $quantity) {
-                    throw ValidationException::withMessages([
-                        'quantity' => 'Not enough tickets remain for that selection.',
+                    if ($lockedCategory->tickets_remaining < $quantity) {
+                        throw ValidationException::withMessages([
+                            'quantity' => 'Not enough tickets remain for that selection.',
+                        ]);
+                    }
+
+                    $lockedCategory->decrement('tickets_remaining', $quantity);
+                    $this->inventorySyncService->syncEventInventory($lockedEvent);
+
+                    $ticket = Ticket::create([
+                        'user_id' => $user->id,
+                        'event_id' => $event->id,
+                        'ticket_category_id' => $lockedCategory->id,
+                        'holder_name' => trim($data['holder_name']),
+                        'ticket_code' => $this->ticketQrService->generateUniqueTicketCode($user->id, $event->id),
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,
+                        'total_amount' => $unitPrice * $quantity,
+                        'payment_provider' => 'free',
+                        'status' => Ticket::STATUS_CONFIRMED,
+                        'purchased_at' => now(),
                     ]);
-                }
 
-                $lockedCategory->decrement('tickets_remaining', $quantity);
-                $this->inventorySyncService->syncEventInventory($lockedEvent);
+                    $ticket->forceFill([
+                        'qr_code_path' => $this->ticketQrService->generateAndStoreForTicket($ticket),
+                    ])->save();
 
-                $ticket = Ticket::create([
-                    'user_id' => $user->id,
-                    'event_id' => $event->id,
-                    'ticket_category_id' => $lockedCategory->id,
-                    'holder_name' => trim($data['holder_name']),
-                    'ticket_code' => $this->ticketQrService->generateUniqueTicketCode($user->id, $event->id),
-                    'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
-                    'total_amount' => $unitPrice * $quantity,
-                    'payment_provider' => 'free',
-                    'status' => Ticket::STATUS_CONFIRMED,
-                    'purchased_at' => now(),
-                ]);
-
-                $ticket->forceFill([
-                    'qr_code_path' => $this->ticketQrService->generateAndStoreForTicket($ticket),
-                ])->save();
-
-                return $ticket;
-            });
+                    return $ticket;
+                });
+            } catch (ValidationException $e) {
+                throw $e;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Free ticket transaction failed', ['error' => $e->getMessage(), 'event_id' => $event->id]);
+                return redirect()
+                    ->route('checkout.create', $event)
+                    ->withInput()
+                    ->with('payment_notice', ['type' => 'error', 'message' => 'Something went wrong reserving your ticket. Please try again.']);
+            }
 
             SendTicketNotification::dispatch($ticket->id);
 
             if ($guestCheckout) {
+                $email = trim((string) ($data['email'] ?? ''));
                 return redirect()
-                    ->route('events.show', $event)
-                    ->with('success', 'Free ticket issued. Check your email for your ticket details.');
+                    ->route('checkout.confirmed')
+                    ->with('checkout_confirmed', [
+                        'event_title' => $event->title,
+                        'email' => $email,
+                        'ticket_code' => $ticket->ticket_code,
+                        'is_free' => true,
+                    ]);
             }
 
             return redirect()
@@ -193,35 +209,45 @@ class CheckoutController extends Controller
             $idempotencyKey = strtoupper((string) Str::uuid());
         }
 
-        $payment = DB::transaction(function () use ($data, $event, $idempotencyKey, $quantity, $ticketCategory, $unitPrice, $user) {
-            $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
-            $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
+        try {
+            $payment = DB::transaction(function () use ($data, $event, $idempotencyKey, $quantity, $ticketCategory, $unitPrice, $user) {
+                $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
+                $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
-            if ($lockedCategory->tickets_remaining < $quantity) {
-                throw ValidationException::withMessages([
-                    'quantity' => 'Not enough tickets remain for that selection.',
+                if ($lockedCategory->tickets_remaining < $quantity) {
+                    throw ValidationException::withMessages([
+                        'quantity' => 'Not enough tickets remain for that selection.',
+                    ]);
+                }
+
+                $lockedCategory->decrement('tickets_remaining', $quantity);
+                $this->inventorySyncService->syncEventInventory($lockedEvent);
+
+                return PaymentTransaction::query()->create([
+                    'user_id' => $user->id,
+                    'event_id' => $event->id,
+                    'ticket_category_id' => $lockedCategory->id,
+                    'holder_name' => trim($data['holder_name']),
+                    'idempotency_key' => $idempotencyKey,
+                    'payment_provider' => $data['payment_provider'],
+                    'phone_number' => trim((string) $data['phone_number']),
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'total_amount' => $unitPrice * $quantity,
+                    'currency' => 'UGX',
+                    'status' => PaymentTransaction::STATUS_INITIATED,
+                    'expires_at' => now()->addMinutes(5),
                 ]);
-            }
-
-            $lockedCategory->decrement('tickets_remaining', $quantity);
-            $this->inventorySyncService->syncEventInventory($lockedEvent);
-
-            return PaymentTransaction::query()->create([
-                'user_id' => $user->id,
-                'event_id' => $event->id,
-                'ticket_category_id' => $lockedCategory->id,
-                'holder_name' => trim($data['holder_name']),
-                'idempotency_key' => $idempotencyKey,
-                'payment_provider' => $data['payment_provider'],
-                'phone_number' => trim((string) $data['phone_number']),
-                'quantity' => $quantity,
-                'unit_price' => $unitPrice,
-                'total_amount' => $unitPrice * $quantity,
-                'currency' => 'UGX',
-                'status' => PaymentTransaction::STATUS_INITIATED,
-                'expires_at' => now()->addMinutes(5),
-            ]);
-        });
+            });
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Payment transaction failed', ['error' => $e->getMessage(), 'event_id' => $event->id]);
+            return redirect()
+                ->route('checkout.create', $event)
+                ->withInput()
+                ->with('payment_notice', ['type' => 'error', 'message' => 'Something went wrong processing your payment. Please try again.']);
+        }
 
         \Illuminate\Support\Facades\Log::info('CheckoutController: initiating Marz Pay request for payment_id=' . $payment->id . ' provider=' . ($data['payment_provider'] ?? ''));
         $initiation = $this->marzePayService->initiateStkPush($payment);
@@ -387,6 +413,16 @@ class CheckoutController extends Controller
         $userPart = $request->user()?->id ? ('user:' . $request->user()->id) : ('ip:' . $request->ip());
 
         return 'checkout:purchase:' . $event->id . ':' . $userPart;
+    }
+
+    public function confirmed()
+    {
+        $data = session('checkout_confirmed');
+        if (! $data) {
+            return redirect()->route('events.index');
+        }
+
+        return view('pages.checkout.confirmed', $data);
     }
 
     protected function isCheckoutClosed(Event $event): bool

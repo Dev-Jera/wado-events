@@ -142,6 +142,7 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('/events/{event}/checkout', [CheckoutController::class, 'store'])->middleware(['throttle:30,1', \App\Http\Middleware\VerifyTurnstile::class])->name('checkout.store');
+Route::get('/checkout/confirmed', [CheckoutController::class, 'confirmed'])->name('checkout.confirmed');
 
 
 // MarzPay Webhook - Must bypass CSRF protection
