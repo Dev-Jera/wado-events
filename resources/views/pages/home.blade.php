@@ -1,3 +1,56 @@
+<style>
+.hp-cats {
+    display: flex; flex-wrap: wrap;
+    justify-content: center;
+    gap: .45rem;
+    margin-top: 1.6rem;
+}
+.hp-cat {
+    display: inline-flex; align-items: center; gap: .38rem;
+    padding: .42rem .95rem;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    color: rgba(220,232,255,.82);
+    font-size: .8rem; font-weight: 600;
+    font-family: var(--site-font); cursor: pointer;
+    transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+}
+.hp-cat:hover {
+    background: var(--maroon-glass);
+    border-color: rgba(160,32,46,.5);
+    color: #fff;
+}
+.hp-cat.is-active {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--maroon-glow);
+}
+.hp-cat-icon {
+    width: .88rem; height: .88rem;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
+.hp-cat-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.3rem; height: 1.3rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    font-size: .63rem; font-weight: 700;
+    padding: 0 .3rem;
+}
+.hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
+</style>
+    <style>
+    /* hero category chips: hidden on mobile — sticky bar takes over */
+    .hp-cats { display: none; }
+    .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
+    .hp-cat-count { display: none; }
+    </style>
 @extends('layouts.app')
 
 @php
@@ -144,6 +197,23 @@
         </div>
     </div>
 </section>
+
+{{-- ─────────────────────── STICKY CATEGORY BAR ─────────────────────── --}}
+<div class="hp-cat-bar" id="hp-cat-bar" role="navigation" aria-label="Filter by category">
+    <div class="hp-cat-bar-inner">
+        <button class="hp-cat is-active" data-category="all" aria-pressed="true" type="button">
+            <svg class="hp-cat-icon" aria-hidden="true"><use href="#icon-community"/></svg>
+            All
+        </button>
+        @foreach ($categoryPills as $key => $cat)
+            <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false" type="button">
+                <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
+                {{ $cat['label'] }}
+                <span class="hp-cat-count">{{ $cat['count'] }}</span>
+            </button>
+        @endforeach
+    </div>
+</div>
 
 {{-- Ticket Packages Marquee Section --}}
 <section class="ticket-packages-marquee" style="margin-top: 0;">
@@ -547,51 +617,6 @@ body {
 .hp-search-btn:hover { background: var(--blue-hover); box-shadow: 0 6px 20px var(--blue-glow); }
 
 /* ── category chips ── */
-.hp-cats {
-    display: flex; flex-wrap: wrap;
-    justify-content: center;
-    gap: .45rem;
-    margin-top: 1.6rem;
-}
-.hp-cat {
-    display: inline-flex; align-items: center; gap: .38rem;
-    padding: .42rem .95rem;
-    border-radius: 999px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur-sm);
-    -webkit-backdrop-filter: var(--glass-blur-sm);
-    color: rgba(220,232,255,.82);
-    font-size: .8rem; font-weight: 600;
-    font-family: var(--site-font); cursor: pointer;
-    transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
-}
-.hp-cat:hover {
-    background: var(--maroon-glass);
-    border-color: rgba(160,32,46,.5);
-    color: #fff;
-}
-.hp-cat.is-active {
-    background: var(--maroon);
-    border-color: var(--maroon);
-    color: #fff;
-    box-shadow: 0 4px 16px var(--maroon-glow);
-}
-.hp-cat-icon {
-    width: .88rem; height: .88rem;
-    stroke: currentColor; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    flex-shrink: 0;
-}
-.hp-cat-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 1.3rem; height: 1.3rem;
-    border-radius: 999px;
-    background: rgba(255,255,255,.14);
-    font-size: .63rem; font-weight: 700;
-    padding: 0 .3rem;
-}
-.hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
 
 /* ── Category bar (below hero) ── */
 .hp-cat-bar {
@@ -1279,16 +1304,6 @@ body.modal-open { overflow:hidden; }
     .hp-search-icon  { order: 1; }
     .hp-search-btn   { order: 3; width: 100%; border-radius: 10px; padding: .6rem 1rem; }
 
-    /* hero category chips: scrollable single row */
-    .hp-cats {
-        flex-wrap: nowrap; overflow-x: auto;
-        justify-content: flex-start;
-        gap: .4rem; padding-bottom: .35rem; margin-top: 1.1rem;
-        scrollbar-width: none; -ms-overflow-style: none;
-    }
-    .hp-cats::-webkit-scrollbar { display: none; }
-    .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
-    .hp-cat-count { display: none; }
 
     /* category bar */
     .hp-cat-bar { top: 3.5rem; }
@@ -1455,11 +1470,18 @@ body.modal-open { overflow:hidden; }
 
     catBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            catBtns.forEach(b => { b.classList.remove('is-active'); b.setAttribute('aria-pressed','false'); });
-            btn.classList.add('is-active');
-            btn.setAttribute('aria-pressed','true');
-            activeCategory = btn.dataset.category || 'all';
+            const cat = btn.dataset.category || 'all';
+            // Sync active state across hero chips AND sticky bar chips
+            catBtns.forEach(b => {
+                const active = (b.dataset.category || 'all') === cat;
+                b.classList.toggle('is-active', active);
+                b.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            activeCategory = cat;
             applyFilters();
+            // Scroll to featured section so filtered results are visible
+            const target = document.querySelector('.hp-featured');
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
 
