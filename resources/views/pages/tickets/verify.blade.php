@@ -91,6 +91,10 @@
                                 Stop camera
                             </button>
                             @if($scannerOnly)
+                                <button type="button" id="manual-entry-btn" class="btn btn-ghost">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                                    Enter code
+                                </button>
                                 <a href="{{ $returnToScannerUrl }}" class="btn btn-outline">← Back</a>
                             @endif
                         </div>
@@ -414,6 +418,18 @@
 
         </div>
     </section>
+
+    {{-- ── MANUAL CODE ENTRY OVERLAY (scanner_only mode fallback) ── --}}
+    <div id="manual-overlay" class="mco mco-hidden" role="dialog" aria-modal="true" aria-label="Enter ticket code">
+        <div class="mco-card">
+            <p class="mco-label">QR unreadable? Enter the code printed below the QR.</p>
+            <input id="manual-code-input" class="mco-input" type="text" placeholder="WADO-1-2-ABC123" autocomplete="off" autocorrect="off" spellcheck="false">
+            <div class="mco-actions">
+                <button type="button" id="manual-cancel" class="mco-btn mco-btn-ghost">Cancel</button>
+                <button type="button" id="manual-confirm" class="mco-btn mco-btn-primary">Verify</button>
+            </div>
+        </div>
+    </div>
 
     {{-- ── FULLSCREEN SCAN RESULT OVERLAY (scanner_only mode) ── --}}
     <div id="scan-overlay" class="sco sco-hidden" role="alert" aria-live="assertive">
@@ -926,6 +942,46 @@
             width: 100%;
             transition: width linear;
         }
+
+        /* ── Manual code entry overlay ── */
+        .mco {
+            position: fixed; inset: 0; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.65);
+            padding: 1.5rem;
+            transition: opacity .15s ease;
+        }
+        .mco-hidden { opacity: 0; pointer-events: none; }
+        .mco-visible { opacity: 1; pointer-events: auto; }
+        .mco-card {
+            background: #fff; border-radius: 16px;
+            padding: 1.4rem 1.5rem;
+            width: min(380px, 100%);
+            display: flex; flex-direction: column; gap: .85rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,.3);
+        }
+        .mco-label {
+            margin: 0; font-size: .88rem; font-weight: 600;
+            color: #132744; line-height: 1.4;
+        }
+        .mco-input {
+            height: 48px; border: 2px solid #dbe4f0; border-radius: 10px;
+            padding: 0 1rem; font-size: 1rem; font-weight: 700;
+            font-family: monospace; color: #132744; letter-spacing: .05em;
+            text-transform: uppercase;
+            transition: border-color .15s;
+        }
+        .mco-input:focus { outline: none; border-color: #0a4fbe; }
+        .mco-actions { display: flex; gap: .6rem; }
+        .mco-btn {
+            flex: 1; height: 44px; border-radius: 10px;
+            font-size: .88rem; font-weight: 700; cursor: pointer;
+            border: none; transition: .15s;
+        }
+        .mco-btn-primary { background: #0a4fbe; color: #fff; }
+        .mco-btn-primary:hover { background: #083f98; }
+        .mco-btn-ghost { background: #f0f4ff; color: #0a4fbe; border: 1.5px solid #dbe4f0; }
+        .mco-btn-ghost:hover { background: #dbe4f0; }
     </style>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -1388,6 +1444,43 @@
             });
             if (selectedEventId) subscribeScans(selectedEventId);
             if (eventSelect) eventSelect.addEventListener('change', () => subscribeScans(selectedEventId));
+        }
+
+        // ── Manual code entry (scanner_only fallback) ──────────────────
+        const manualOverlay  = document.getElementById('manual-overlay');
+        const manualInput    = document.getElementById('manual-code-input');
+        const manualEntryBtn = document.getElementById('manual-entry-btn');
+        const manualConfirm  = document.getElementById('manual-confirm');
+        const manualCancel   = document.getElementById('manual-cancel');
+
+        const openManual = () => {
+            if (!manualOverlay) return;
+            manualOverlay.className = 'mco mco-visible';
+            if (manualInput) { manualInput.value = ''; manualInput.focus(); }
+        };
+        const closeManual = () => {
+            if (manualOverlay) manualOverlay.className = 'mco mco-hidden';
+        };
+        const submitManual = () => {
+            const code = (manualInput?.value || '').trim().toUpperCase();
+            if (!code) return;
+            closeManual();
+            applyCode(code);
+        };
+
+        if (manualEntryBtn) manualEntryBtn.addEventListener('click', openManual);
+        if (manualCancel)   manualCancel.addEventListener('click', closeManual);
+        if (manualConfirm)  manualConfirm.addEventListener('click', submitManual);
+        if (manualInput) {
+            manualInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') submitManual();
+                if (e.key === 'Escape') closeManual();
+            });
+        }
+        if (manualOverlay) {
+            manualOverlay.addEventListener('click', (e) => {
+                if (e.target === manualOverlay) closeManual();
+            });
         }
     })();
     </script>

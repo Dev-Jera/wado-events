@@ -33,7 +33,7 @@ class TicketQrService
             writerOptions: [],
             data: $this->encryptPayload($payload),
             encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
             size: 600,
             margin: 20,
             roundBlockSizeMode: RoundBlockSizeMode::Margin
