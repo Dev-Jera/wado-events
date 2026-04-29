@@ -9,6 +9,7 @@ use App\Services\Payment\PaymentLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @group Webhooks
@@ -84,6 +85,32 @@ class PaymentWebhookController extends Controller
 
                 if ($locked->status === PaymentTransaction::STATUS_REFUNDED) {
                     return 'Already refunded.';
+                }
+
+                // Verify the amount MarzePay collected matches what we charged.
+                // Protects against a scenario where payment was made for a
+                // different amount than the ticket price.
+                $paidAmount = (float) (
+                    data_get($payload, 'collection.amount')
+                    ?? data_get($payload, 'transaction.amount')
+                    ?? data_get($payload, 'amount')
+                    ?? data_get($payload, 'data.amount')
+                    ?? 0
+                );
+
+                if ($paidAmount > 0 && abs($paidAmount - (float) $locked->total_amount) > 1) {
+                    Log::error('Webhook amount mismatch — ticket not issued', [
+                        'payment_id'      => $locked->id,
+                        'expected_amount' => $locked->total_amount,
+                        'received_amount' => $paidAmount,
+                        'idempotency_key' => $locked->idempotency_key,
+                    ]);
+
+                    $locked->forceFill([
+                        'last_error' => "Amount mismatch: expected {$locked->total_amount}, webhook reported {$paidAmount}.",
+                    ])->save();
+
+                    return 'Amount mismatch — ticket not issued.';
                 }
 
                 $locked->forceFill([
