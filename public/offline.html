@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>You're offline — Wado Events</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#c0283c">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Quicksand', sans-serif;
+            background: #150508;
+            color: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+        .logo { height: 48px; margin-bottom: 2.5rem; }
+        .icon {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: rgba(192,40,60,.15);
+            border: 2px solid rgba(192,40,60,.3);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.75rem;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+        .icon svg { width: 38px; height: 38px; stroke: #c0283c; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        @keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.7; transform:scale(.95); } }
+        h1 { font-size: clamp(1.4rem,5vw,2rem); font-weight: 800; letter-spacing:-.02em; margin-bottom:.6rem; }
+        p { font-size: .95rem; color: rgba(255,215,220,.65); line-height: 1.6; max-width: 360px; margin-bottom: 2rem; }
+        .btn {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .72rem 1.8rem; border-radius: 999px;
+            background: #c0283c; color: #fff;
+            font-size: .92rem; font-weight: 700;
+            border: none; cursor: pointer;
+            box-shadow: 0 4px 18px rgba(192,40,60,.35);
+            transition: background .18s;
+        }
+        .btn:hover { background: #a01e2e; }
+    </style>
+</head>
+<body>
+    <img class="logo" src="/images/logos/logo-no-bg.png" alt="Wado Events">
+    <div class="icon">
+        <svg viewBox="0 0 24 24">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+    </div>
+    <h1>You're offline</h1>
+    <p>No internet connection detected. Connect to Wi-Fi or mobile data, then try again.</p>
+    <button class="btn" onclick="window.location.reload()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Try again
+    </button>
+</body>
+</html>
