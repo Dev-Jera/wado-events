@@ -1006,7 +1006,9 @@
         };
 
         // ── Fullscreen result overlay (scanner_only mode) ──────────────
-        const OVERLAY_DURATION = 3000;
+        const OVERLAY_DURATION  = 3000;
+        const RESCAN_COOLDOWN   = 1500; // ms after overlay closes before same code can fire again
+        let   rescanCooldownTimer = null;
 
         // Colour by reason: valid=green, already_used=amber, everything else=red
         const overlayColor = (result) => {
@@ -1058,9 +1060,12 @@
 
         const hideOverlay = () => {
             clearTimeout(overlayTimer);
+            clearTimeout(rescanCooldownTimer);
             if (overlay) overlay.className = 'sco sco-hidden';
             scanLocked = false;
-            lastCode   = '';   // allow re-scanning same code after dismiss
+            // Keep lastCode blocked for RESCAN_COOLDOWN after overlay closes.
+            // This prevents the same ticket re-firing if it's still in frame.
+            rescanCooldownTimer = setTimeout(() => { lastCode = ''; }, RESCAN_COOLDOWN);
         };
 
         if (overlay) overlay.addEventListener('click', hideOverlay);
@@ -1212,7 +1217,7 @@
                 await scanner.start(
                     cameraId,
                     {
-                        fps: 15,
+                        fps: 8,
                         qrbox: (w, h) => {
                             const s = Math.floor(Math.min(w, h) * 0.82);
                             return { width: s, height: s };
