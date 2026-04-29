@@ -27,6 +27,29 @@
             </form>
         </section>
 
+        <div class="pay-stats-row">
+            <div class="pay-stat-card {{ $failedPayments > 0 ? 'pay-stat-card-warn' : '' }}">
+                <h4>Failed payments</h4>
+                <strong>{{ number_format($failedPayments) }}</strong>
+                <p>Transactions that did not go through</p>
+            </div>
+            <div class="pay-stat-card {{ $confirmedNoTicket > 0 ? 'pay-stat-card-warn' : '' }}">
+                <h4>Confirmed, no ticket</h4>
+                <strong>{{ number_format($confirmedNoTicket) }}</strong>
+                <p>{{ number_format($ticketsPendingIssue) }} ticket{{ $ticketsPendingIssue == 1 ? '' : 's' }} pending issue</p>
+            </div>
+            <div class="pay-stat-card">
+                <h4>Confirmed today</h4>
+                <strong>{{ number_format($confirmedToday) }}</strong>
+                <p>Payments confirmed in the last 24 hours</p>
+            </div>
+            <div class="pay-stat-card">
+                <h4>Events with open issues</h4>
+                <strong>{{ number_format($eventsWithOpenPayments) }}</strong>
+                <p>Events with pending or failed payments</p>
+            </div>
+        </div>
+
     </div>
 
     <style>
@@ -178,6 +201,15 @@
             background: var(--pay-blue);
             border-color: var(--pay-blue);
         }
+
+        .pay-stat-card-warn {
+            background: #fff5f5;
+            border-color: #fca5a5;
+        }
+
+        .pay-stat-card-warn h4 { color: #9e2135; }
+        .pay-stat-card-warn strong { color: #7f1d1d; }
+        .pay-stat-card-warn p { color: #b91c1c; }
 
         .pay-stat-card h4 {
             margin: 0;
