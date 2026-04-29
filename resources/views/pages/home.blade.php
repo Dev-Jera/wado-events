@@ -46,8 +46,10 @@
 .hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
 </style>
     <style>
-    /* hero category chips: hidden on mobile — sticky bar takes over */
+    /* hero chips hidden on mobile — sticky bar takes over */
     .hp-cats { display: none; }
+    /* show the sticky scrollable bar on mobile */
+    .hp-cat-bar { display: block; }
     .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
     .hp-cat-count { display: none; }
     </style>
@@ -692,8 +694,9 @@ body {
 
 /* ── category chips ── */
 
-/* ── Category bar (below hero) ── */
+/* ── Category bar (mobile only — replaces hero chips on small screens) ── */
 .hp-cat-bar {
+    display: none; /* hidden on desktop; shown only inside ≤640px media query */
     position: sticky;
     top: 4.2rem;
     z-index: 30;
