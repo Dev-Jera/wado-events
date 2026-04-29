@@ -159,10 +159,13 @@ class MarzePayService
     {
         $secret = (string) config('services.marzepay.webhook_secret', '');
 
-        // MarzPay does not send webhook signatures — allow through when no secret is configured
+        // No secret configured — reject in all environments.
+        // Set MARZEPAY_WEBHOOK_SECRET in .env to the secret MarzePay signs webhooks with.
+        // If MarzePay does not support HMAC signatures, use a hard-to-guess token in the
+        // webhook callback URL and set that as MARZEPAY_WEBHOOK_SECRET.
         if ($secret === '') {
-            Log::warning('MarzPay webhook received with no secret configured — accepting without verification');
-            return true;
+            Log::error('MarzePay webhook rejected: MARZEPAY_WEBHOOK_SECRET is not configured. Set it in .env to accept webhooks.');
+            return false;
         }
 
         if (blank($providedSignature)) {
