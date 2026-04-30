@@ -1,66 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WADO Events & Tickets
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A full-stack event ticketing platform built for WADO Concepts. Handles event publishing, ticket sales, QR-based gate scanning, re-entry management, and real-time admin reporting.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Layer | Technology |
+|---|---|
+| Framework | Laravel 12 |
+| Admin panel | Filament v3 |
+| Database | MySQL / MariaDB |
+| Cache & queues | Redis + Laravel Horizon |
+| WebSockets | Laravel Reverb |
+| Payments | MarzePay (Mobile Money) |
+| Email | Brevo (Sendinblue) |
+| SMS | Africa's Talking |
+| Storage | Laravel local disk / Railway volume |
+| Deployment | Railway |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Public event listing** — filterable by category, featured events pinned to top
+- **Ticket checkout** — multi-ticket purchase, promo code support, Mobile Money STK push via MarzePay
+- **QR tickets** — AES-256-GCM signed QR codes, PDF download, email delivery
+- **Gate scanning** — camera-based QR scanner with manual code entry fallback; entry and exit modes
+- **Re-entry system** — per-event re-entry policy with configurable limits and cooldown periods
+- **Anti-oversell locking** — Redis lock + `lockForUpdate()` DB transaction on every purchase and scan
+- **Admin panel** — event management, ticket categories, sales reporting, promo codes, refunds, gate batches
+- **Security** — HMAC-SHA256 webhook verification, HSTS, fail-closed webhook handling, rate limiting
 
-## Production Database Requirement
+## Local Setup
 
-This project uses transaction + `lockForUpdate()` patterns in checkout and payment flows.
-For production integrity, use `mysql` or `pgsql`.
+```bash
+# 1. Clone and install
+git clone <repo-url>
+cd wado-events-tickets
+composer install
+npm install
 
-SQLite does not provide the same row-level locking semantics for these paths and can allow oversell races under concurrent purchases.
+# 2. Environment
+cp .env.example .env
+php artisan key:generate
 
-## Learning Laravel
+# 3. Database
+php artisan migrate
+php artisan db:seed   # optional demo data
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+# 4. Storage link
+php artisan storage:link
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 5. Start dev servers
+php artisan serve
+npm run dev
 
-## Laravel Sponsors
+# 6. Queue worker (separate terminal)
+php artisan queue:work
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Key Environment Variables
 
-### Premium Partners
+```dotenv
+APP_URL=https://your-domain.com
+APP_ENV=production
+APP_DEBUG=false
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+DB_CONNECTION=mysql
+DB_HOST=...
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
 
-## Contributing
+REDIS_HOST=...
+REDIS_PASSWORD=...
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+MARZEPAY_BUSINESS_ID=...
+MARZEPAY_API_KEY=...
+MARZEPAY_WEBHOOK_SECRET=...
 
-## Code of Conduct
+BREVO_API_KEY=...
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+AFRICASTALKING_USERNAME=...
+AFRICASTALKING_API_KEY=...
+```
 
-## Security Vulnerabilities
+## Deployment (Railway)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+The `start.sh` script runs on every deploy:
+
+```bash
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan storage:link --force
+php artisan serve --host=0.0.0.0 --port=$PORT
+```
+
+## Gate Scanning
+
+Navigate to `/tickets/verify` with a staff account. Toggle between **Entry** and **Exit** mode before scanning. The scanner supports both camera QR reading and manual ticket code entry.
+
+- Entry scan: validates ticket, marks attendee as inside
+- Exit scan: records exit, enables re-entry if the event allows it
+- Re-entry limits and cooldown periods are configured per event in the admin panel
+
+## Testing
+
+```bash
+php artisan test
+```
+
+Includes unit tests for checkout security, payment verification, promo code logic, and webhook handling.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Proprietary — WADO Concepts. All rights reserved.

@@ -22,3 +22,13 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Database dumps
+*.sql
+*.sql.gz
+
+# Auto-generated API docs
+.scribe/
+
+# Internal dev docs
+docs/
