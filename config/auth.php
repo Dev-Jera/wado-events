@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Separate guard for the Filament admin dashboard.
+        // Storing the admin session under a different key means logging into
+        // /dashboard never affects the frontend web session and vice-versa.
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*

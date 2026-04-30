@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('dashboard')
+            ->authGuard('admin')
             ->login()
             ->databaseNotifications()
             ->maxContentWidth('full')
