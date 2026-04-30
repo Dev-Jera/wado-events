@@ -31,19 +31,29 @@ class Ticket extends Model
         'total_amount',
         'payment_provider',
         'status',
+        'gate_status',
+        'reentry_count',
+        'last_entry_at',
+        'last_exit_at',
         'purchased_at',
         'used_at',
         'dismissed_at',
     ];
+
+    public const GATE_STATUS_OUTSIDE = 'outside';
+    public const GATE_STATUS_INSIDE  = 'inside';
 
     protected function casts(): array
     {
         return [
             'unit_price' => 'decimal:2',
             'total_amount' => 'decimal:2',
-            'purchased_at' => 'datetime',
-            'used_at' => 'datetime',
-            'dismissed_at' => 'datetime',
+            'reentry_count' => 'integer',
+            'last_entry_at' => 'datetime',
+            'last_exit_at'  => 'datetime',
+            'purchased_at'  => 'datetime',
+            'used_at'       => 'datetime',
+            'dismissed_at'  => 'datetime',
         ];
     }
 

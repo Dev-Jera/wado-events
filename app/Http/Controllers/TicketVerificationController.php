@@ -104,44 +104,46 @@ class TicketVerificationController extends Controller
             'ticket_code'       => ['nullable', 'string', 'max:120'],
             'scanned_payload'   => ['nullable', 'string', 'max:2000'],
             'device_id'         => ['nullable', 'string', 'max:120'],
+            'scan_type'         => ['nullable', 'string', 'in:entry,exit'],
         ]);
 
         $selectedEventId = (int) $data['selected_event_id'];
+        $scanType        = (string) ($data['scan_type'] ?? 'entry');
 
         if (! $request->user()?->canAccessGateEvent($selectedEventId)) {
             return response()->json(['ok' => false, 'message' => 'Not assigned to this event.'], 403);
         }
 
-        $rawPayload  = trim((string) ($data['scanned_payload'] ?? ''));
-        $payload     = $rawPayload !== '' ? $this->ticketQrService->parsePayload($rawPayload) : null;
+        $rawPayload = trim((string) ($data['scanned_payload'] ?? ''));
+        $payload    = $rawPayload !== '' ? $this->ticketQrService->parsePayload($rawPayload) : null;
 
         // Route gate-print tickets to their own handler
         if (isset($payload['type']) && $payload['type'] === 'gate_print') {
             return $this->scanGatePrintJson($request, $payload, $rawPayload, $selectedEventId);
         }
 
-        // Foreign / unrecognised QR — not our format at all
+        // Foreign / unrecognised QR
         if ($rawPayload !== '' && $payload === null) {
-            $this->logScan($request, null, 'UNKNOWN', 'fake', 'Unrecognised QR — not a WADO ticket', $rawPayload, $selectedEventId);
+            $this->logScan($request, null, 'UNKNOWN', 'fake', 'Unrecognised QR — not a WADO ticket', $rawPayload, $selectedEventId, $scanType);
             return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
         }
 
         // Signature check
         if ($payload && ! $this->ticketQrService->verifyPayloadSignature($payload)) {
-            $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'fake', 'Invalid QR signature', $rawPayload, $selectedEventId);
+            $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'fake', 'Invalid QR signature', $rawPayload, $selectedEventId, $scanType);
             return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
         }
 
         // Event mismatch in payload
         if ($payload && isset($payload['event_id']) && (int) $payload['event_id'] !== $selectedEventId) {
-            $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'rejected', 'QR belongs to another event', $rawPayload, $selectedEventId);
+            $this->logScan($request, null, strtoupper((string) ($payload['code'] ?? ($data['ticket_code'] ?? ''))), 'rejected', 'QR belongs to another event', $rawPayload, $selectedEventId, $scanType);
             return response()->json(['ok' => false, 'reason' => 'wrong_event', 'message' => 'Does not belong to this event.']);
         }
 
         $ticketCode = $this->normalizeTicketCode((string) ($payload['code'] ?? ($data['ticket_code'] ?? '')));
 
         if ($ticketCode === '') {
-            $this->logScan($request, null, 'UNKNOWN', 'fake', 'QR yielded no ticket code', $rawPayload ?: null, $selectedEventId);
+            $this->logScan($request, null, 'UNKNOWN', 'fake', 'QR yielded no ticket code', $rawPayload ?: null, $selectedEventId, $scanType);
             return response()->json(['ok' => false, 'reason' => 'fake', 'message' => 'Fake ticket.']);
         }
 
@@ -159,63 +161,89 @@ class TicketVerificationController extends Controller
         }
 
         if (! $ticket) {
-            $this->logScan($request, null, $ticketCode, 'rejected', 'Ticket not found', $rawPayload, $selectedEventId);
+            $this->logScan($request, null, $ticketCode, 'rejected', 'Ticket not found', $rawPayload, $selectedEventId, $scanType);
             return response()->json([
-                'ok' => false,
+                'ok'     => false,
                 'reason' => 'fake',
                 'message' => 'Fake ticket.',
-                'detail' => 'This code does not match any ticket in the system.',
+                'detail'  => 'This code does not match any ticket in the system.',
             ]);
         }
 
         if ((int) $ticket->event_id !== $selectedEventId) {
-            $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket belongs to another event', $rawPayload, $selectedEventId);
+            $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket belongs to another event', $rawPayload, $selectedEventId, $scanType);
             return response()->json([
-                'ok' => false,
+                'ok'     => false,
                 'reason' => 'wrong_event',
                 'message' => 'Does not belong to this event.',
-                'detail' => 'This ticket is for: ' . ($ticket->event?->title ?? 'another event'),
-                'holder' => $ticket->holder_name ?: $ticket->user?->name ?: 'Guest',
+                'detail'  => 'This ticket is for: ' . ($ticket->event?->title ?? 'another event'),
+                'holder'  => $ticket->holder_name ?: $ticket->user?->name ?: 'Guest',
             ]);
         }
 
         $holderName = $ticket->holder_name ?: $ticket->user?->name ?: 'Guest';
 
         if ($ticket->status === Ticket::STATUS_CANCELLED) {
-            $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket is cancelled', $rawPayload, $selectedEventId);
+            $this->logScan($request, $ticket, $ticketCode, 'rejected', 'Ticket is cancelled', $rawPayload, $selectedEventId, $scanType);
             return response()->json([
-                'ok' => false,
+                'ok'     => false,
                 'reason' => 'fake',
                 'message' => 'Fake ticket.',
-                'detail' => 'This ticket has been cancelled and is not valid for entry.',
-                'holder' => $holderName,
+                'detail'  => 'This ticket has been cancelled and is not valid for entry.',
+                'holder'  => $holderName,
             ]);
         }
 
-        // Fast path: already used — skip acquiring the lock entirely
+        // Permanently blocked (no re-entry events mark STATUS_USED on first scan;
+        // re-entry events never set STATUS_USED, so this only fires when manually cancelled
+        // or when this was a no-reentry event).
         if ($ticket->status === Ticket::STATUS_USED || $ticket->used_at) {
-            $this->logScan($request, $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
+            $this->logScan($request, $ticket, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId, $scanType);
             $usedAt = $ticket->used_at ? $ticket->used_at->format('d M H:i') : null;
             return response()->json([
-                'ok' => false,
+                'ok'     => false,
                 'reason' => 'already_used',
                 'message' => 'Ticket already used.',
-                'detail' => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
-                'holder' => $holderName,
+                'detail'  => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
+                'holder'  => $holderName,
             ]);
         }
 
-        // Redis lock (10 s TTL) prevents two simultaneous scans of the same code from
-        // both succeeding. The DB transaction + lockForUpdate inside catches any race
-        // that slips through (e.g. when Redis is unavailable and the lock is skipped).
+        $reentryAllowed = (bool) ($ticket->event?->reentry_allowed ?? false);
+
+        // Pre-lock fast-path checks for re-entry mode
+        if ($reentryAllowed) {
+            if ($scanType === 'exit' && $ticket->gate_status !== Ticket::GATE_STATUS_INSIDE) {
+                $this->logScan($request, $ticket, $ticketCode, 'already-outside', 'Ticket holder is not inside', $rawPayload, $selectedEventId, 'exit');
+                return response()->json([
+                    'ok'     => false,
+                    'reason' => 'not_inside',
+                    'message' => 'Ticket holder is not recorded as inside the venue.',
+                    'holder'  => $holderName,
+                ]);
+            }
+
+            if ($scanType === 'entry' && $ticket->gate_status === Ticket::GATE_STATUS_INSIDE) {
+                $this->logScan($request, $ticket, $ticketCode, 'already-inside', 'Ticket holder is already inside', $rawPayload, $selectedEventId, 'entry');
+                return response()->json([
+                    'ok'     => false,
+                    'reason' => 'already_inside',
+                    'message' => 'Already inside the venue.',
+                    'detail'  => 'This ticket was scanned in and has not been scanned out.',
+                    'holder'  => $holderName,
+                ]);
+            }
+        }
+
+        // Redis lock — prevents simultaneous scans of the same code both succeeding
         try {
             $broadcastData = null;
 
             $jsonResponse = Cache::lock('scan:' . $ticketCode, 10)->block(5, function () use (
-                $request, $ticketCode, $rawPayload, $selectedEventId, &$broadcastData
+                $request, $ticketCode, $rawPayload, $selectedEventId, $scanType, $reentryAllowed, &$broadcastData
             ): \Illuminate\Http\JsonResponse {
                 return DB::transaction(function () use (
-                    $request, $ticketCode, $rawPayload, $selectedEventId, &$broadcastData
+                    $request, $ticketCode, $rawPayload, $selectedEventId, $scanType, $reentryAllowed, &$broadcastData
                 ): \Illuminate\Http\JsonResponse {
                     $locked = Ticket::query()
                         ->with(['event', 'user', 'ticketCategory'])
@@ -229,26 +257,123 @@ class TicketVerificationController extends Controller
 
                     $holderName = $locked->holder_name ?: $locked->user?->name ?: 'Guest';
 
+                    // Re-check terminal status inside lock
                     if ($locked->status === Ticket::STATUS_USED || $locked->used_at) {
-                        $this->logScan($request, $locked, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId);
+                        $this->logScan($request, $locked, $ticketCode, 'already-used', 'Ticket already used', $rawPayload, $selectedEventId, $scanType);
                         $usedAt = $locked->used_at ? $locked->used_at->format('d M H:i') : null;
                         return response()->json([
                             'ok'     => false,
                             'reason' => 'already_used',
                             'message' => 'Ticket already used.',
-                            'detail' => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
-                            'holder' => $holderName,
+                            'detail'  => $usedAt ? "Scanned in at {$usedAt}." : 'This ticket has already been used.',
+                            'holder'  => $holderName,
                         ]);
                     }
 
+                    // ── RE-ENTRY MODE ──────────────────────────────────────
+                    if ($reentryAllowed) {
+                        $event = $locked->event;
+
+                        if ($scanType === 'exit') {
+                            if ($locked->gate_status !== Ticket::GATE_STATUS_INSIDE) {
+                                return response()->json([
+                                    'ok'     => false,
+                                    'reason' => 'not_inside',
+                                    'message' => 'Ticket holder is not recorded as inside the venue.',
+                                    'holder'  => $holderName,
+                                ]);
+                            }
+
+                            $locked->forceFill([
+                                'gate_status'  => Ticket::GATE_STATUS_OUTSIDE,
+                                'last_exit_at' => now(),
+                            ])->save();
+
+                            $this->logScan($request, $locked, $ticketCode, 'exited', 'Exit recorded', $rawPayload, $selectedEventId, 'exit');
+
+                            $broadcastData = ['holder' => $holderName, 'category' => $locked->ticketCategory?->name ?? '', 'scan_type' => 'exit'];
+
+                            return response()->json([
+                                'ok'       => true,
+                                'reason'   => 'exited',
+                                'message'  => 'Exit recorded for ' . ($locked->event?->title ?? 'this event') . '.',
+                                'detail'   => $holderName . ($locked->ticketCategory?->name ? ' · ' . $locked->ticketCategory->name : ''),
+                                'holder'   => $holderName,
+                                'event'    => $locked->event?->title ?? '',
+                                'category' => $locked->ticketCategory?->name ?? '',
+                                'code'     => $locked->ticket_code,
+                            ]);
+                        }
+
+                        // Entry scan
+                        if ($locked->gate_status === Ticket::GATE_STATUS_INSIDE) {
+                            return response()->json([
+                                'ok'     => false,
+                                'reason' => 'already_inside',
+                                'message' => 'Already inside the venue.',
+                                'holder'  => $holderName,
+                            ]);
+                        }
+
+                        $isReentry = $locked->last_entry_at !== null;
+
+                        if ($isReentry) {
+                            $reentryLimit = (int) ($event?->reentry_limit ?? 1);
+                            if ($reentryLimit > 0 && $locked->reentry_count >= $reentryLimit) {
+                                $this->logScan($request, $locked, $ticketCode, 'rejected', 'Re-entry limit reached', $rawPayload, $selectedEventId, 'entry');
+                                return response()->json([
+                                    'ok'     => false,
+                                    'reason' => 'reentry_limit',
+                                    'message' => 'Re-entry limit reached for this ticket.',
+                                    'holder'  => $holderName,
+                                ]);
+                            }
+
+                            $cooldown = (int) ($event?->reentry_cooldown_minutes ?? 0);
+                            if ($cooldown > 0 && $locked->last_exit_at) {
+                                $minutesSinceExit = (int) $locked->last_exit_at->diffInMinutes(now());
+                                if ($minutesSinceExit < $cooldown) {
+                                    $wait = $cooldown - $minutesSinceExit;
+                                    $this->logScan($request, $locked, $ticketCode, 'rejected', "Re-entry cooldown: {$wait} min remaining", $rawPayload, $selectedEventId, 'entry');
+                                    return response()->json([
+                                        'ok'     => false,
+                                        'reason' => 'cooldown',
+                                        'message' => "Please wait {$wait} more minute(s) before re-entering.",
+                                        'holder'  => $holderName,
+                                    ]);
+                                }
+                            }
+                        }
+
+                        $locked->forceFill([
+                            'gate_status'   => Ticket::GATE_STATUS_INSIDE,
+                            'last_entry_at' => now(),
+                            'reentry_count' => $isReentry ? $locked->reentry_count + 1 : $locked->reentry_count,
+                        ])->save();
+
+                        $logMessage = $isReentry ? 'Re-entry verified' : 'Entry verified';
+                        $this->logScan($request, $locked, $ticketCode, 'valid', $logMessage, $rawPayload, $selectedEventId, 'entry');
+
+                        $broadcastData = ['holder' => $holderName, 'category' => $locked->ticketCategory?->name ?? '', 'scan_type' => 'entry'];
+
+                        return response()->json([
+                            'ok'       => true,
+                            'reason'   => 'valid',
+                            'message'  => ($isReentry ? 'Re-entry verified for ' : 'Ticket verified for ') . ($locked->event?->title ?? 'this event') . '.',
+                            'detail'   => $holderName . ($locked->ticketCategory?->name ? ' · ' . $locked->ticketCategory->name : ''),
+                            'holder'   => $holderName,
+                            'event'    => $locked->event?->title ?? '',
+                            'category' => $locked->ticketCategory?->name ?? '',
+                            'code'     => $locked->ticket_code,
+                        ]);
+                    }
+
+                    // ── NO RE-ENTRY MODE (original behaviour) ──────────────
                     $locked->forceFill(['status' => Ticket::STATUS_USED, 'used_at' => now()])->save();
 
-                    $this->logScan($request, $locked, $ticketCode, 'valid', 'Ticket verified and marked used', $rawPayload, $selectedEventId);
+                    $this->logScan($request, $locked, $ticketCode, 'valid', 'Ticket verified and marked used', $rawPayload, $selectedEventId, 'entry');
 
-                    $broadcastData = [
-                        'holder'   => $holderName,
-                        'category' => $locked->ticketCategory?->name ?? '',
-                    ];
+                    $broadcastData = ['holder' => $holderName, 'category' => $locked->ticketCategory?->name ?? '', 'scan_type' => 'entry'];
 
                     return response()->json([
                         'ok'       => true,
@@ -263,19 +388,17 @@ class TicketVerificationController extends Controller
                 });
             });
 
-            // Broadcast after the DB transaction commits so the event is never
-            // pushed to the queue while the row lock is still held.
             if ($broadcastData !== null) {
                 broadcast(new TicketScanned(
-                    eventId:   $selectedEventId,
+                    eventId:    $selectedEventId,
                     ticketCode: $ticketCode,
-                    holder:    $broadcastData['holder'],
-                    category:  $broadcastData['category'],
-                    result:    'valid',
-                    ok:        true,
-                    staffName: $request->user()?->name ?? 'Staff',
-                    scannedAt: now()->format('H:i:s'),
-                    deviceId:  $request->string('device_id')->toString(),
+                    holder:     $broadcastData['holder'],
+                    category:   $broadcastData['category'],
+                    result:     'valid',
+                    ok:         true,
+                    staffName:  $request->user()?->name ?? 'Staff',
+                    scannedAt:  now()->format('H:i:s'),
+                    deviceId:   $request->string('device_id')->toString(),
                 ));
             }
 
@@ -693,19 +816,21 @@ class TicketVerificationController extends Controller
         string $result,
         string $message,
         ?string $rawPayload,
-        ?int $selectedEventId = null
+        ?int $selectedEventId = null,
+        string $scanType = 'entry'
     ): void {
         $scanLog = TicketScanLog::query()->create([
-            'ticket_id' => $ticket?->id,
-            'staff_user_id' => $request->user()?->id,
-            'ticket_code' => $ticketCode,
+            'ticket_id'       => $ticket?->id,
+            'scan_type'       => $scanType,
+            'staff_user_id'   => $request->user()?->id,
+            'ticket_code'     => $ticketCode,
             'scanned_payload' => $rawPayload,
-            'device_id' => $request->string('device_id')->toString() ?: null,
-            'result' => $result,
-            'message' => $selectedEventId ? ($message . " [gate_event_id={$selectedEventId}]") : $message,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'scanned_at' => now(),
+            'device_id'       => $request->string('device_id')->toString() ?: null,
+            'result'          => $result,
+            'message'         => $selectedEventId ? ($message . " [gate_event_id={$selectedEventId}]") : $message,
+            'ip_address'      => $request->ip(),
+            'user_agent'      => $request->userAgent(),
+            'scanned_at'      => now(),
         ]);
 
         if ($result !== 'valid') {

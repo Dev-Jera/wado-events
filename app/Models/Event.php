@@ -31,6 +31,9 @@ class Event extends Model
         'image_url',
         'is_featured',
         'is_free',
+        'reentry_allowed',
+        'reentry_limit',
+        'reentry_cooldown_minutes',
     ];
 
     protected function casts(): array
@@ -39,8 +42,11 @@ class Event extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'ticket_price' => 'decimal:2',
-            'is_featured' => 'boolean',
-            'is_free'     => 'boolean',
+            'is_featured'              => 'boolean',
+            'is_free'                  => 'boolean',
+            'reentry_allowed'          => 'boolean',
+            'reentry_limit'            => 'integer',
+            'reentry_cooldown_minutes' => 'integer',
         ];
     }
 

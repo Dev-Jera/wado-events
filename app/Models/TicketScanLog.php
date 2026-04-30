@@ -9,6 +9,7 @@ class TicketScanLog extends Model
 {
     protected $fillable = [
         'ticket_id',
+        'scan_type',
         'staff_user_id',
         'ticket_code',
         'scanned_payload',

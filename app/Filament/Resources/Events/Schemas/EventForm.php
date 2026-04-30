@@ -190,6 +190,36 @@ class EventForm
                     Tab::make('Settings')
                         ->icon('heroicon-o-cog-6-tooth')
                         ->schema([
+
+                            Section::make('Re-entry')
+                                ->description('Allow attendees to leave and re-enter the venue.')
+                                ->icon('heroicon-o-arrow-path')
+                                ->schema([
+                                    Toggle::make('reentry_allowed')
+                                        ->label('Allow re-entry')
+                                        ->helperText('When enabled, gate agents can scan tickets out and back in.')
+                                        ->onColor('success')
+                                        ->live(),
+
+                                    Grid::make(2)->schema([
+                                        TextInput::make('reentry_limit')
+                                            ->label('Max re-entries per ticket')
+                                            ->integer()
+                                            ->minValue(1)
+                                            ->default(1)
+                                            ->helperText('How many times a ticket can re-enter after the first entry. 1 = one re-entry allowed.')
+                                            ->visible(fn (callable $get): bool => (bool) $get('reentry_allowed')),
+
+                                        TextInput::make('reentry_cooldown_minutes')
+                                            ->label('Cooldown after exit (minutes)')
+                                            ->integer()
+                                            ->minValue(0)
+                                            ->default(0)
+                                            ->helperText('How long after exiting before re-entry is allowed. 0 = no cooldown.')
+                                            ->visible(fn (callable $get): bool => (bool) $get('reentry_allowed')),
+                                    ]),
+                                ]),
+
                             Grid::make(2)->schema([
                                 Section::make('Visibility')
                                     ->schema([
@@ -216,7 +246,7 @@ class EventForm
                                             ->content(fn ($record) => $record
                                                 ? 'UGX ' . number_format(\App\Models\PaymentTransaction::where('event_id', $record->id)->where('status', 'CONFIRMED')->sum('total_amount')) : '—'),
                                     ]),
-                            ]),
+                            ]),  // end Grid::make(2) Visibility / At a glance
 
                             Section::make('Revenue by category')
                                 ->description('Sales and revenue broken down per ticket tier.')

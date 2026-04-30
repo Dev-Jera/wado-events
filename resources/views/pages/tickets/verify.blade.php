@@ -79,6 +79,21 @@
                             {{ $initialScannerFeedback }}
                         </div>
 
+                        {{-- Entry / Exit mode toggle --}}
+                        <div class="scan-mode-row">
+                            <span class="scan-mode-label">Mode:</span>
+                            <div class="scan-mode-toggle">
+                                <button type="button" id="mode-entry" class="scan-mode-btn active" data-mode="entry">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                                    Entry
+                                </button>
+                                <button type="button" id="mode-exit" class="scan-mode-btn" data-mode="exit">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                    Exit
+                                </button>
+                            </div>
+                        </div>
+
                         <div id="qr-reader" class="qr-viewport"></div>
 
                         <div class="scanner-actions">
@@ -644,6 +659,34 @@
             text-transform:none; letter-spacing:.01em;
         }
 
+        /* ── scan mode toggle ── */
+        .scan-mode-row {
+            display: flex; align-items: center; gap: .6rem;
+            margin-bottom: .75rem;
+        }
+        .scan-mode-label {
+            font-size: .75rem; font-weight: 700; color: var(--muted);
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .scan-mode-toggle {
+            display: flex; background: var(--off); border: 1.5px solid var(--border);
+            border-radius: 8px; padding: 3px; gap: 3px;
+        }
+        .scan-mode-btn {
+            display: inline-flex; align-items: center; gap: .35rem;
+            height: 30px; padding: 0 .75rem; border: none; border-radius: 6px;
+            font-size: .78rem; font-weight: 700; cursor: pointer;
+            background: transparent; color: var(--muted);
+            transition: background .15s, color .15s;
+        }
+        .scan-mode-btn.active[data-mode="entry"] {
+            background: #16a34a; color: #fff;
+        }
+        .scan-mode-btn.active[data-mode="exit"] {
+            background: #0a4fbe; color: #fff;
+        }
+        .scan-mode-btn:not(.active):hover { background: var(--border); color: var(--text); }
+
         /* ── scanner ── */
         .scanner-card { border-top:3px solid var(--red); }
         .scanner-feedback {
@@ -897,6 +940,7 @@
         .sco-ok   { background: #16a34a; }
         .sco-bad  { background: #c0283c; }
         .sco-warn { background: #b45309; }
+        .sco-info { background: #0a4fbe; }
 
         .sco-body {
             flex: 1; display: flex; flex-direction: column;
@@ -1024,6 +1068,23 @@
         let scanner = null, running = false, lastCode = '', scanLocked = false,
             scanWatchdog = null, selectedCameraLabel = '', overlayTimer = null;
         let selectedEventId = String(eventSelect?.value || initialEventId || '').trim();
+        let scanMode = 'entry'; // 'entry' or 'exit'
+
+        // ── Scan mode toggle ───────────────────────────────────────────
+        const modeEntryBtn = document.getElementById('mode-entry');
+        const modeExitBtn  = document.getElementById('mode-exit');
+
+        const setScanMode = (mode) => {
+            scanMode = mode;
+            [modeEntryBtn, modeExitBtn].forEach(b => b?.classList.remove('active'));
+            const active = mode === 'exit' ? modeExitBtn : modeEntryBtn;
+            active?.classList.add('active');
+            if (running) {
+                setFeedback(mode === 'exit' ? 'EXIT mode — scan to record exit.' : 'ENTRY mode — scan to admit.', mode === 'exit' ? 'info' : 'neutral');
+            }
+        };
+        modeEntryBtn?.addEventListener('click', () => setScanMode('entry'));
+        modeExitBtn?.addEventListener('click',  () => setScanMode('exit'));
 
         // ── Device ID ──────────────────────────────────────────────────
         const getDeviceId = () => {
@@ -1066,11 +1127,15 @@
         const RESCAN_COOLDOWN   = 1500; // ms after overlay closes before same code can fire again
         let   rescanCooldownTimer = null;
 
-        // Colour by reason: valid=green, already_used=amber, everything else=red
+        // Colour by reason
         const overlayColor = (result) => {
-            if (result.ok)                         return 'sco-ok';
-            if (result.reason === 'already_used')  return 'sco-warn';
-            if (result.reason === 'wrong_event')   return 'sco-warn';
+            if (result.ok && result.reason === 'exited') return 'sco-info';
+            if (result.ok)                               return 'sco-ok';
+            if (result.reason === 'already_used')        return 'sco-warn';
+            if (result.reason === 'already_inside')      return 'sco-warn';
+            if (result.reason === 'not_inside')          return 'sco-warn';
+            if (result.reason === 'wrong_event')         return 'sco-warn';
+            if (result.reason === 'cooldown')            return 'sco-warn';
             return 'sco-bad';
         };
 
@@ -1089,9 +1154,14 @@
 
             // Clear, reason-based headings
             const reasonLabel = (() => {
-                if (result.ok)                              return result.message || 'Ticket verified.';
-                if (result.reason === 'already_used')       return 'Ticket already used.';
-                if (result.reason === 'wrong_event')        return 'Does not belong to this event.';
+                if (result.ok && result.reason === 'exited') return 'Exit recorded.';
+                if (result.ok)                               return result.message || 'Ticket verified.';
+                if (result.reason === 'already_used')        return 'Ticket already used.';
+                if (result.reason === 'already_inside')      return 'Already inside.';
+                if (result.reason === 'not_inside')          return 'Not inside venue.';
+                if (result.reason === 'reentry_limit')       return 'Re-entry limit reached.';
+                if (result.reason === 'cooldown')            return result.message || 'Cooldown active.';
+                if (result.reason === 'wrong_event')         return 'Does not belong to this event.';
                 return 'Fake ticket.';
             })();
             scoHolder.textContent = reasonLabel;
@@ -1207,6 +1277,7 @@
                         ticket_code:       code,
                         scanned_payload:   payload ? JSON.stringify(payload) : raw,
                         device_id:         getDeviceId(),
+                        scan_type:         scanMode,
                     }),
                 })
                 .then(r => {
