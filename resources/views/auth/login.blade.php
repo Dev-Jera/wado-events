@@ -6,13 +6,16 @@
     <section class="auth-page">
         <div class="auth-shell">
             <aside class="auth-visual">
-                <a href="{{ route('home') }}" class="auth-logo-name">Wado Tickets</a>
                 <h2 class="auth-title"><span>Sign In</span><br>account<br>access</h2>
                 <p class="auth-tagline">Secure entry for returning users</p>
             </aside>
 
             <div class="auth-card">
                 <div class="auth-card-panel">
+                    <a href="{{ route('home') }}" class="auth-back-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                        Back to home
+                    </a>
                     <h1>Log in to your account</h1>
                     <p class="auth-copy">Sign in once &mdash; complete purchases, return later, and open My Tickets anytime.</p>
 
@@ -98,16 +101,18 @@
 
         .auth-shell { min-height: 100vh; width: min(1120px, 100%); margin: 0 auto; display: grid; grid-template-columns: 0.96fr 1.04fr; }
 
-        .auth-visual { background: #1a0508; padding: clamp(6rem, 15vh, 8.4rem) 0.9rem 2rem 1rem; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; text-align: left; }
+        .auth-visual { background: #1a0508; padding: 2rem 0.9rem 2rem 1rem; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: left; }
 
-        .auth-logo-name { margin-top: 0.85rem; color: var(--brand-blue); font-size: 1.05rem; font-weight: 900; text-decoration: none; width: min(360px, 100%); }
-
-        .auth-title { margin: 1.4rem 0 0; color: #fff; font-size: clamp(2.2rem, 4.2vw, 3.5rem); line-height: 1.02; font-weight: 800; width: min(360px, 100%); }
+        .auth-title { margin: 0; color: #fff; font-size: clamp(2.2rem, 4.2vw, 3.5rem); line-height: 1.02; font-weight: 800; width: min(360px, 100%); }
         .auth-title span { color: var(--brand-blue); }
 
         .auth-tagline { margin: 1rem 0 0; color: #8a9ab8; font-size: 1rem; width: min(360px, 100%); }
 
-        .auth-card { background: #1a0508; padding: 2rem 0.6rem 2rem 0; display: flex; align-items: flex-start; justify-content: flex-start; position: relative; }
+        .auth-card { background: #1a0508; padding: 2rem 0.6rem 2rem 0; display: flex; align-items: center; justify-content: flex-start; position: relative; }
+
+        .auth-back-btn { display: inline-flex; align-items: center; gap: 0.4rem; color: #8a9ab8; font-size: 0.82rem; font-weight: 600; text-decoration: none; margin-bottom: 1.1rem; transition: color 0.15s; }
+        .auth-back-btn:hover { color: var(--brand-blue); }
+        .auth-back-btn svg { width: 15px; height: 15px; }
 
         .auth-card-panel { width: min(405px, 100%); margin-left: -10px; background: #1e0b0e; border: 1px solid #3a1520; border-radius: 20px; padding: 1.5rem 1.35rem 1.2rem; box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
 
@@ -162,8 +167,8 @@
 
         @media (max-width: 860px) {
             .auth-shell { grid-template-columns: 1fr; width: 100%; }
-            .auth-visual { padding: 3.1rem 1.25rem 1.6rem; align-items: center; text-align: center; }
-            .auth-logo-name, .auth-title, .auth-tagline { width: auto; }
+            .auth-visual { padding: 3.1rem 1.25rem 1.6rem; align-items: center; text-align: center; justify-content: flex-start; }
+            .auth-title, .auth-tagline { width: auto; }
             .auth-title { font-size: 2.35rem; }
             .auth-card { padding: 1.25rem; }
             .auth-card-panel { width: 100%; margin-left: 0; }
