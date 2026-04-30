@@ -63,9 +63,10 @@ class HomeController extends Controller
         // Category pills
         $categoryPills = Cache::remember('home:category_pills', 3600, function () {
             return Category::query()
-                ->withCount('events')
+                ->withCount(['events' => fn ($q) => $q->where('status', 'published')])
                 ->orderBy('name')
                 ->get()
+                ->filter(fn (Category $category) => $category->events_count > 0)
                 ->mapWithKeys(function (Category $category) {
                     return [
                         Str::slug($category->name) => [

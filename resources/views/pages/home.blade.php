@@ -100,7 +100,6 @@
                 <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false">
                     <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
                     {{ $cat['label'] }}
-                    <span class="hp-cat-count">{{ $cat['count'] }}</span>
                 </button>
             @endforeach
         </div>
@@ -156,7 +155,6 @@
             <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false" type="button">
                 <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
                 {{ $cat['label'] }}
-                <span class="hp-cat-count">{{ $cat['count'] }}</span>
             </button>
         @endforeach
     </div>
@@ -638,6 +636,17 @@ body {
 .hp-search-btn:hover { background: var(--blue-hover); box-shadow: 0 6px 20px var(--blue-glow); }
 
 /* ── category chips ── */
+.hp-cats {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: .15rem;
+}
+.hp-cats::-webkit-scrollbar { display: none; }
 .hp-cat {
     display: inline-flex; align-items: center; gap: .38rem;
     padding: .42rem .95rem;
@@ -649,6 +658,7 @@ body {
     color: rgba(220,232,255,.82);
     font-size: .8rem; font-weight: 600;
     font-family: var(--site-font); cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
     transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
 }
 .hp-cat:hover {
@@ -668,15 +678,6 @@ body {
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     flex-shrink: 0;
 }
-.hp-cat-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 1.3rem; height: 1.3rem;
-    border-radius: 999px;
-    background: rgba(255,255,255,.14);
-    font-size: .63rem; font-weight: 700;
-    padding: 0 .3rem;
-}
-.hp-cat.is-active .hp-cat-count { background: rgba(255,255,255,.28); }
 
 /* ── Category bar (mobile only — replaces hero chips on small screens) ── */
 .hp-cat-bar {
