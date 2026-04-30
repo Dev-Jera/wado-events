@@ -174,11 +174,15 @@
                         <span class="field-span">Payment provider</span>
                         <div class="provider-grid">
                             <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'mtn' ? 'is-selected' : '' }}" data-provider="mtn">
-                                <div class="provider-icon mtn-icon">M</div>
+                                <div class="provider-icon mtn-icon">
+                                    <img src="{{ asset('images/mtn-logo.png') }}" alt="MTN">
+                                </div>
                                 <span class="provider-name">MTN MoMo</span>
                             </button>
                             <button type="button" class="provider-btn {{ old('payment_provider', $selectedPaymentProvider) === 'airtel' ? 'is-selected' : '' }}" data-provider="airtel">
-                                <div class="provider-icon airtel-icon">A</div>
+                                <div class="provider-icon airtel-icon">
+                                    <img src="{{ asset('images/airtel-logo.png') }}" alt="Airtel">
+                                </div>
                                 <span class="provider-name">Airtel Money</span>
                             </button>
                         </div>
@@ -473,13 +477,15 @@
         }
 
         .provider-icon {
-            width: 28px; height: 28px; border-radius: 6px;
+            width: 36px; height: 36px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 800; flex-shrink: 0;
+            flex-shrink: 0; overflow: hidden;
         }
 
-        .mtn-icon { background: #ffcc00; color: #111; }
-        .airtel-icon { background: var(--brand-red); color: #fff; }
+        .provider-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .mtn-icon { background: #ffcc00; }
+        .airtel-icon { background: #fff; }
 
         .provider-name { font-size: 12px; font-weight: 600; color: #c0cfe8; }
         .provider-btn.is-selected .provider-name { color: #fff; }
