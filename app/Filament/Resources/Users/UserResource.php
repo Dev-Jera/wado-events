@@ -8,6 +8,7 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\Event;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -17,6 +18,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -38,6 +40,9 @@ class UserResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $auth       = auth()->user();
+        $isSuperAdmin = $auth?->isSuperAdmin();
+
         return $schema->components([
             FileUpload::make('profile_image_path')
                 ->label('Profile image')
@@ -49,9 +54,7 @@ class UserResource extends Resource
                     if (! is_string($state) || $state === '') {
                         return null;
                     }
-
                     $extension = Str::lower(pathinfo($state, PATHINFO_EXTENSION));
-
                     return in_array($extension, ['jpg', 'jpeg', 'jfif', 'png', 'webp'], true) ? $state : null;
                 })
                 ->helperText('Use JPG, JFIF, PNG, or WEBP up to 4MB.')
@@ -77,7 +80,14 @@ class UserResource extends Resource
             Select::make('role')
                 ->required()
                 ->live()
-                ->options(fn (): array => static::getAssignableRoles()),
+                ->options(fn (?User $record): array => static::getAssignableRoles($record))
+                // Super admins cannot demote themselves — that would lock them out
+                ->disabled(fn (?User $record): bool => $record?->id === $auth?->id && $isSuperAdmin)
+                ->helperText(fn (?User $record): ?string =>
+                    ($record?->id === $auth?->id && $isSuperAdmin)
+                        ? 'You cannot change your own role.'
+                        : null
+                ),
 
             Select::make('event_ids')
                 ->label('Assigned gate events')
@@ -91,11 +101,13 @@ class UserResource extends Resource
                 ->dehydrated(false),
 
             TextInput::make('password')
+                ->label(fn (?User $record): string => $record ? 'New password (leave blank to keep current)' : 'Password')
                 ->password()
                 ->revealable()
                 ->minLength(8)
                 ->required(fn (string $operation): bool => $operation === 'create')
-                ->dehydrated(fn (?string $state): bool => filled($state)),
+                ->dehydrated(fn (?string $state): bool => filled($state))
+                ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
         ]);
     }
 
@@ -108,25 +120,28 @@ class UserResource extends Resource
                     ->label('Image')
                     ->disk('public')
                     ->circular()
-                    ->defaultImageUrl(fn (User $record): string => 'https://ui-avatars.com/api/?name=' . urlencode((string) $record->name) . '&background=1f66d5&color=ffffff'),
-                TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('email')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('phone')
-                    ->placeholder('—')
-                    ->searchable(),
+                    ->defaultImageUrl(fn (User $record): string =>
+                        'https://ui-avatars.com/api/?name=' . urlencode((string) $record->name) . '&background=1f66d5&color=ffffff'
+                    ),
+                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('email')->searchable()->sortable(),
+                TextColumn::make('phone')->placeholder('—')->searchable(),
                 TextColumn::make('role')
                     ->badge()
-                    ->formatStateUsing(function (string $state): string {
-                        return match ($state) {
-                            'super_admin' => 'SUPER ADMIN',
-                            'gate_agent' => 'GATE OFFICER',
-                            'customer' => 'CUSTOMER',
-                            default => strtoupper($state),
-                        };
+                    ->color(fn (string $state): string => match ($state) {
+                        'super_admin' => 'danger',
+                        'admin'       => 'warning',
+                        'event_owner' => 'info',
+                        'gate_agent'  => 'primary',
+                        default       => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'super_admin' => 'Super Admin',
+                        'admin'       => 'Admin',
+                        'event_owner' => 'Event Owner',
+                        'gate_agent'  => 'Gate Officer',
+                        'customer'    => 'Customer',
+                        default       => ucfirst($state),
                     })
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -136,7 +151,15 @@ class UserResource extends Resource
             ])
             ->filters([])
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make()
+                    ->visible(fn (User $record): bool => static::canEdit($record)),
+
+                DeleteAction::make()
+                    ->label('Delete')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record): string => "Delete {$record->name}?")
+                    ->modalDescription('This will permanently remove the user. This cannot be undone.')
+                    ->visible(fn (User $record): bool => static::canDelete($record)),
             ])
             ->toolbarActions([]);
     }
@@ -144,42 +167,84 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListUsers::route('/'),
+            'index'  => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
-            'edit' => EditUser::route('/{record}/edit'),
+            'edit'   => EditUser::route('/{record}/edit'),
         ];
     }
+
+    // ── Access control ────────────────────────────────────────────────────────
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-
         return (bool) ($user?->isSuperAdmin() || $user?->isAdmin());
     }
 
     public static function canCreate(): bool
     {
-        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin());
+        $user = auth()->user();
+        return (bool) ($user?->isSuperAdmin() || $user?->isAdmin());
     }
 
     public static function canEdit(Model $record): bool
     {
-        return (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin());
+        $auth = auth()->user();
+        if (! $auth) {
+            return false;
+        }
+
+        // Super admin can edit anyone
+        if ($auth->isSuperAdmin()) {
+            return true;
+        }
+
+        // Admin can only edit roles below themselves (not super_admin or admin)
+        if ($auth->isAdmin()) {
+            return ! $record->isSuperAdmin() && $record->role !== 'admin';
+        }
+
+        return false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return false;
+        // Super admin accounts are permanently protected — nobody can delete them
+        if ($record->isSuperAdmin()) {
+            return false;
+        }
+
+        // Only super admin can delete other users
+        // Also prevent self-deletion
+        $auth = auth()->user();
+        return $auth?->isSuperAdmin() && $auth->id !== $record->id;
     }
 
-    protected static function getAssignableRoles(): array
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Returns the roles the currently logged-in user is allowed to assign.
+     * When editing a super_admin record, their role is shown but disabled in the form.
+     */
+    protected static function getAssignableRoles(?User $record = null): array
     {
+        $auth = auth()->user();
+
+        if ($auth?->isSuperAdmin()) {
+            return [
+                'super_admin' => 'Super Admin',
+                'admin'       => 'Admin',
+                'event_owner' => 'Event Owner',
+                'gate_agent'  => 'Gate Officer',
+                'customer'    => 'Customer',
+            ];
+        }
+
+        // Admin can only assign roles below themselves
         return [
-            'super_admin' => 'SUPER ADMIN',
-            'admin' => 'ADMIN',
-            'event_owner' => 'EVENT OWNER',
-            'gate_agent' => 'GATE OFFICER',
-            'customer' => 'CUSTOMER',
+            'event_owner' => 'Event Owner',
+            'gate_agent'  => 'Gate Officer',
+            'customer'    => 'Customer',
         ];
     }
 }

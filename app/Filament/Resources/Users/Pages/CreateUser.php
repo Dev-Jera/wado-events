@@ -14,6 +14,19 @@ class CreateUser extends CreateRecord
         return UserResource::getUrl('index');
     }
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // Server-side guard: admins cannot assign super_admin or admin roles
+        if (! auth()->user()?->isSuperAdmin()) {
+            $allowed = ['event_owner', 'gate_agent', 'customer'];
+            if (! in_array($data['role'] ?? '', $allowed, true)) {
+                $data['role'] = 'customer';
+            }
+        }
+
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
         $eventIds = collect((array) ($this->form->getRawState()['event_ids'] ?? []))
@@ -24,7 +37,6 @@ class CreateUser extends CreateRecord
 
         if ($this->record->role !== 'gate_agent') {
             $this->record->gateAssignedEvents()->detach();
-
             return;
         }
 

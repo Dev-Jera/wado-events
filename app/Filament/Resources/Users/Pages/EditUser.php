@@ -22,8 +22,28 @@ class EditUser extends EditRecord
             $existsOnDisk = Storage::disk('public')->exists($profileImagePath);
 
             if (! $isSupported || ! $existsOnDisk) {
-                // Avoid endless preview loading for legacy or missing files.
                 $data['profile_image_path'] = null;
+            }
+        }
+
+        return $data;
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $auth   = auth()->user();
+        $record = $this->record;
+
+        // Prevent self-demotion: a super admin cannot strip their own role
+        if ($record->id === $auth?->id && $record->isSuperAdmin()) {
+            $data['role'] = 'super_admin';
+        }
+
+        // Server-side guard: admins cannot escalate roles to admin or super_admin
+        if (! $auth?->isSuperAdmin()) {
+            $allowed = ['event_owner', 'gate_agent', 'customer'];
+            if (! in_array($data['role'] ?? '', $allowed, true)) {
+                $data['role'] = $record->role; // leave unchanged
             }
         }
 
