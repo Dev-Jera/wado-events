@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PaymentTransactions\Tables;
 
+use App\Filament\Resources\PaymentTransactions\PaymentTransactionResource;
 use App\Jobs\IssueTicketForPayment;
 use App\Models\PaymentTransaction;
 use App\Services\Payment\PaymentLifecycleService;
@@ -94,6 +95,12 @@ class PaymentTransactionsTable
                     ]),
             ])
             ->recordActions([
+                Action::make('view_details')
+                    ->label('View details')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->url(fn (PaymentTransaction $record): string => PaymentTransactionResource::getUrl('view', ['record' => $record])),
+
                 Action::make('resend')
                     ->label('Resend')
                     ->tooltip('Use this after a confirmed payment if the attendee did not receive their ticket. It retries ticket issuance or re-sends the confirmation message.')

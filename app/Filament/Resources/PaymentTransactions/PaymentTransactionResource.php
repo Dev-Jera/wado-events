@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PaymentTransactions;
 
 use App\Filament\Resources\PaymentTransactions\Pages\ListPaymentTransactions;
+use App\Filament\Resources\PaymentTransactions\Pages\ViewPaymentTransaction;
 use App\Filament\Resources\PaymentTransactions\Tables\PaymentTransactionsTable;
 use App\Models\PaymentTransaction;
 use BackedEnum;
@@ -66,6 +67,7 @@ class PaymentTransactionResource extends Resource
     {
         return [
             'index' => ListPaymentTransactions::route('/'),
+            'view'  => ViewPaymentTransaction::route('/{record}'),
         ];
     }
 
