@@ -38,13 +38,13 @@
                             @error('email') <small>{{ $message }}</small> @enderror
                         </label>
 
+                        <div class="auth-field-hint">Your tickets will be sent to this email after purchase.</div>
+
                         <label>
                             <span>Phone number (optional)</span>
                             <input type="text" name="phone" value="{{ old('phone') }}" placeholder="e.g. +256700000000">
                             @error('phone') <small>{{ $message }}</small> @enderror
                         </label>
-
-                        <div class="auth-field-hint">We'll send your tickets here</div>
 
                         <div class="auth-pw-row">
                             <label>
