@@ -83,11 +83,11 @@
 
                     <div class="auth-social">
                         <a href="{{ route('social.redirect', 'google') }}" class="auth-social-btn">
-                            <span class="auth-social-icon"><img src="{{ asset('images/google.png') }}" alt="Google logo"></span>
+                            <span class="auth-social-icon"><img src="{{ asset('images/logos/Google-logo.jfif') }}" alt="Google logo"></span>
                             <span>Google</span>
                         </a>
                         <button type="button" class="auth-social-btn" onclick="document.getElementById('fb-coming-soon').style.display='flex'">
-                            <span class="auth-social-icon"><img src="{{ asset('images/facebook-logo.png') }}" alt="Facebook logo"></span>
+                            <span class="auth-social-icon"><img src="{{ asset('images/logos/facebook-logo.jfif') }}" alt="Facebook logo"></span>
                             <span>Facebook</span>
                         </button>
                     </div>
@@ -95,7 +95,7 @@
                     {{-- Facebook coming soon modal --}}
                     <div id="fb-coming-soon" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
                         <div style="background:#1e0b0e;border:1px solid #3a1520;border-radius:20px;padding:2rem 1.75rem;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
-                            <div style="width:52px;height:52px;background:#1877f2;border-radius:14px;display:grid;place-items:center;margin:0 auto 1rem;"><img src="{{ asset('images/facebook-logo.png') }}" style="width:30px;height:30px;object-fit:contain;" alt=""></div>
+                            <div style="width:52px;height:52px;background:#1877f2;border-radius:14px;display:grid;place-items:center;margin:0 auto 1rem;"><img src="{{ asset('images/logos/facebook-logo.jfif') }}" style="width:30px;height:30px;object-fit:contain;" alt=""></div>
                             <h3 style="color:#fff;margin:0 0 0.5rem;font-size:1.2rem;font-weight:800;">Facebook Login — Coming Soon</h3>
                             <p style="color:#8a9ab8;font-size:0.9rem;line-height:1.5;margin:0 0 1.5rem;">Facebook login is being set up and will be available shortly. In the meantime, create your account using your email below.</p>
                             <button onclick="document.getElementById('fb-coming-soon').style.display='none'" style="height:42px;width:100%;border:none;border-radius:8px;background:#e8241a;color:#fff;font-size:0.92rem;font-weight:700;cursor:pointer;">Got it</button>
@@ -391,20 +391,19 @@
         }
 
         .auth-social-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 999px;
-            background: #2a1015;
-            border: 1px solid #3a1520;
+            width: 24px;
+            height: 24px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .auth-social-btn img {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             object-fit: contain;
+            border-radius: 4px;
         }
 
         /* ── Switch ── */
