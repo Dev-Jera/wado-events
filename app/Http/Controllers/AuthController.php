@@ -55,6 +55,14 @@ class AuthController extends Controller
 
         RateLimiter::clear($this->throttleKey($request));
 
+        if (Auth::user()->isAdmin()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->to('/dashboard');
+        }
+
         $this->recordLoginAttempt($request, true);
 
         $request->session()->regenerate();

@@ -57,6 +57,10 @@ class SocialAuthController extends Controller
             ]);
         }
 
+        if ($user->isAdmin()) {
+            return redirect()->route('login')->withErrors(['email' => 'Admin accounts must log in through the dashboard.']);
+        }
+
         Auth::login($user, remember: true);
         request()->session()->regenerate();
 
