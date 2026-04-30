@@ -1,18 +1,18 @@
 @extends('layouts.app')
 
 @php
-    $homeEvents  = $featuredEvents->take(12);
-    $featuredRow = $homeEvents->take(6);
-
     $categoryPills = collect($categoryPills ?? []);
     if ($categoryPills->isEmpty()) {
-        $categoryPills = $homeEvents
+        $allForPills = $featuredEvents->merge($trendingEvents)->merge($upcomingEvents)->merge($allPublished);
+        $categoryPills = $allForPills
             ->groupBy(fn ($e) => \Illuminate\Support\Str::lower($e->category_label ?? 'uncategorized'))
             ->map(fn ($events) => [
                 'label' => $events->first()->category_label,
                 'count' => $events->count(),
             ]);
     }
+    $hasAnyEvents = $featuredEvents->isNotEmpty() || $trendingEvents->isNotEmpty() || $upcomingEvents->isNotEmpty();
+
 
     $iconMap = [
         'music'      => 'icon-music',
@@ -180,6 +180,7 @@
 </section>
 
 {{-- ─────────────────────── FEATURED STRIP ─────────────────────── --}}
+@if($hpSettings->show_featured && $featuredEvents->isNotEmpty())
 <section class="hp-featured" aria-label="Featured events">
     <div class="hp-shell">
         <div class="hp-sec-head">
@@ -194,7 +195,7 @@
 
         <div class="hp-strip-wrap">
             <div class="hp-strip" id="hp-feat-track">
-                @foreach ($featuredRow as $event)
+                @foreach ($featuredEvents as $event)
                     @php $price = (float) $event->ticket_price; @endphp
                     <article class="hp-fcard"
                         data-category="{{ \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized') }}"
@@ -251,8 +252,85 @@
         </div>
     </div>
 </section>
+@endif
+
+{{-- ─────────────────────── TRENDING STRIP ─────────────────────── --}}
+@if($hpSettings->show_trending && $trendingEvents->isNotEmpty())
+<section class="hp-featured hp-trending" aria-label="Trending events">
+    <div class="hp-shell">
+        <div class="hp-sec-head">
+            <div>
+                <p class="hp-sec-kicker">HOT RIGHT NOW</p>
+                <h2 class="hp-sec-title">Trending Events</h2>
+            </div>
+            <a href="{{ route('events.index') }}" class="hp-see-all">
+                See all <svg aria-hidden="true"><use href="#icon-arrow-r"/></svg>
+            </a>
+        </div>
+
+        <div class="hp-strip-wrap">
+            <div class="hp-strip" id="hp-trend-track">
+                @foreach ($trendingEvents as $event)
+                    @php $price = (float) $event->ticket_price; @endphp
+                    <article class="hp-fcard"
+                        data-category="{{ \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized') }}"
+                        data-href="{{ $event->url }}"
+                        data-title="{{ $event->title }}"
+                        data-description="{{ e($event->description) }}"
+                        data-artists='@json(collect($event->artists ?? [])->pluck("name")->values())'
+                        data-location="{{ e($event->venue.', '.$event->city) }}"
+                        data-time="{{ $event->starts_at->format('h:i A') }}"
+                        data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
+                        data-date="{{ $event->starts_at->format('d M') }}"
+                        data-image="{{ asset(ltrim((string)$event->image_url,'/')) }}">
+
+                        <div class="hp-fcard-img"
+                             style="background-image:url('{{ asset(ltrim((string)$event->image_url,'/')) }}')">
+                            <div class="hp-fcard-gradient"></div>
+                            <span class="hp-fcard-date-badge">
+                                <span class="hp-fcard-day">{{ $event->starts_at->format('d') }}</span>
+                                <span class="hp-fcard-mon">{{ $event->starts_at->format('M') }}</span>
+                            </span>
+                            <span class="hp-fcard-cat-badge">{{ $event->category_label }}</span>
+                        </div>
+
+                        <div class="hp-fcard-body">
+                            <h3 class="hp-fcard-title">{{ $event->title }}</h3>
+                            <p class="hp-fcard-meta">
+                                <svg aria-hidden="true"><use href="#icon-location"/></svg>
+                                {{ $event->venue }}, {{ $event->city }}
+                            </p>
+                            <p class="hp-fcard-meta">
+                                <svg aria-hidden="true"><use href="#icon-clock"/></svg>
+                                {{ $event->starts_at->format('h:i A') }}
+                            </p>
+                            <div class="hp-fcard-foot">
+                                <span class="hp-fcard-price {{ $price <= 0 ? 'is-free' : '' }}">
+                                    {{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}
+                                </span>
+                                <a href="{{ $event->url }}" class="hp-fcard-btn"
+                                   onclick="event.stopPropagation()">Join Event</a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+
+            <button class="hp-arrow hp-arrow-prev" id="hp-trend-prev" aria-label="Previous">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="hp-arrow hp-arrow-next" id="hp-trend-next" aria-label="Next">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                     stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+    </div>
+</section>
+@endif
 
 {{-- ─────────────────────── UPCOMING GRID ─────────────────────── --}}
+@if($hpSettings->show_upcoming && $upcomingEvents->isNotEmpty())
 <section class="hp-all" aria-label="Upcoming events">
     <div class="hp-shell">
         <div class="hp-sec-head">
@@ -266,7 +344,7 @@
         </div>
 
         <div class="hp-grid" id="hp-grid">
-            @foreach ($homeEvents as $event)
+            @foreach ($upcomingEvents as $event)
                 @php
                     $key   = \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized');
                     $price = (float) $event->ticket_price;
@@ -315,7 +393,6 @@
         </div>
 
         <div class="hp-empty" id="hp-grid-empty" hidden>
-            {{-- radial glow behind illustration --}}
             <div class="hp-empty-glow" aria-hidden="true"></div>
 
             <div class="hp-empty-art" aria-hidden="true">
@@ -402,6 +479,107 @@
         </div>
     </div>
 </section>
+@endif
+
+{{-- ─────────────────────── ALL-EVENTS FALLBACK ─────────────────────── --}}
+@if(!$hasAnyEvents && $allPublished->isNotEmpty())
+<section class="hp-all" aria-label="Events">
+    <div class="hp-shell">
+        <div class="hp-sec-head">
+            <div>
+                <p class="hp-sec-kicker">BROWSE EVENTS</p>
+                <h2 class="hp-sec-title">{{ $hpSettings->empty_heading ?? 'Events' }}</h2>
+            </div>
+            <a href="{{ route('events.index') }}" class="hp-see-all">
+                Browse all <svg aria-hidden="true"><use href="#icon-arrow-r"/></svg>
+            </a>
+        </div>
+        <div class="hp-grid">
+            @foreach ($allPublished as $event)
+                @php
+                    $key   = \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized');
+                    $price = (float) $event->ticket_price;
+                @endphp
+                <article class="hp-ecard"
+                    data-category="{{ $key }}"
+                    data-title-search="{{ \Illuminate\Support\Str::lower($event->title) }}"
+                    data-description="{{ e($event->description) }}"
+                    data-artists='@json(collect($event->artists ?? [])->pluck("name")->values())'
+                    data-href="{{ $event->url }}"
+                    data-location="{{ e($event->venue.', '.$event->city) }}"
+                    data-time="{{ $event->starts_at->format('h:i A') }}"
+                    data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
+                    data-date="{{ $event->starts_at->format('d M') }}"
+                    data-image="{{ asset(ltrim((string)$event->image_url,'/')) }}">
+
+                    <div class="hp-ecard-thumb"
+                         style="background-image:url('{{ asset(ltrim((string)$event->image_url,'/')) }}')">
+                        <span class="hp-ecard-date-badge">
+                            <span class="hp-ecard-day">{{ $event->starts_at->format('d') }}</span>
+                            <span class="hp-ecard-mon">{{ $event->starts_at->format('M') }}</span>
+                        </span>
+                    </div>
+
+                    <div class="hp-ecard-body">
+                        <span class="hp-ecard-cat">{{ $event->category_label }}</span>
+                        <h3 class="hp-ecard-title">{{ $event->title }}</h3>
+                        <p class="hp-ecard-meta">
+                            <svg aria-hidden="true"><use href="#icon-location"/></svg>
+                            {{ $event->venue }}, {{ $event->city }}
+                        </p>
+                        <p class="hp-ecard-meta">
+                            <svg aria-hidden="true"><use href="#icon-clock"/></svg>
+                            {{ $event->starts_at->format('h:i A') }}
+                        </p>
+                        <div class="hp-ecard-foot">
+                            <span class="hp-ecard-price {{ $price <= 0 ? 'is-free' : '' }}">
+                                {{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}
+                            </span>
+                            <a href="{{ $event->url }}" class="hp-ecard-btn"
+                               onclick="event.stopPropagation()">Get Tickets</a>
+                        </div>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+        <div class="hp-grid-footer">
+            <a href="{{ route('events.index') }}" class="hp-browse-btn">Browse All Events</a>
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- ─────────────────────── FULLY EMPTY STATE ─────────────────────── --}}
+@if(!$hasAnyEvents && $allPublished->isEmpty())
+<section class="hp-all" aria-label="No events">
+    <div class="hp-shell">
+        <div class="hp-empty" style="display:block">
+            <div class="hp-empty-glow" aria-hidden="true"></div>
+            <div class="hp-empty-art" aria-hidden="true">
+                <svg viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="140" cy="90" r="82" stroke="rgba(192,40,60,.13)" stroke-width="1" stroke-dasharray="3 6"/>
+                    <circle cx="140" cy="90" r="60" stroke="rgba(192,40,60,.09)" stroke-width="1" stroke-dasharray="2 7"/>
+                    <rect x="30" y="52" width="220" height="76" rx="13" fill="rgba(192,40,60,.13)" stroke="rgba(192,40,60,.45)" stroke-width="1.6"/>
+                    <circle cx="30" cy="90" r="11" fill="#2a1015"/>
+                    <circle cx="250" cy="90" r="11" fill="#2a1015"/>
+                    <line x1="68" y1="54" x2="68" y2="126" stroke="rgba(192,40,60,.35)" stroke-width="1.3" stroke-dasharray="4 5"/>
+                    <text x="139" y="108" text-anchor="middle" fill="rgba(255,180,185,.4)" font-size="22" font-weight="900" font-family="system-ui,sans-serif">?</text>
+                </svg>
+            </div>
+            <div class="hp-empty-body">
+                <h3 class="hp-empty-heading">{{ $hpSettings->empty_heading ?? 'No upcoming events right now' }}</h3>
+                <p class="hp-empty-sub">{{ $hpSettings->empty_sub ?? "We're working on bringing more events to you. Check back soon." }}</p>
+                <div class="hp-empty-actions">
+                    <a href="{{ route('events.index') }}" class="hp-empty-browse">
+                        Browse all events
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@endif
 
 {{-- ─────────────────────── EVENT MODAL ─────────────────────── --}}
 <div class="event-modal" id="event-modal" aria-hidden="true">
@@ -1715,6 +1893,15 @@ body.modal-open { overflow:hidden; }
     if (track && prevBtn && nextBtn) {
         prevBtn.addEventListener('click', () => track.scrollBy({ left: -330, behavior: 'smooth' }));
         nextBtn.addEventListener('click', () => track.scrollBy({ left:  330, behavior: 'smooth' }));
+    }
+
+    // trending strip arrows
+    const trendTrack   = document.getElementById('hp-trend-track');
+    const trendPrevBtn = document.getElementById('hp-trend-prev');
+    const trendNextBtn = document.getElementById('hp-trend-next');
+    if (trendTrack && trendPrevBtn && trendNextBtn) {
+        trendPrevBtn.addEventListener('click', () => trendTrack.scrollBy({ left: -330, behavior: 'smooth' }));
+        trendNextBtn.addEventListener('click', () => trendTrack.scrollBy({ left:  330, behavior: 'smooth' }));
     }
 
     // modal

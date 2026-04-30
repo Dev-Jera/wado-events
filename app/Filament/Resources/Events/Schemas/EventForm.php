@@ -225,7 +225,7 @@ class EventForm
                                     ->schema([
                                         Toggle::make('is_featured')
                                             ->label('Feature on homepage')
-                                            ->helperText('Pinned to top of public events page.')
+                                            ->helperText('Pins this event to the Featured section on the homepage. Only published events starting today or later appear there. Trending and Upcoming are automatic.')
                                             ->onColor('primary'),
                                     ]),
 
