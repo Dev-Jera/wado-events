@@ -264,7 +264,7 @@ class GatePortalController extends Controller
 
             return redirect()
                 ->route('gate.portal', ['event_id' => $event->id])
-                ->with('error', (string) ($initiation['message'] ?? 'Failed to initiate walk-in mobile money payment.'));
+                ->with('error', 'Payment request failed. Check the phone number and try again.');
         }
 
         $payment->forceFill([

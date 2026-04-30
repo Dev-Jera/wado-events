@@ -306,7 +306,7 @@ class CheckoutController extends Controller
                 ])
                 ->with('payment_notice', [
                     'type' => 'error',
-                    'message' => (string) ($initiation['message'] ?? 'Failed to initiate payment.'),
+                    'message' => 'We couldn\'t send the payment request. Please check your mobile number and try again, or choose a different payment method.',
                 ]);
         }
 
@@ -383,7 +383,7 @@ class CheckoutController extends Controller
 
         $noticeMessage = in_array($status, [PaymentTransaction::STATUS_PENDING, PaymentTransaction::STATUS_INITIATED], true)
             ? 'A payment request is already active. Check your phone and enter your PIN to complete payment.'
-            : ((string) ($payment->last_error ?: 'This payment request already exists. Returning latest status.'));
+            : 'Your previous payment attempt did not go through. Please try again.';
 
         return redirect()
             ->route('checkout.create', [
