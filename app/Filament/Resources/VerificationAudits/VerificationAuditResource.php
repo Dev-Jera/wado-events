@@ -24,9 +24,9 @@ class VerificationAuditResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Verification Audits';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Operations';
+    protected static string|UnitEnum|null $navigationGroup = 'Gate';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 21;
 
     public static function form(Schema $schema): Schema
     {

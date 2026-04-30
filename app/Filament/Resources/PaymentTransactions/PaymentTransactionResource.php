@@ -25,7 +25,7 @@ class PaymentTransactionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Payments';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Operations';
+    protected static string|UnitEnum|null $navigationGroup = 'Sales';
 
     protected static ?int $navigationSort = 10;
 

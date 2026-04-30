@@ -29,9 +29,9 @@ class EnquiryResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Enquiries';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Content';
+    protected static string|UnitEnum|null $navigationGroup = 'Communication';
 
-    protected static ?int $navigationSort = 55;
+    protected static ?int $navigationSort = 40;
 
     public static function getNavigationBadge(): ?string
     {

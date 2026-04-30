@@ -28,6 +28,8 @@ class EmailLogResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Logs';
 
+    protected static ?int $navigationSort = 51;
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);

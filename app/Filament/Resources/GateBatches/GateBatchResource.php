@@ -38,9 +38,9 @@ class GateBatchResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Gate Ticket Batches';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Operations';
+    protected static string|UnitEnum|null $navigationGroup = 'Gate';
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 20;
 
     public static function getEloquentQuery(): Builder
     {
