@@ -32,8 +32,10 @@ class PaymentTransaction extends Model
         'collected_at',
         'collector_reference',
         'phone_number',
+        'promo_code_id',
         'quantity',
         'unit_price',
+        'discount_amount',
         'total_amount',
         'currency',
         'status',
@@ -56,8 +58,9 @@ class PaymentTransaction extends Model
     protected function casts(): array
     {
         return [
-            'unit_price' => 'decimal:2',
-            'total_amount' => 'decimal:2',
+            'unit_price'      => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'total_amount'    => 'decimal:2',
             'provider_payload' => 'array',
             'webhook_payload' => 'array',
             'expires_at' => 'datetime',
@@ -94,6 +97,11 @@ class PaymentTransaction extends Model
     public function collectedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'collected_by_user_id');
+    }
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
     }
 
     public function isTerminal(): bool

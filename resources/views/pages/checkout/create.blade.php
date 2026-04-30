@@ -52,6 +52,10 @@
                         <span class="os-label">Quantity</span>
                         <span class="os-val" id="summary-qty">1</span>
                     </div>
+                    <div class="os-row os-discount-row" id="summary-discount-row" style="display:none;color:#1a7a3f;">
+                        <span class="os-label">Promo discount</span>
+                        <span class="os-val" id="summary-discount">—</span>
+                    </div>
                     <div class="os-total">
                         <span class="os-total-label">Total</span>
                         <span class="os-total-val" id="summary-total">—</span>
@@ -188,6 +192,24 @@
                     </label>
 
                     <div class="field-divider" style="margin-top:14px;"></div>
+                </div>
+
+                {{-- Promo code --}}
+                <input type="hidden" name="promo_code" id="promo_code_input" value="{{ old('promo_code') }}">
+                <div class="promo-section" id="promo-section">
+                    <div class="promo-row">
+                        <input
+                            type="text"
+                            id="promo_code_field"
+                            class="promo-input"
+                            placeholder="Have a promo code?"
+                            autocomplete="off"
+                            maxlength="32"
+                            value="{{ old('promo_code') }}"
+                        >
+                        <button type="button" id="promo-apply-btn" class="promo-btn">Apply</button>
+                    </div>
+                    <p class="promo-feedback" id="promo-feedback" style="display:none;"></p>
                 </div>
 
                 <button type="submit" class="checkout-btn" id="checkout-submit-btn">
@@ -477,6 +499,23 @@
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
 
+        .promo-section { margin-bottom: 14px; }
+        .promo-row { display: flex; gap: 8px; }
+        .promo-input {
+            flex: 1; padding: 10px 12px; border: 1.5px solid #dbe4f0; border-radius: 8px;
+            font-size: 13px; background: #f8faff; color: #132744; outline: none;
+            text-transform: uppercase;
+        }
+        .promo-input:focus { border-color: #0a4fbe; }
+        .promo-btn {
+            padding: 10px 16px; background: #0a4fbe; color: #fff; border: none;
+            border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+            white-space: nowrap;
+        }
+        .promo-btn:hover:not(:disabled) { background: #0843a8; }
+        .promo-btn:disabled { opacity: 0.6; cursor: default; }
+        .promo-feedback { font-size: 12px; margin-top: 5px; }
+
         @media (max-width: 760px) {
             .checkout-shell { grid-template-columns: 1fr; }
             .event-banner { height: 170px; }
@@ -491,17 +530,25 @@
             const summaryPrice = document.getElementById('summary-price');
             const summaryQty = document.getElementById('summary-qty');
             const summaryTotal = document.getElementById('summary-total');
+            const summaryDiscountRow = document.getElementById('summary-discount-row');
+            const summaryDiscount = document.getElementById('summary-discount');
             const providerInput = document.getElementById('payment_provider_input');
             const providerBtns = document.querySelectorAll('.provider-btn');
             const popup = document.getElementById('checkout-popup');
             const popupClose = document.getElementById('checkout-popup-close');
             const createAccountCheckbox = document.getElementById('create_account');
             const passwordFields = document.getElementById('account_password_fields');
+            const promoCodeInput = document.getElementById('promo_code_input');
+            const promoField = document.getElementById('promo_code_field');
+            const promoApplyBtn = document.getElementById('promo-apply-btn');
+            const promoFeedback = document.getElementById('promo-feedback');
 
             const formatUgx = (n) => n <= 0 ? 'Free' : 'UGX ' + Math.round(n).toLocaleString('en-US');
             const paymentFields = document.getElementById('payment-fields');
             const secureNote = document.getElementById('secure-note');
             const submitBtn = document.getElementById('checkout-submit-btn');
+
+            let appliedDiscount = 0; // discount amount in UGX, set by promo AJAX
 
             const updateSummary = () => {
                 const selected = categorySelect?.options[categorySelect.selectedIndex];
@@ -509,20 +556,100 @@
                 const label = selected?.dataset.label || '—';
                 const priceLabel = selected?.dataset.priceLabel || '—';
                 const qty = parseInt(quantityInput?.value || 1, 10);
-                const isFree = price <= 0;
+                const subtotal = price * qty;
+                const finalTotal = Math.max(0, subtotal - appliedDiscount);
+                const isFree = finalTotal <= 0;
 
                 if (summaryCategory) summaryCategory.textContent = label;
                 if (summaryPrice) summaryPrice.textContent = priceLabel;
                 if (summaryQty) summaryQty.textContent = qty;
-                if (summaryTotal) summaryTotal.textContent = isFree ? 'Free' : formatUgx(price * qty);
+
+                if (appliedDiscount > 0 && summaryDiscountRow && summaryDiscount) {
+                    summaryDiscountRow.style.display = '';
+                    summaryDiscount.textContent = '− ' + formatUgx(appliedDiscount);
+                } else if (summaryDiscountRow) {
+                    summaryDiscountRow.style.display = 'none';
+                }
+
+                if (summaryTotal) summaryTotal.textContent = isFree ? 'Free' : formatUgx(finalTotal);
 
                 if (paymentFields) paymentFields.style.display = isFree ? 'none' : '';
                 if (secureNote) secureNote.style.display = isFree ? 'none' : '';
                 if (submitBtn) submitBtn.textContent = isFree ? 'Get Ticket →' : 'Initiate payment →';
             };
 
-            if (categorySelect) categorySelect.addEventListener('change', updateSummary);
-            if (quantityInput) quantityInput.addEventListener('input', updateSummary);
+            // Promo code AJAX
+            const applyPromo = async () => {
+                const code = promoField?.value.trim();
+                if (!code) return;
+
+                const selected = categorySelect?.options[categorySelect.selectedIndex];
+                const price = parseFloat(selected?.dataset.price || 0);
+                const qty = parseInt(quantityInput?.value || 1, 10);
+                const subtotal = price * qty;
+
+                promoApplyBtn.disabled = true;
+                promoApplyBtn.textContent = '…';
+
+                try {
+                    const res = await fetch('{{ route('promo.validate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            code,
+                            event_id: {{ $event->id }},
+                            subtotal,
+                        }),
+                    });
+
+                    const json = await res.json();
+
+                    if (json.ok) {
+                        appliedDiscount = json.discount_amount;
+                        if (promoCodeInput) promoCodeInput.value = code.toUpperCase();
+                        showFeedback('✓ ' + json.message, true);
+                        promoApplyBtn.textContent = 'Applied';
+                        promoApplyBtn.disabled = true;
+                    } else {
+                        appliedDiscount = 0;
+                        if (promoCodeInput) promoCodeInput.value = '';
+                        showFeedback(json.message || 'Invalid promo code.', false);
+                        promoApplyBtn.textContent = 'Apply';
+                        promoApplyBtn.disabled = false;
+                    }
+                } catch {
+                    promoApplyBtn.textContent = 'Apply';
+                    promoApplyBtn.disabled = false;
+                }
+
+                updateSummary();
+            };
+
+            const showFeedback = (msg, ok) => {
+                if (!promoFeedback) return;
+                promoFeedback.textContent = msg;
+                promoFeedback.style.display = '';
+                promoFeedback.style.color = ok ? '#1a7a3f' : '#c0283c';
+            };
+
+            if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromo);
+            if (promoField) promoField.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } });
+
+            // Reset discount when category or qty changes (code may no longer apply)
+            const resetPromo = () => {
+                appliedDiscount = 0;
+                if (promoCodeInput) promoCodeInput.value = '';
+                if (promoField) promoField.value = '';
+                if (promoFeedback) promoFeedback.style.display = 'none';
+                if (promoApplyBtn) { promoApplyBtn.textContent = 'Apply'; promoApplyBtn.disabled = false; }
+            };
+
+            if (categorySelect) categorySelect.addEventListener('change', () => { resetPromo(); updateSummary(); });
+            if (quantityInput) quantityInput.addEventListener('input', () => { resetPromo(); updateSummary(); });
 
             providerBtns.forEach((btn) => {
                 btn.addEventListener('click', () => {

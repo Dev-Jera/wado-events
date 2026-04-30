@@ -10,6 +10,7 @@ use App\Models\PaymentTransaction;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Services\Checkout\GuestCheckoutUserResolver;
+use App\Services\Checkout\PromoCodeService;
 use App\Services\Event\InventorySyncService;
 use App\Services\Payment\MarzePayService;
 use App\Services\Payment\PaymentLifecycleService;
@@ -34,7 +35,8 @@ class CheckoutController extends Controller
         protected PaymentLifecycleService $paymentLifecycleService,
         protected GuestCheckoutUserResolver $guestCheckoutUserResolver,
         protected InventorySyncService $inventorySyncService,
-        protected \App\Services\Payment\PaymentNotificationService $paymentNotificationService
+        protected \App\Services\Payment\PaymentNotificationService $paymentNotificationService,
+        protected PromoCodeService $promoCodeService
     ) {
     }
 
@@ -121,11 +123,25 @@ class CheckoutController extends Controller
 
         $quantity = (int) $data['quantity'];
         $unitPrice = (float) $ticketCategory->price;
-        $isFree = $unitPrice <= 0;
+
+        // Resolve promo code — re-validated server-side regardless of AJAX pre-check
+        $promoCode    = null;
+        $discountAmount = 0.0;
+        $promoCodeRaw = trim((string) ($data['promo_code'] ?? ''));
+        if ($promoCodeRaw !== '') {
+            $promoResult = $this->promoCodeService->validate($promoCodeRaw, $event->id, $unitPrice * $quantity);
+            if ($promoResult['ok']) {
+                $promoCode      = $promoResult['promo'];
+                $discountAmount = (float) $promoResult['discount_amount'];
+            }
+            // Invalid/expired codes are silently ignored so checkout isn't blocked
+        }
+
+        $isFree = ($unitPrice * $quantity - $discountAmount) <= 0;
 
         if ($isFree) {
             try {
-                $ticket = DB::transaction(function () use ($data, $event, $quantity, $ticketCategory, $unitPrice, $user) {
+                $ticket = DB::transaction(function () use ($data, $event, $quantity, $ticketCategory, $unitPrice, $discountAmount, $promoCode, $user) {
                     $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
                     $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
@@ -138,6 +154,12 @@ class CheckoutController extends Controller
                     $lockedCategory->decrement('tickets_remaining', $quantity);
                     $this->inventorySyncService->syncEventInventory($lockedEvent);
 
+                    if ($promoCode) {
+                        $this->promoCodeService->incrementUses($promoCode);
+                    }
+
+                    $finalTotal = max(0, $unitPrice * $quantity - $discountAmount);
+
                     $ticket = Ticket::create([
                         'user_id' => $user->id,
                         'event_id' => $event->id,
@@ -146,7 +168,7 @@ class CheckoutController extends Controller
                         'ticket_code' => $this->ticketQrService->generateUniqueTicketCode($user->id, $event->id),
                         'quantity' => $quantity,
                         'unit_price' => $unitPrice,
-                        'total_amount' => $unitPrice * $quantity,
+                        'total_amount' => $finalTotal,
                         'payment_provider' => 'free',
                         'status' => Ticket::STATUS_CONFIRMED,
                         'purchased_at' => now(),
@@ -210,7 +232,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $payment = DB::transaction(function () use ($data, $event, $idempotencyKey, $quantity, $ticketCategory, $unitPrice, $user) {
+            $payment = DB::transaction(function () use ($data, $event, $idempotencyKey, $quantity, $ticketCategory, $unitPrice, $discountAmount, $promoCode, $user) {
                 $lockedCategory = TicketCategory::query()->lockForUpdate()->findOrFail($ticketCategory->id);
                 $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
 
@@ -223,17 +245,25 @@ class CheckoutController extends Controller
                 $lockedCategory->decrement('tickets_remaining', $quantity);
                 $this->inventorySyncService->syncEventInventory($lockedEvent);
 
+                if ($promoCode) {
+                    $this->promoCodeService->incrementUses($promoCode);
+                }
+
+                $finalTotal = max(0, $unitPrice * $quantity - $discountAmount);
+
                 return PaymentTransaction::query()->create([
                     'user_id' => $user->id,
                     'event_id' => $event->id,
                     'ticket_category_id' => $lockedCategory->id,
+                    'promo_code_id' => $promoCode?->id,
                     'holder_name' => trim($data['holder_name']),
                     'idempotency_key' => $idempotencyKey,
                     'payment_provider' => $data['payment_provider'],
                     'phone_number' => trim((string) $data['phone_number']),
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
-                    'total_amount' => $unitPrice * $quantity,
+                    'discount_amount' => $discountAmount,
+                    'total_amount' => $finalTotal,
                     'currency' => 'UGX',
                     'status' => PaymentTransaction::STATUS_INITIATED,
                     'expires_at' => now()->addMinutes(5),

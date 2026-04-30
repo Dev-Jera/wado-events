@@ -28,6 +28,7 @@ class CheckoutRequest extends FormRequest
             'create_account' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8', 'required_if:create_account,1', 'confirmed'],
             'idempotency_key' => ['required', 'string', 'max:64'],
+            'promo_code' => ['nullable', 'string', 'max:32'],
         ];
     }
 
