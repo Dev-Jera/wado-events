@@ -7,22 +7,56 @@
             <div class="events-head">
                 <div>
                     <p class="eyebrow">Public listings</p>
-                    <h1>Discover Events</h1>
+                    <h1>{{ $activeCategoryLabel ? $activeCategoryLabel . ' Events' : 'Discover Events' }}</h1>
                 </div>
                 <div class="events-count">
                     {{ $events->count() }} {{ Str::plural('event', $events->count()) }}
                 </div>
             </div>
 
+            <form class="events-toolbar" action="{{ route('events.index') }}" method="GET">
+                <label class="events-search">
+                    <span class="sr-only">Search events</span>
+                    <input type="search" name="search" value="{{ $search }}" placeholder="Search events, venues, cities">
+                </label>
+                @if ($activeCategory)
+                    <input type="hidden" name="category" value="{{ $activeCategory }}">
+                @endif
+                <button type="submit">Search</button>
+            </form>
+
+            @if ($categoryPills->isNotEmpty())
+                <div class="events-category-bar" aria-label="Filter by category">
+                    <a href="{{ route('events.index', array_filter(['search' => $search])) }}" class="category-pill {{ $activeCategory === '' ? 'is-active' : '' }}">
+                        All
+                    </a>
+                    @foreach ($categoryPills as $categoryPill)
+                        <a
+                            href="{{ route('events.index', array_filter(['category' => $categoryPill['key'], 'search' => $search])) }}"
+                            class="category-pill {{ $activeCategory === $categoryPill['key'] ? 'is-active' : '' }}"
+                        >
+                            {{ $categoryPill['label'] }}
+                            <span>{{ $categoryPill['count'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="events-grid">
                 @forelse ($events as $event)
                     @php
                         $isBookmarked = $bookmarkedIds->contains($event->id);
                         $liveStatus = $event->live_status;
+                        $statusLabel = match ($liveStatus) {
+                            'live' => 'Live now',
+                            'ended' => 'Passed',
+                            default => 'Upcoming',
+                        };
                     @endphp
-                    <div class="event-card">
+                    <div class="event-card event-card--{{ $liveStatus }}">
                         <a href="{{ $event->url ?? route('events.show', $event) }}" class="event-card-img-link">
                             <div class="event-card-img" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}')">
+                                <span class="status-badge status-badge--{{ $liveStatus }}">{{ $statusLabel }}</span>
                                 @if ($liveStatus === 'live')
                                     <span class="live-badge">● Live now</span>
                                 @endif
@@ -58,13 +92,17 @@
                                     {{ $event->venue }}{{ $event->city ? ', ' . $event->city : '' }}
                                 </li>
                             </ul>
+                            <div class="event-card-footer">
+                                <span class="event-category">{{ $event->category_label }}</span>
+                                <span class="event-state event-state--{{ $liveStatus }}">{{ $statusLabel }}</span>
+                            </div>
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
                         <svg width="40" height="40" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:0.3;margin-bottom:1rem"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="#fff" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>
-                        <h2>No events yet</h2>
-                        <p>Use the admin dashboard to create your first event listing.</p>
+                        <h2>No events found</h2>
+                        <p>Try another category or search term.</p>
                     </div>
                 @endforelse
             </div>
@@ -90,7 +128,7 @@
             justify-content: space-between;
             align-items: flex-end;
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
         }
         .eyebrow {
             color: #6b7280;
@@ -109,6 +147,78 @@
             font-size: 13px;
             color: #6b7280;
             padding-bottom: 4px;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .events-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .events-search {
+            flex: 1;
+        }
+        .events-search input {
+            width: 100%;
+            height: 42px;
+            border-radius: 8px;
+            border: 0.5px solid #2a2a2a;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 0 14px;
+            outline: none;
+        }
+        .events-search input:focus {
+            border-color: rgba(192, 40, 60, 0.8);
+        }
+        .events-toolbar button {
+            height: 42px;
+            border: 0;
+            border-radius: 8px;
+            background: #c0283c;
+            color: #fff;
+            font-weight: 700;
+            padding: 0 18px;
+            cursor: pointer;
+        }
+        .events-category-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+        .category-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 34px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            border: 0.5px solid #2a2a2a;
+            background: #1a1a1a;
+            color: #bbb;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .category-pill span {
+            color: #777;
+            font-size: 12px;
+        }
+        .category-pill:hover,
+        .category-pill.is-active {
+            border-color: rgba(192, 40, 60, 0.65);
+            color: #fff;
+            background: rgba(192, 40, 60, 0.14);
         }
 
         /* ── Grid ── */
@@ -132,6 +242,9 @@
             border-color: #c0283c;
             transform: translateY(-2px);
         }
+        .event-card--ended .event-card-img {
+            filter: grayscale(45%) brightness(0.78);
+        }
         .event-card-img-link { display: block; }
 
         /* ── Card image ── */
@@ -146,6 +259,7 @@
 
         /* ── Live badge ── */
         .live-badge {
+            display: none;
             position: absolute;
             top: 10px;
             left: 12px;
@@ -158,6 +272,33 @@
             border: 0.5px solid rgba(248, 113, 113, 0.35);
             letter-spacing: 0.02em;
             animation: pulse-live 2s ease-in-out infinite;
+        }
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 999px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .status-badge--live {
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+            border: 0.5px solid rgba(248, 113, 113, 0.35);
+            animation: pulse-live 2s ease-in-out infinite;
+        }
+        .status-badge--upcoming {
+            background: rgba(59, 130, 246, 0.16);
+            color: #93c5fd;
+            border: 0.5px solid rgba(147, 197, 253, 0.32);
+        }
+        .status-badge--ended {
+            background: rgba(17, 24, 39, 0.72);
+            color: #d1d5db;
+            border: 0.5px solid rgba(209, 213, 219, 0.22);
         }
         @keyframes pulse-live {
             0%, 100% { opacity: 1; }
@@ -275,6 +416,42 @@
         }
 
         /* ── Responsive ── */
+        .event-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 4px;
+            padding-top: 10px;
+            border-top: 0.5px solid #2a2a2a;
+        }
+        .event-category {
+            color: #aaa;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .event-state {
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 999px;
+            padding: 3px 8px;
+            white-space: nowrap;
+        }
+        .event-state--live {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.12);
+        }
+        .event-state--upcoming {
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.12);
+        }
+        .event-state--ended {
+            color: #d1d5db;
+            background: rgba(107, 114, 128, 0.16);
+        }
+
         @media (max-width: 600px) {
             .events-grid {
                 grid-template-columns: 1fr;
@@ -282,6 +459,12 @@
             .events-head {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+            .events-toolbar {
+                flex-direction: column;
+            }
+            .events-toolbar button {
+                width: 100%;
             }
         }
     </style>

@@ -109,7 +109,7 @@ class HomeController extends Controller
                 });
         });
 
-        // All-events fallback: used only when all three are empty
+        // All-events fallback: used only when all three curated sections are empty.
         $allPublished = ($featuredEvents->isEmpty() && $trendingEvents->isEmpty() && $upcomingEvents->isEmpty())
             ? Cache::remember('home:all_fallback', 300, function () {
                 return Event::query()

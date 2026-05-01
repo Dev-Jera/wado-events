@@ -97,7 +97,7 @@
                 All
             </button>
             @foreach ($categoryPills as $key => $cat)
-                <button class="hp-cat" type="button" data-category="{{ $key }}" aria-pressed="false">
+                <button class="hp-cat" type="button" data-category="{{ $key }}" data-url="{{ route('events.index', ['category' => $key]) }}" aria-pressed="false">
                     <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
                     {{ $cat['label'] }}
                     <span class="hp-cat-count">{{ $cat['count'] }}</span>
@@ -153,7 +153,7 @@
             All
         </button>
         @foreach ($categoryPills as $key => $cat)
-            <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false" type="button">
+            <button class="hp-cat" data-category="{{ $key }}" data-url="{{ route('events.index', ['category' => $key]) }}" aria-pressed="false" type="button">
                 <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
                 {{ $cat['label'] }}
                 <span class="hp-cat-count">{{ $cat['count'] }}</span>
@@ -719,8 +719,10 @@ body {
     margin-inline: auto;
 }
 .hp-hero-panel-intro  { max-width: 680px; }
+.hp-hero-panel-intro.is-active { z-index: 4; }
 .hp-hero-panel-packages {
     max-width: 1120px;
+    z-index: 3;
     justify-content: flex-start;
     overflow: hidden;
     padding: 8rem 1.5rem 1.5rem;
@@ -779,6 +781,8 @@ body {
 
 /* ── glass search bar ── */
 .hp-search-bar {
+    position: relative;
+    z-index: 5;
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -790,6 +794,7 @@ body {
     -webkit-backdrop-filter: var(--glass-blur);
     box-shadow: 0 8px 32px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08);
     transition: border-color .2s, box-shadow .2s;
+    pointer-events: auto;
 }
 .hp-search-bar:focus-within {
     border-color: var(--blue);
@@ -802,12 +807,17 @@ body {
     flex-shrink: 0;
 }
 .hp-search-input {
+    position: relative;
+    z-index: 2;
     flex: 1; min-width: 0;
     background: transparent; border: none; outline: none;
     color: #fff; font-size: .95rem; font-family: var(--site-font);
+    pointer-events: auto;
 }
 .hp-search-input::placeholder { color: rgba(255,255,255,.35); }
 .hp-search-btn {
+    position: relative;
+    z-index: 2;
     flex-shrink: 0;
     padding: .6rem 1.5rem;
     border-radius: 999px; border: none;
@@ -1860,19 +1870,30 @@ body.modal-open { overflow:hidden; }
     };
 
     catBtns.forEach(btn => {
-        btn.addEventListener('click', () => setCategory(btn.dataset.category || 'all'));
+        btn.addEventListener('click', () => {
+            if (btn.dataset.url) {
+                window.location.href = btn.dataset.url;
+                return;
+            }
+
+            setCategory(btn.dataset.category || 'all');
+        });
     });
 
     const clearBtn = document.getElementById('hp-empty-clear');
     if (clearBtn) clearBtn.addEventListener('click', () => setCategory('all'));
 
     if (searchInput) {
+        document.getElementById('hp-search-form')?.addEventListener('click', e => {
+            if (!e.target.closest('button')) {
+                searchInput.focus();
+            }
+        });
+
         searchInput.addEventListener('input', () => {
             searchQuery = searchInput.value.trim().toLowerCase();
             applyFilters();
         });
-        const form = document.getElementById('hp-search-form');
-        if (form) form.addEventListener('submit', e => { if (!searchQuery) e.preventDefault(); });
     }
 
     // ticket packages marquee
