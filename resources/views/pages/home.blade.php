@@ -397,94 +397,67 @@
             @endforeach
         </div>
 
-        <div class="hp-empty" id="hp-grid-empty" hidden>
-            <div class="hp-empty-glow" aria-hidden="true"></div>
-
-            <div class="hp-empty-art" aria-hidden="true">
-                <svg viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {{-- dashed orbit rings --}}
-                    <circle cx="140" cy="90" r="82" stroke="rgba(192,40,60,.13)" stroke-width="1" stroke-dasharray="3 6"/>
-                    <circle cx="140" cy="90" r="60" stroke="rgba(192,40,60,.09)" stroke-width="1" stroke-dasharray="2 7"/>
-
-                    {{-- ticket body --}}
-                    <rect x="30" y="52" width="220" height="76" rx="13"
-                          fill="rgba(192,40,60,.13)" stroke="rgba(192,40,60,.45)" stroke-width="1.6"/>
-
-                    {{-- left notch cutout --}}
-                    <circle cx="30" cy="90" r="11" fill="#2a1015"/>
-                    {{-- right notch cutout --}}
-                    <circle cx="250" cy="90" r="11" fill="#2a1015"/>
-
-                    {{-- perforated tear line --}}
-                    <line x1="68" y1="54" x2="68" y2="126"
-                          stroke="rgba(192,40,60,.35)" stroke-width="1.3" stroke-dasharray="4 5"/>
-
-                    {{-- stub area: small star --}}
-                    <path d="M49 90 L50.4 86 L54.5 86 L51.3 88.5 L52.7 92.5 L49 90.3 L45.3 92.5 L46.7 88.5 L43.5 86 L47.6 86 Z"
-                          fill="rgba(255,180,185,.55)"/>
-
-                    {{-- main body: faint calendar card --}}
-                    <rect x="98" y="63" width="82" height="54" rx="9"
-                          fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.11)" stroke-width="1.2"/>
-                    {{-- calendar top bar --}}
-                    <rect x="98" y="63" width="82" height="16" rx="9"
-                          fill="rgba(192,40,60,.22)"/>
-                    <rect x="98" y="70" width="82" height="9" fill="rgba(192,40,60,.22)"/>
-                    {{-- calendar pin lines --}}
-                    <line x1="119" y1="60" x2="119" y2="68" stroke="rgba(255,180,185,.75)" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="161" y1="60" x2="161" y2="68" stroke="rgba(255,180,185,.75)" stroke-width="2" stroke-linecap="round"/>
-                    {{-- large "?" --}}
-                    <text x="139" y="108" text-anchor="middle" fill="rgba(255,180,185,.4)"
-                          font-size="22" font-weight="900" font-family="system-ui,sans-serif">?</text>
-
-                    {{-- sparkle top-left --}}
-                    <path d="M18 28 L19.5 23 L24 23 L20.5 26 L22 31 L18 28.5 L14 31 L15.5 26 L12 23 L16.5 23 Z"
-                          fill="rgba(192,40,60,.5)"/>
-                    {{-- sparkle top-right (smaller) --}}
-                    <path d="M232 20 L233.2 16.5 L237 16.5 L234.2 18.7 L235.4 22.2 L232 20.2 L228.6 22.2 L229.8 18.7 L227 16.5 L230.8 16.5 Z"
-                          fill="rgba(255,180,185,.55)"/>
-                    {{-- cross sparkle right --}}
-                    <path d="M262 68 L264 68 M263 66 L263 70 M261.5 66.5 L264.5 69.5 M264.5 66.5 L261.5 69.5"
-                          stroke="rgba(255,180,185,.5)" stroke-width="1.6" stroke-linecap="round"/>
-                    {{-- cross sparkle left --}}
-                    <path d="M14 65 L16 65 M15 63 L15 67 M13.5 63.5 L16.5 66.5 M16.5 63.5 L13.5 66.5"
-                          stroke="rgba(192,40,60,.45)" stroke-width="1.6" stroke-linecap="round"/>
-                    {{-- floating dots --}}
-                    <circle cx="256" cy="130" r="4"   fill="rgba(192,40,60,.32)"/>
-                    <circle cx="268" cy="118" r="2.2" fill="rgba(192,40,60,.22)"/>
-                    <circle cx="18"  cy="132" r="3"   fill="rgba(192,40,60,.28)"/>
-                    <circle cx="9"   cy="118" r="1.8" fill="rgba(255,180,185,.28)"/>
-                    <circle cx="140" cy="14"  r="2.5" fill="rgba(255,180,185,.35)"/>
-                    <circle cx="72"  cy="148" r="2"   fill="rgba(192,40,60,.22)"/>
-                    <circle cx="208" cy="148" r="2"   fill="rgba(192,40,60,.22)"/>
-                </svg>
-            </div>
-
-            <div class="hp-empty-body">
-                <h3 class="hp-empty-heading" id="hp-empty-heading">No events in this category</h3>
-                <p class="hp-empty-sub" id="hp-empty-sub">
-                    We're working on bringing more events to you.<br>
-                    Try another category or come back soon.
-                </p>
-                <div class="hp-empty-actions">
-                    <button type="button" class="hp-empty-clear" id="hp-empty-clear">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                        All categories
-                    </button>
-                    <a href="{{ route('events.index') }}" class="hp-empty-browse">
-                        Browse all events
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                </div>
-            </div>
-        </div>
-
         <div class="hp-grid-footer">
             <a href="{{ route('events.index') }}" class="hp-browse-btn">Browse All Events</a>
         </div>
     </div>
 </section>
 @endif
+
+{{-- ── Category filter empty state — always in DOM so JS can always find it ── --}}
+<div class="hp-shell">
+    <div class="hp-empty" id="hp-grid-empty" hidden>
+        <div class="hp-empty-glow" aria-hidden="true"></div>
+
+        <div class="hp-empty-art" aria-hidden="true">
+            <svg viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="140" cy="90" r="82" stroke="rgba(192,40,60,.13)" stroke-width="1" stroke-dasharray="3 6"/>
+                <circle cx="140" cy="90" r="60" stroke="rgba(192,40,60,.09)" stroke-width="1" stroke-dasharray="2 7"/>
+                <rect x="30" y="52" width="220" height="76" rx="13"
+                      fill="rgba(192,40,60,.13)" stroke="rgba(192,40,60,.45)" stroke-width="1.6"/>
+                <circle cx="30" cy="90" r="11" fill="#2a1015"/>
+                <circle cx="250" cy="90" r="11" fill="#2a1015"/>
+                <line x1="68" y1="54" x2="68" y2="126"
+                      stroke="rgba(192,40,60,.35)" stroke-width="1.3" stroke-dasharray="4 5"/>
+                <path d="M49 90 L50.4 86 L54.5 86 L51.3 88.5 L52.7 92.5 L49 90.3 L45.3 92.5 L46.7 88.5 L43.5 86 L47.6 86 Z"
+                      fill="rgba(255,180,185,.55)"/>
+                <rect x="98" y="63" width="82" height="54" rx="9"
+                      fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.11)" stroke-width="1.2"/>
+                <rect x="98" y="63" width="82" height="16" rx="9" fill="rgba(192,40,60,.22)"/>
+                <rect x="98" y="70" width="82" height="9" fill="rgba(192,40,60,.22)"/>
+                <line x1="119" y1="60" x2="119" y2="68" stroke="rgba(255,180,185,.75)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="161" y1="60" x2="161" y2="68" stroke="rgba(255,180,185,.75)" stroke-width="2" stroke-linecap="round"/>
+                <text x="139" y="108" text-anchor="middle" fill="rgba(255,180,185,.4)"
+                      font-size="22" font-weight="900" font-family="system-ui,sans-serif">?</text>
+                <path d="M18 28 L19.5 23 L24 23 L20.5 26 L22 31 L18 28.5 L14 31 L15.5 26 L12 23 L16.5 23 Z"
+                      fill="rgba(192,40,60,.5)"/>
+                <path d="M232 20 L233.2 16.5 L237 16.5 L234.2 18.7 L235.4 22.2 L232 20.2 L228.6 22.2 L229.8 18.7 L227 16.5 L230.8 16.5 Z"
+                      fill="rgba(255,180,185,.55)"/>
+                <circle cx="256" cy="130" r="4"   fill="rgba(192,40,60,.32)"/>
+                <circle cx="268" cy="118" r="2.2" fill="rgba(192,40,60,.22)"/>
+                <circle cx="18"  cy="132" r="3"   fill="rgba(192,40,60,.28)"/>
+                <circle cx="140" cy="14"  r="2.5" fill="rgba(255,180,185,.35)"/>
+            </svg>
+        </div>
+
+        <div class="hp-empty-body">
+            <h3 class="hp-empty-heading" id="hp-empty-heading">No upcoming events in this category</h3>
+            <p class="hp-empty-sub" id="hp-empty-sub">
+                Nothing scheduled here yet. Check back soon or browse all events.
+            </p>
+            <div class="hp-empty-actions">
+                <button type="button" class="hp-empty-clear" id="hp-empty-clear">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                    All categories
+                </button>
+                <a href="{{ route('events.index') }}" class="hp-empty-browse">
+                    Browse all events
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- ─────────────────────── ALL-EVENTS FALLBACK ─────────────────────── --}}
 @if(!$hasAnyEvents && $allPublished->isNotEmpty())
@@ -1833,30 +1806,34 @@ body.modal-open { overflow:hidden; }
 
     const applyFilters = () => {
         let visible = 0;
+
         gridCards.forEach(card => {
-            const catOk  = activeCategory === 'all' || card.dataset.category === activeCategory;
-            const txtOk  = !searchQuery || (card.dataset.titleSearch || '').includes(searchQuery);
-            const show   = catOk && txtOk;
+            const catOk = activeCategory === 'all' || card.dataset.category === activeCategory;
+            const txtOk = !searchQuery || (card.dataset.titleSearch || '').includes(searchQuery);
+            const show  = catOk && txtOk;
             card.classList.toggle('is-hidden', !show);
+            if (show) visible++;
+        });
+
+        featCards.forEach(card => {
+            const show = activeCategory === 'all' || card.dataset.category === activeCategory;
+            card.style.display = show ? '' : 'none';
             if (show) visible++;
         });
 
         if (gridEmpty) {
             gridEmpty.hidden = visible > 0;
             if (visible === 0) {
-                const label = catLabels[activeCategory] || (activeCategory + ' events');
                 const heading = document.getElementById('hp-empty-heading');
                 const sub     = document.getElementById('hp-empty-sub');
-                if (heading) heading.textContent = `No ${label} right now`;
+                if (heading) heading.textContent = searchQuery
+                    ? `No results for "${searchQuery}"`
+                    : `No upcoming events in this category`;
                 if (sub) sub.innerHTML = searchQuery
-                    ? `No events match <strong style="color:#fff">"${searchQuery}"</strong>.<br>Try a different search or clear the filter.`
-                    : `We're working on bringing more events to you.<br>Try another category or come back soon.`;
+                    ? `Try a different search term or clear the filter.`
+                    : `Nothing scheduled here yet. Check back soon or browse all events.`;
             }
         }
-
-        featCards.forEach(card => {
-            card.style.display = (activeCategory === 'all' || card.dataset.category === activeCategory) ? '' : 'none';
-        });
     };
 
     const setCategory = (cat) => {

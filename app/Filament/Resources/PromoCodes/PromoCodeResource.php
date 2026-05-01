@@ -8,6 +8,8 @@ use App\Filament\Resources\PromoCodes\Pages\ListPromoCodes;
 use App\Models\Event;
 use App\Models\PromoCode;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -15,8 +17,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -137,7 +137,7 @@ class PromoCodeResource extends Resource
                 ToggleColumn::make('is_active')->label('Active'),
             ])
             ->defaultSort('created_at', 'desc')
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

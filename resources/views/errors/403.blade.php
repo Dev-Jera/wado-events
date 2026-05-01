@@ -38,8 +38,7 @@
             text-decoration: none;
             color: #fff;
         }
-        .err-logo img { height: 36px; }
-        .err-logo-name { font-size: 1.15rem; font-weight: 700; }
+        .err-logo img { height: 54px; width: auto; display: block; }
         .err-code {
             font-size: clamp(5rem, 22vw, 9rem);
             font-weight: 800;
@@ -115,8 +114,7 @@
 </head>
 <body>
     <a class="err-logo" href="{{ url('/') }}">
-        <img src="{{ asset('images/logos/logo-no-bg.png') }}" alt="Wado Events logo">
-        <span class="err-logo-name">Wado Events</span>
+        <img src="{{ asset('images/logos/Wado Ticketing.png') }}" alt="Wado Tickets">
     </a>
 
     <svg class="err-lock" aria-hidden="true" viewBox="0 0 72 72" fill="none">

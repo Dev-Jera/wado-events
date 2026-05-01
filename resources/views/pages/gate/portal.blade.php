@@ -23,7 +23,7 @@
             @endunless
 
             <div class="gate-note" role="status" aria-live="polite">
-                Auto-refresh every 15 seconds. Metrics link event ticket allocation, QR-issued tickets, and scans.
+                Live metrics. Push requests sync every 5 seconds from the backend.
             </div>
 
             @if (session('success'))
@@ -66,15 +66,8 @@
 
                     <label>
                         <span>Ticket category</span>
-                        <select name="ticket_category_id" required>
+                        <select name="ticket_category_id" id="categorySelect" required>
                             <option value="">Select category...</option>
-                            @foreach ($events as $event)
-                                @foreach ($event->ticketCategories as $category)
-                                    <option value="{{ $category->id }}" @selected((int) old('ticket_category_id') === $category->id)>
-                                        {{ $event->title }} :: {{ $category->name }} · UGX {{ number_format((float) $category->price, 0) }} · {{ $category->tickets_remaining }} left
-                                    </option>
-                                @endforeach
-                            @endforeach
                         </select>
                         @error('ticket_category_id') <small>{{ $message }}</small> @enderror
                     </label>
@@ -325,8 +318,36 @@
             setInterval(poll, 5000);
         }());
 
-        setInterval(function () {
-            window.location.reload();
-        }, 15000);
+        // Populate ticket categories based on selected event
+        const categoriesData = {!! json_encode($events->mapWithKeys(fn($event) => [
+            $event->id => $event->ticketCategories->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'price' => $cat->price,
+                'remaining' => $cat->tickets_remaining
+            ])
+        ])) !!};
+
+        const eventSelect = document.querySelector('select[name="event_id"]');
+        const categorySelect = document.getElementById('categorySelect');
+        const savedCategoryId = '{{ old('ticket_category_id') }}';
+
+        function updateCategories() {
+            const eventId = eventSelect.value;
+            categorySelect.innerHTML = '<option value="">Select category...</option>';
+            
+            if (eventId && categoriesData[eventId]) {
+                categoriesData[eventId].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name + ' · UGX ' + new Intl.NumberFormat().format(cat.price) + ' · ' + cat.remaining + ' left';
+                    if (savedCategoryId == cat.id) option.selected = true;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+
+        eventSelect.addEventListener('change', updateCategories);
+        updateCategories();
     </script>
 @endsection

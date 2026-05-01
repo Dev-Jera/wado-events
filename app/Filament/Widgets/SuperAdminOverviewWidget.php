@@ -11,6 +11,8 @@ use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 
 class SuperAdminOverviewWidget extends Widget
 {
@@ -21,6 +23,15 @@ class SuperAdminOverviewWidget extends Widget
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $pollingInterval = '10s';
+
+    #[Url(as: 'event_id')]
+    public int $selectedEventId = 0;
+
+    #[On('event-filter-changed')]
+    public function updateEventFilter(int $eventId): void
+    {
+        $this->selectedEventId = $eventId;
+    }
 
     protected function getViewData(): array
     {
@@ -174,10 +185,14 @@ class SuperAdminOverviewWidget extends Widget
     protected function scopedEventsQuery(): Builder
     {
         $query = Event::query();
-        $user = auth()->user();
+        $user  = auth()->user();
 
         if ($user?->isEventOwner()) {
             $query->where('user_id', $user->id);
+        }
+
+        if ($this->selectedEventId > 0) {
+            $query->where('id', $this->selectedEventId);
         }
 
         return $query;
@@ -186,10 +201,14 @@ class SuperAdminOverviewWidget extends Widget
     protected function scopedPaymentsQuery(): Builder
     {
         $query = PaymentTransaction::query();
-        $user = auth()->user();
+        $user  = auth()->user();
 
         if ($user?->isEventOwner()) {
-            $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+            $query->whereHas('event', fn (Builder $q) => $q->where('user_id', $user->id));
+        }
+
+        if ($this->selectedEventId > 0) {
+            $query->where('event_id', $this->selectedEventId);
         }
 
         return $query;
@@ -198,10 +217,14 @@ class SuperAdminOverviewWidget extends Widget
     protected function scopedTicketsQuery(): Builder
     {
         $query = Ticket::query();
-        $user = auth()->user();
+        $user  = auth()->user();
 
         if ($user?->isEventOwner()) {
-            $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+            $query->whereHas('event', fn (Builder $q) => $q->where('user_id', $user->id));
+        }
+
+        if ($this->selectedEventId > 0) {
+            $query->where('event_id', $this->selectedEventId);
         }
 
         return $query;
@@ -210,10 +233,14 @@ class SuperAdminOverviewWidget extends Widget
     protected function scopedTicketCategoriesQuery(): Builder
     {
         $query = TicketCategory::query();
-        $user = auth()->user();
+        $user  = auth()->user();
 
         if ($user?->isEventOwner()) {
-            $query->whereHas('event', fn (Builder $eventQuery) => $eventQuery->where('user_id', $user->id));
+            $query->whereHas('event', fn (Builder $q) => $q->where('user_id', $user->id));
+        }
+
+        if ($this->selectedEventId > 0) {
+            $query->whereHas('event', fn (Builder $q) => $q->where('id', $this->selectedEventId));
         }
 
         return $query;

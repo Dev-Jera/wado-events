@@ -67,11 +67,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/events/{event}/bookmark', [EventBookmarkController::class, 'toggle'])->name('events.bookmark');
 
-    Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
-    Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
-    Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->middleware('throttle:60,1')->name('tickets.verify.scan-json');
-    Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
-
     // Payment Monitor → Filament admin
     Route::get('/admin/payments', fn () => redirect('/dashboard/payment-transactions'))->name('payments.admin.index');
     Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
@@ -79,10 +74,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/payments/{paymentTransaction}/refund', [PaymentController::class, 'adminRefund'])->name('payments.admin.refund');
 
     Route::get('/gate-batches/{batchId}/download-pdf', [GateBatchController::class, 'downloadPdf'])->name('gate-batches.download-pdf');
-
-    Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
-    Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
-    Route::get('/gate-portal/walkin-requests', [GatePortalController::class, 'pendingWalkInRequests'])->name('gate.portal.walkin.requests');
 
     Route::get('/admin/events/{event}', [AdminEventController::class, 'show'])->name('admin.events.show');
 
@@ -141,6 +132,19 @@ Route::middleware('auth')->group(function () {
             'eventImageUrl' => $eventImageUrl,
         ]);
     })->name('admin.email.preview');
+});
+
+// Gate portal routes — authenticated via the Filament admin guard
+Route::middleware('auth:admin')->group(function () {
+    Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
+    Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
+    Route::get('/gate-portal/walkin-requests', [GatePortalController::class, 'pendingWalkInRequests'])->name('gate.portal.walkin.requests');
+
+    // Ticket verification/scanner routes
+    Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
+    Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
+    Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->middleware('throttle:60,1')->name('tickets.verify.scan-json');
+    Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
 });
 
 Route::get('/events/{event}/checkout', [CheckoutController::class, 'create'])->name('checkout.create');

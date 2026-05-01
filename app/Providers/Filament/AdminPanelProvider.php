@@ -35,8 +35,8 @@ class AdminPanelProvider extends PanelProvider
 
             // ── Brand ──────────────────────────────────────
             ->brandName('WADO')
-            ->brandLogo(asset('images/logos/logo-no-bg.png'))
-            ->brandLogoHeight('2.2rem')
+            ->brandLogo(asset('images/logos/Wado Ticketing.png'))
+            ->brandLogoHeight('3.1rem')
 
             // ── Colors ─────────────────────────────────────
             ->colors([
@@ -79,7 +79,7 @@ class AdminPanelProvider extends PanelProvider
     margin-bottom: 1.5rem !important;
 }
 .fi-logo img {
-    height: 2.8rem !important;
+    height: 3.1rem !important;
     width: auto !important;
 }
 .fi-simple-page .fi-header-heading,
@@ -174,73 +174,160 @@ html.fi { --font-family: var(--wado-admin-font) !important; }
    APP SHELL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-.fi-body, .fi-main, .fi-main-ctn, .fi-layout { background: #eef2f8 !important; }
+.fi-body, .fi-main, .fi-main-ctn, .fi-layout { background: #f0f2f8 !important; }
+
+/* ── Sidebar base ── */
 .fi-sidebar, .fi-sidebar-nav, nav.fi-sidebar-nav {
-    background: #f7f9fd !important;
-    border-right: 1px solid #dfe7f3 !important;
+    background: #ffffff !important;
+    border-right: 1px solid #e2e8f0 !important;
 }
 .fi-sidebar-header {
-    background: #f7f9fd !important;
-    border-bottom: 1px solid #e7edf7 !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
 }
+
+/* ── Section group separators ── */
+.fi-sidebar-group,
+.fi-sidebar-nav ul > li.fi-sidebar-group,
+[class*="fi-sidebar-group"] {
+    border-top: 1px solid #dde3ed !important;
+    margin-top: .5rem !important;
+    padding-top: .5rem !important;
+}
+.fi-sidebar-group:first-child,
+.fi-sidebar-nav ul > li.fi-sidebar-group:first-child,
+[class*="fi-sidebar-group"]:first-child {
+    border-top: none !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+/* fallback: separator line above each group label */
 .fi-sidebar-group-label {
-    color: #7f90ab !important;
-    font-size: .62rem !important;
-    letter-spacing: .08em !important;
+    position: relative !important;
+}
+.fi-sidebar-group + .fi-sidebar-group > .fi-sidebar-group-label::before,
+.fi-sidebar-group ~ .fi-sidebar-group > .fi-sidebar-group-label::before {
+    content: "" !important;
+    display: block !important;
+    height: 1px !important;
+    background: #dde3ed !important;
+    margin-bottom: .5rem !important;
+}
+
+/* ── Section labels ── */
+.fi-sidebar-group-label {
+    color: #2563eb !important;
+    font-size: .6rem !important;
+    letter-spacing: .12em !important;
     font-weight: 700 !important;
+    text-transform: uppercase !important;
 }
-.fi-sidebar-item-button {
-    color: #2a3f63 !important;
+
+/* ── Nav items (correct class: fi-sidebar-item-btn on the <a>) ── */
+.fi-sidebar-item-btn {
+    color: #374151 !important;
     border-radius: 10px !important;
-    min-height: 2.2rem !important;
-    padding-inline: .62rem !important;
+    min-height: 2.5rem !important;
+    padding-inline: .7rem !important;
+    transition: background .15s, color .15s !important;
+    text-decoration: none !important;
 }
-.fi-sidebar-item-button svg,
-.fi-sidebar-item-button span,
-.fi-sidebar-item-label { color: #2a3f63 !important; }
-.fi-sidebar-item-button:hover { background: #edf3ff !important; color: #1f4faa !important; }
-.fi-sidebar-item-button:hover svg,
-.fi-sidebar-item-button:hover span,
-.fi-sidebar-item-button:hover .fi-sidebar-item-label { color: #1f4faa !important; }
-.fi-sidebar-item-button.fi-active,
-.fi-sidebar-item-button[aria-current],
-.fi-sidebar-item-button[aria-current="page"] {
-    background: #e8f0ff !important;
-    color: #1e4ea8 !important;
-    box-shadow: inset 0 0 0 1px #cfdcf8 !important;
+.fi-sidebar-item-btn .fi-sidebar-item-icon,
+.fi-sidebar-item-btn svg { color: #2563eb !important; }
+.fi-sidebar-item-btn .fi-sidebar-item-label { color: #374151 !important; }
+
+.fi-sidebar-item-btn:hover {
+    background: #eff6ff !important;
 }
-.fi-sidebar-item-button.fi-active svg,
-.fi-sidebar-item-button.fi-active span,
-.fi-sidebar-item-button.fi-active .fi-sidebar-item-label,
-.fi-sidebar-item-button[aria-current] svg,
-.fi-sidebar-item-button[aria-current] span,
-.fi-sidebar-item-button[aria-current] .fi-sidebar-item-label { color: #1e4ea8 !important; }
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
-.fi-sidebar .fi-sidebar-item[aria-current="page"] .fi-sidebar-item-button,
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
-.fi-sidebar .fi-sidebar-item[aria-current="page"] .fi-sidebar-item-label,
-.fi-sidebar .fi-sidebar-item.fi-active svg,
-.fi-sidebar .fi-sidebar-item[aria-current="page"] svg { color: #1e4ea8 !important; }
+.fi-sidebar-item-btn:hover .fi-sidebar-item-icon,
+.fi-sidebar-item-btn:hover svg { color: #1d4ed8 !important; }
+.fi-sidebar-item-btn:hover .fi-sidebar-item-label { color: #1d4ed8 !important; }
+
+/* ── Parent with active child — tinted but NOT blue pill ── */
+li.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+li.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn .fi-sidebar-item-icon,
+li.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn svg { color: #1d4ed8 !important; }
+li.fi-sidebar-item-has-active-child-items > .fi-sidebar-item-btn .fi-sidebar-item-label { color: #1d4ed8 !important; }
+
+/* ── Sub-items container ── */
+.fi-sidebar-sub-group-items {
+    background: #f8fafc !important;
+    border-radius: 10px !important;
+    margin-top: 2px !important;
+    padding: 3px !important;
+}
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn {
+    color: #374151 !important;
+    background: transparent !important;
+}
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn .fi-sidebar-item-icon,
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn svg { color: #2563eb !important; }
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn .fi-sidebar-item-label { color: #374151 !important; }
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn:hover { background: #eff6ff !important; }
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn:hover .fi-sidebar-item-label,
+.fi-sidebar-sub-group-items .fi-sidebar-item-btn:hover svg { color: #1d4ed8 !important; }
+
+/* ── Active item — blue pill ── */
+li.fi-active > .fi-sidebar-item-btn {
+    background: #2563eb !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(37,99,235,.4) !important;
+}
+li.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon,
+li.fi-active > .fi-sidebar-item-btn svg { color: #fff !important; }
+li.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label { color: #fff !important; }
+
+/* ── Sidebar footer ── */
 .fi-sidebar-footer {
-    background: #f7f9fd !important;
-    border-top: 1px solid #e7edf7 !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
 }
+
+/* ── Footer user card ── */
+.wado-sidebar-foot {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: .65rem;
+    display: grid;
+    gap: .5rem;
+}
+.wado-sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+.wado-sidebar-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .78rem; font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37,99,235,.3);
+}
+.wado-sidebar-user-info { display: grid; gap: .1rem; overflow: hidden; }
+.wado-sidebar-user-info strong {
+    color: #0f172a; font-size: .72rem; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wado-sidebar-user-info span { color: #94a3b8; font-size: .62rem; }
 .wado-sidebar-logout {
     width: 100%;
     display: inline-flex; align-items: center; justify-content: center;
-    gap: .35rem; padding: .5rem .7rem; border-radius: 10px;
-    border: 1px solid #d7e1ef; background: #ffffff; color: #30486f;
+    gap: .4rem; padding: .48rem .7rem; border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
     font-size: .69rem; font-weight: 700; line-height: 1; cursor: pointer;
-    transition: background .15s, border-color .15s;
+    transition: background .15s, color .15s;
+    font-family: inherit;
 }
-.wado-sidebar-logout:hover { background: #edf3ff; border-color: #c5d7f6; }
-.wado-sidebar-foot {
-    border: 1px solid #dbe4f0; border-radius: 12px;
-    background: #ffffff; padding: .65rem; display: grid; gap: .45rem;
-}
-.wado-sidebar-user { display: grid; gap: .1rem; }
-.wado-sidebar-user strong { color: #1b2e4d; font-size: .69rem; font-weight: 700; line-height: 1.2; }
-.wado-sidebar-user span  { color: #7b8da8; font-size: .63rem; font-weight: 600; }
+.wado-sidebar-logout:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CREATE / EDIT EVENT FORM
@@ -295,13 +382,18 @@ textarea.fi-fo-textarea:focus { border-color: #0d1b3e !important; background: #f
 
             // ── Sidebar footer: user info + logout ────────
             ->renderHook('panels::sidebar.footer', function () {
-                $user = auth()->user();
+                $user   = auth()->user();
+                $initials = $user ? strtoupper(mb_substr($user->name, 0, 1)) : '?';
+                $role   = $user?->roles?->first()?->name ?? 'Admin';
                 return '
 <div style="padding:.5rem .75rem .8rem">
     <div class="wado-sidebar-foot">
         <div class="wado-sidebar-user">
-            <strong>' . e($user?->name ?? '') . '</strong>
-            <span>' . e($user?->email ?? '') . '</span>
+            <div class="wado-sidebar-avatar">' . e($initials) . '</div>
+            <div class="wado-sidebar-user-info">
+                <strong>' . e($user?->name ?? '') . '</strong>
+                <span>' . e($role) . '</span>
+            </div>
         </div>
         <form method="POST" action="' . route('filament.admin.auth.logout') . '">
             <input type="hidden" name="_token" value="' . csrf_token() . '">

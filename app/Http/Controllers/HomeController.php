@@ -127,10 +127,13 @@ class HomeController extends Controller
             })
             : collect();
 
-        // Category pills — keyed by Str::lower to match data-category on event cards
-        $categoryPills = Cache::remember('home:category_pills_v2', 3600, function () {
+        // Category pills — only upcoming events count, keyed by Str::lower to match data-category on cards
+        $categoryPills = Cache::remember('home:category_pills_v3', 300, function () {
             return Category::query()
-                ->withCount(['events' => fn ($q) => $q->where('status', 'published')])
+                ->withCount(['events' => fn ($q) => $q
+                    ->where('status', 'published')
+                    ->where('starts_at', '>=', now()->startOfDay())
+                ])
                 ->orderBy('name')
                 ->get()
                 ->filter(fn (Category $category) => $category->events_count > 0)
