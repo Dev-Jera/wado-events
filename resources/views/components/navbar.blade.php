@@ -4,7 +4,7 @@
 
 <nav class="site-nav" aria-label="Main navigation">
     <a href="{{ route('home') }}" class="brand" aria-label="Wado Tickets home">
-        <img src="{{ asset('images/logos/logo-no-bg.png') }}" alt="Wado Tickets">
+        <img src="{{ asset('images/logos/Wado Ticketing.png') }}" alt="Wado Tickets">
     </a>
 
     <a href="{{ $myTicketsUrl }}" class="mobile-ticket-link" aria-label="My tickets">
@@ -22,6 +22,7 @@
             <a href="{{ route('home') }}" @class(['active' => request()->routeIs('home')])>Home</a>
             <a href="{{ route('events.index') }}" @class(['active' => request()->routeIs('events.*')])>Events</a>
             <a href="{{ route('ticket-packages.index') }}" @class(['active' => request()->routeIs('ticket-packages.*')])>Packages</a>
+            <a href="{{ route('contact') }}" @class(['active' => request()->routeIs('contact*')])>Contact</a>
             @auth
                 <a href="{{ $myTicketsUrl }}" @class(['active' => request()->routeIs('tickets.index')])>My Tickets</a>
             @endauth
@@ -87,7 +88,7 @@
     }
 
     .brand img {
-        height: 34px;
+        height: 44px;
         width: auto;
         display: block;
     }

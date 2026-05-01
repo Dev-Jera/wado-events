@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#c0283c">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logos/Favcon Wado Ticketing.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logos/Favcon Wado Ticketing.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logos/Wado Ticketing.png') }}">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logos/logo-no-bg.png') }}">
 
     {{-- Hide page until all styles are parsed — prevents flash of unstyled content --}}
     <style>html{opacity:0;}</style>

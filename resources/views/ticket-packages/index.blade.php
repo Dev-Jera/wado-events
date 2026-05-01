@@ -269,7 +269,7 @@
         font-size: 0.72rem;
         font-weight: 700;
         letter-spacing: 0.14em;
-        color: #e8a06a;
+        color: rgba(192,40,60,.9);
         text-transform: uppercase;
     }
 
@@ -342,7 +342,7 @@
         letter-spacing: .06em;
         text-transform: uppercase;
     }
-    .tp-pkg-media-badge--gold { background: linear-gradient(135deg, #b8860b 0%, #e8a06a 100%); }
+    .tp-pkg-media-badge--gold { background: #1255c0; }
 
     /* ── Body panel ── */
     .tp-pkg-body {
@@ -418,24 +418,17 @@
     }
 
     .tp-opt-tag {
-        display: inline-flex;
-        align-items: center;
+        font-size: .75rem;
+        font-weight: 600;
+        color: #1255c0;
         margin-left: .3rem;
-        padding: .1rem .4rem;
-        border-radius: 999px;
-        background: rgba(192,40,60,.12);
-        border: 1px solid rgba(192,40,60,.3);
-        color: #ff8096;
-        font-size: .6rem;
-        font-weight: 700;
-        letter-spacing: .04em;
-        vertical-align: middle;
-        white-space: nowrap;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        text-underline-offset: 3px;
     }
     .tp-opt-tag--soon {
-        background: rgba(255,255,255,.05);
-        border-color: rgba(255,255,255,.12);
-        color: rgba(255,255,255,.35);
+        color: rgba(255,255,255,.3);
+        text-decoration: none;
     }
 
     /* ── Role prose ── */
@@ -459,8 +452,8 @@
         border-color: rgba(192,40,60,.22);
     }
     .tp-fee-footer--gold {
-        background: rgba(184,134,11,.07);
-        border-color: rgba(232,160,106,.22);
+        background: rgba(18,85,192,.08);
+        border-color: rgba(18,85,192,.25);
     }
     .tp-fee-main {
         display: flex;
@@ -513,8 +506,8 @@
     .tp-pkg-cta:hover { background: #0e3fa0; transform: translateY(-1px); }
     .tp-pkg-cta--maroon { background: #c0283c; }
     .tp-pkg-cta--maroon:hover { background: #a01e2e; }
-    .tp-pkg-cta--gold { background: linear-gradient(135deg, #a0680a 0%, #c8852a 100%); }
-    .tp-pkg-cta--gold:hover { filter: brightness(1.1); }
+    .tp-pkg-cta--gold { background: #1255c0; }
+    .tp-pkg-cta--gold:hover { background: #0e3fa0; transform: translateY(-1px); }
 
     /* ── Add-ons section ── */
     .tp-addons {
@@ -543,18 +536,18 @@
         gap: .7rem;
         transition: border-color .2s;
     }
-    .tp-addon-card:hover { border-color: rgba(232,160,106,.3); }
+    .tp-addon-card:hover { border-color: rgba(192,40,60,.4); }
     .tp-addon-icon {
         width: 2.5rem; height: 2.5rem;
-        background: rgba(232,160,106,.1);
+        background: rgba(18,85,192,.15);
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
     }
-    .tp-addon-icon svg { width: 1.25rem; height: 1.25rem; stroke: #e8a06a; }
+    .tp-addon-icon svg { width: 1.25rem; height: 1.25rem; stroke: #6ea8fe; }
     .tp-addon-name { margin: 0; font-size: .95rem; font-weight: 700; color: #fff; line-height: 1.25; }
     .tp-addon-desc { margin: 0; font-size: .83rem; line-height: 1.55; color: rgba(255,255,255,.55); flex: 1; }
-    .tp-addon-price { font-size: .8rem; font-weight: 700; color: #e8a06a; }
+    .tp-addon-price { font-size: .8rem; font-weight: 700; color: #ff8096; }
 
     /* ── Bottom CTA ── */
     .tp-cta { padding: 3rem 0 5rem; }
@@ -738,7 +731,7 @@
     .enq-field { display: flex; flex-direction: column; gap: .38rem; }
     .enq-field--full { grid-column: 1 / -1; }
     .enq-field label { font-size: .78rem; font-weight: 700; color: rgba(255,255,255,.7); letter-spacing: .03em; }
-    .enq-req { color: #e8a06a; }
+    .enq-req { color: #ff8096; }
 
     .enq-field input,
     .enq-field select,

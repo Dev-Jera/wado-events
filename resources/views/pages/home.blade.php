@@ -92,14 +92,15 @@
 
         {{-- category chips --}}
         <div class="hp-cats" role="list" aria-label="Filter by category">
-            <button class="hp-cat is-active" data-category="all" aria-pressed="true">
+            <button class="hp-cat is-active" type="button" data-category="all" aria-pressed="true">
                 <svg class="hp-cat-icon" aria-hidden="true"><use href="#icon-community"/></svg>
                 All
             </button>
             @foreach ($categoryPills as $key => $cat)
-                <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false">
+                <button class="hp-cat" type="button" data-category="{{ $key }}" aria-pressed="false">
                     <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
                     {{ $cat['label'] }}
+                    <span class="hp-cat-count">{{ $cat['count'] }}</span>
                 </button>
             @endforeach
         </div>
@@ -155,6 +156,7 @@
             <button class="hp-cat" data-category="{{ $key }}" aria-pressed="false" type="button">
                 <svg class="hp-cat-icon" aria-hidden="true"><use href="#{{ $iconMap[$key] ?? 'icon-community' }}"/></svg>
                 {{ $cat['label'] }}
+                <span class="hp-cat-count">{{ $cat['count'] }}</span>
             </button>
         @endforeach
     </div>
@@ -199,6 +201,7 @@
                     @php $price = (float) $event->ticket_price; @endphp
                     <article class="hp-fcard"
                         data-category="{{ \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized') }}"
+                        data-ts="{{ $event->starts_at->timestamp }}"
                         data-href="{{ $event->url }}"
                         data-title="{{ $event->title }}"
                         data-description="{{ e($event->description) }}"
@@ -274,6 +277,7 @@
                     @php $price = (float) $event->ticket_price; @endphp
                     <article class="hp-fcard"
                         data-category="{{ \Illuminate\Support\Str::lower($event->category_label ?? 'uncategorized') }}"
+                        data-ts="{{ $event->starts_at->timestamp }}"
                         data-href="{{ $event->url }}"
                         data-title="{{ $event->title }}"
                         data-description="{{ e($event->description) }}"
@@ -351,6 +355,7 @@
                 @endphp
                 <article class="hp-ecard"
                     data-category="{{ $key }}"
+                    data-ts="{{ $event->starts_at->timestamp }}"
                     data-title-search="{{ \Illuminate\Support\Str::lower($event->title) }}"
                     data-description="{{ e($event->description) }}"
                     data-artists='@json(collect($event->artists ?? [])->pluck("name")->values())'
@@ -502,6 +507,7 @@
                 @endphp
                 <article class="hp-ecard"
                     data-category="{{ $key }}"
+                    data-ts="{{ $event->starts_at->timestamp }}"
                     data-title-search="{{ \Illuminate\Support\Str::lower($event->title) }}"
                     data-description="{{ e($event->description) }}"
                     data-artists='@json(collect($event->artists ?? [])->pluck("name")->values())'
@@ -813,17 +819,8 @@ body {
 }
 .hp-search-btn:hover { background: var(--blue-hover); box-shadow: 0 6px 20px var(--blue-glow); }
 
-/* ── category chips ── */
-.hp-cats {
-    display: flex;
-    align-items: center;
-    gap: .45rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: .15rem;
-}
+/* ── category chips (hero) — hidden; sticky bar is used instead ── */
+.hp-cats { display: none; }
 .hp-cats::-webkit-scrollbar { display: none; }
 .hp-cat {
     display: inline-flex; align-items: center; gap: .38rem;
@@ -856,10 +853,19 @@ body {
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     flex-shrink: 0;
 }
+.hp-cat-count {
+    font-size: .7rem;
+    font-weight: 700;
+    opacity: .55;
+    background: rgba(255,255,255,.1);
+    border-radius: 999px;
+    padding: .05rem .38rem;
+    margin-left: .1rem;
+}
 
-/* ── Category bar (mobile only — replaces hero chips on small screens) ── */
+/* ── Category bar — always visible, sticky below navbar ── */
 .hp-cat-bar {
-    display: none; /* hidden on desktop; shown only inside ≤640px media query */
+    display: block;
     position: sticky;
     top: 4.2rem;
     z-index: 30;
@@ -1228,6 +1234,32 @@ body {
     transition: background .18s, transform .15s;
 }
 .hp-fcard-btn:hover { background: var(--blue-hover); transform: scale(1.04); }
+
+/* ── Past event state ── */
+.hp-fcard.is-past .hp-fcard-img,
+.hp-ecard.is-past .hp-ecard-thumb {
+    filter: grayscale(55%) brightness(.8);
+}
+.hp-fcard.is-past .hp-fcard-btn,
+.hp-ecard.is-past .hp-ecard-btn {
+    opacity: .45;
+    pointer-events: none;
+}
+.hp-past-badge {
+    position: absolute;
+    top: .6rem;
+    right: .6rem;
+    padding: .22rem .6rem;
+    border-radius: 6px;
+    background: rgba(10,10,14,.72);
+    border: 1px solid rgba(255,255,255,.15);
+    backdrop-filter: blur(6px);
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.65);
+}
 
 /* scroll arrows */
 .hp-arrow {
@@ -1624,11 +1656,8 @@ body.modal-open { overflow:hidden; }
     .hp-search-btn   { order: 3; width: 100%; border-radius: 10px; padding: .6rem 1rem; }
 
 
-    /* hero chips hidden on mobile — sticky bar takes over */
     .hp-cats { display: none; }
-    .hp-cat-count { display: none; }
-    /* category bar — shown on mobile only */
-    .hp-cat-bar { display: block; top: 3.5rem; }
+    .hp-cat-bar { top: 3.5rem; }
     .hp-cat-bar-inner { padding: .5rem .75rem; gap: .35rem; }
     .hp-cat-bar .hp-cat { flex-shrink: 0; font-size: .76rem; padding: .36rem .72rem; }
 
@@ -1828,8 +1857,6 @@ body.modal-open { overflow:hidden; }
             b.setAttribute('aria-pressed', active ? 'true' : 'false');
         });
         applyFilters();
-        const target = document.querySelector('.hp-featured');
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     catBtns.forEach(btn => {
@@ -1991,6 +2018,28 @@ body.modal-open { overflow:hidden; }
             window.location.href = `${modalLink.href}/checkout`;
         });
     }
+})();
+</script>
+
+<script>
+(() => {
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    document.querySelectorAll('.hp-fcard[data-ts], .hp-ecard[data-ts]').forEach(card => {
+        const ts = parseInt(card.dataset.ts, 10);
+        if (!ts || ts > nowSec) return;
+
+        card.classList.add('is-past');
+
+        // inject "Ended" badge into the image area
+        const imgWrap = card.querySelector('.hp-fcard-img, .hp-ecard-thumb');
+        if (imgWrap && !imgWrap.querySelector('.hp-past-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'hp-past-badge';
+            badge.textContent = 'Ended';
+            imgWrap.appendChild(badge);
+        }
+    });
 })();
 </script>
 

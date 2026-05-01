@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\EventBookmarkController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GatePortalController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
@@ -23,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthController::class)->name('health');
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'send'])->name('contact.send')->middleware('throttle:5,1');
 Route::get('/events', [EventController::class, 'index'])->middleware('throttle:60,1')->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->middleware('throttle:60,1')->name('events.show');
 

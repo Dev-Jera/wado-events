@@ -127,8 +127,8 @@ class HomeController extends Controller
             })
             : collect();
 
-        // Category pills
-        $categoryPills = Cache::remember('home:category_pills', 3600, function () {
+        // Category pills — keyed by Str::lower to match data-category on event cards
+        $categoryPills = Cache::remember('home:category_pills_v2', 3600, function () {
             return Category::query()
                 ->withCount(['events' => fn ($q) => $q->where('status', 'published')])
                 ->orderBy('name')
@@ -136,7 +136,7 @@ class HomeController extends Controller
                 ->filter(fn (Category $category) => $category->events_count > 0)
                 ->mapWithKeys(function (Category $category) {
                     return [
-                        Str::slug($category->name) => [
+                        Str::lower($category->name) => [
                             'label' => $category->name,
                             'count' => (int) $category->events_count,
                         ],
