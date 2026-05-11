@@ -508,6 +508,25 @@ textarea.fi-fo-textarea:focus { border-color: #0d1b3e !important; background: #f
 </style>
 
 <script>
+function wadoMarkNotificationAsRead(card) {
+    var unreadContainer = card.closest(".fi-no-notification-unread-ctn");
+
+    if (!unreadContainer) {
+        return;
+    }
+
+    if (window.Alpine && typeof window.Alpine.$data === "function") {
+        var alpineData = window.Alpine.$data(card);
+
+        if (alpineData && typeof alpineData.markAsRead === "function") {
+            alpineData.markAsRead();
+        }
+    }
+
+    unreadContainer.classList.remove("fi-no-notification-unread-ctn");
+    unreadContainer.classList.add("fi-no-notification-read-ctn");
+}
+
 document.addEventListener("click", function (event) {
     var card = event.target.closest(".fi-no-database .fi-no-notification");
     if (!card) {
@@ -524,6 +543,8 @@ document.addEventListener("click", function (event) {
             item.classList.remove("wado-notification-expanded");
         }
     });
+
+    wadoMarkNotificationAsRead(card);
 
     card.classList.add("wado-notification-opened");
     card.classList.toggle("wado-notification-expanded");
