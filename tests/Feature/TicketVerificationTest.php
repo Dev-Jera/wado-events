@@ -23,7 +23,7 @@ class TicketVerificationTest extends TestCase
         $ticket = $context['ticket'];
 
         $response = $this
-            ->actingAs($staff)
+            ->actingAs($staff, 'admin')
             ->post(route('tickets.verify.store'), [
                 'selected_event_id' => $event->id,
                 'scanned_payload' => json_encode([
@@ -65,7 +65,7 @@ class TicketVerificationTest extends TestCase
         ]);
 
         $response = $this
-            ->actingAs($staff)
+            ->actingAs($staff, 'admin')
             ->post(route('tickets.verify.store'), [
                 'selected_event_id' => $otherEvent->id,
                 'ticket_code' => $ticket->ticket_code,
@@ -93,7 +93,7 @@ class TicketVerificationTest extends TestCase
         ])->save();
 
         $response = $this
-            ->actingAs($staff)
+            ->actingAs($staff, 'admin')
             ->post(route('tickets.verify.store'), [
                 'selected_event_id' => $event->id,
                 'ticket_code' => $ticket->ticket_code,
@@ -115,7 +115,7 @@ class TicketVerificationTest extends TestCase
         $ticket = $context['ticket'];
 
         $response = $this
-            ->actingAs($staff)
+            ->actingAs($staff, 'admin')
             ->post(route('tickets.verify.store'), [
                 'selected_event_id' => $event->id,
                 'ticket_code' => $ticket->ticket_code,
