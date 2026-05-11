@@ -280,6 +280,12 @@ class GateBatchResource extends Resource
                     ->searchable()
                     ->limit(32),
 
+                TextColumn::make('event.verification_mode')
+                    ->label('Verification Mode')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state === 'self_managed' ? 'Self-managed' : 'WADO-managed')
+                    ->color(fn (?string $state): string => $state === 'self_managed' ? 'warning' : 'info'),
+
                 TextColumn::make('label')
                     ->label('Category')
                     ->searchable(),

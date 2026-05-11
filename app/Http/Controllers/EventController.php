@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Mail\EventSubmitted;
 use App\Support\StaticEventCatalog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 /**
@@ -110,5 +114,163 @@ class EventController extends Controller
         return view('pages.events.show', [
             'event' => $event,
         ]);
+    }
+
+    public function create()
+    {
+        $categories = \App\Models\Category::all();
+        
+        return view('pages.events.create', [
+            'categories' => $categories,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'venue' => 'required|string|max:255',
+            'city' => 'required|string|max:120',
+            'country' => 'required|string|max:120',
+            'starts_at' => 'required|date_format:Y-m-d\TH:i',
+            'ends_at' => 'nullable|date_format:Y-m-d\TH:i|after:starts_at',
+            'description' => 'required|string',
+            'image_url' => 'nullable|image|max:5120',
+            'verification_mode' => 'required|in:wado_managed,self_managed',
+            'is_free' => 'boolean',
+            'reentry_allowed' => 'boolean',
+            'reentry_limit' => 'nullable|integer|min:1',
+            'reentry_cooldown_minutes' => 'nullable|integer|min:0',
+            'ticket_categories' => 'required|array|min:1',
+            'ticket_categories.*.name' => 'required|string|max:100',
+            'ticket_categories.*.price' => 'nullable|numeric|min:0',
+            'ticket_categories.*.ticket_count' => 'required|integer|min:1',
+            'ticket_categories.*.description' => 'nullable|string',
+        ]);
+
+        // Handle image upload
+        if ($request->hasFile('image_url')) {
+            $validated['image_url'] = $request->file('image_url')->store('event-images', 'public');
+        } else {
+            unset($validated['image_url']);
+        }
+
+        $user = auth()->user();
+
+        $event = DB::transaction(function () use ($validated, $user) {
+            // Create event with pending status (awaiting admin approval)
+            $event = new \App\Models\Event();
+            $event->fill($validated);
+            $event->status = 'pending';
+            $event->user_id = $user->id;
+            $event->is_featured = false;
+            $baseSlug = Str::slug($validated['title']);
+            $slug = $baseSlug;
+            $suffix = 1;
+            while (Event::query()->where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $suffix;
+                $suffix++;
+            }
+            $event->slug = $slug;
+            $event->verification_mode = $validated['verification_mode'] ?? 'wado_managed';
+            $event->reentry_allowed = $validated['reentry_allowed'] ?? false;
+            $event->reentry_limit = $validated['reentry_limit'] ?? 1;
+            $event->reentry_cooldown_minutes = $validated['reentry_cooldown_minutes'] ?? 0;
+            $event->is_free = $validated['is_free'] ?? false;
+
+            $ticketCategories = collect($validated['ticket_categories'] ?? []);
+            $event->capacity = (int) $ticketCategories->sum(fn (array $ticketCat): int => (int) ($ticketCat['ticket_count'] ?? 0));
+            $event->tickets_available = $event->capacity;
+
+            if ($event->is_free) {
+                $event->ticket_price = 0;
+            } else {
+                $lowestPrice = $ticketCategories
+                    ->map(fn (array $ticketCat): float => (float) ($ticketCat['price'] ?? 0))
+                    ->min();
+                $event->ticket_price = $lowestPrice ?? 0;
+            }
+
+            $event->save();
+
+            // Create ticket categories
+            if (!empty($validated['ticket_categories'])) {
+                foreach ($validated['ticket_categories'] as $index => $ticketCat) {
+                    $price = $event->is_free ? 0 : ($ticketCat['price'] ?? 0);
+                    $event->ticketCategories()->create([
+                        'name' => $ticketCat['name'],
+                        'price' => $price,
+                        'ticket_count' => $ticketCat['ticket_count'],
+                        'tickets_remaining' => $ticketCat['ticket_count'],
+                        'description' => $ticketCat['description'] ?? null,
+                        'sort_order' => $index,
+                    ]);
+                }
+            }
+
+            return $event;
+        });
+
+        // Send confirmation email to the event owner
+        $event->loadMissing(['category', 'ticketCategories']);
+        Mail::to($user)->send(new EventSubmitted($event, $user));
+
+        return redirect()->route('home')->with('success', 'Your event has been submitted for review. We\'ll notify you once it\'s approved.');
+    }
+
+    public function createCategory(Request $request)
+    {
+        // Always return JSON for async category creation requests
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
+        $normalizedName = trim((string) $validated['name']);
+
+        $existingCategory = \App\Models\Category::query()
+            ->whereRaw('LOWER(name) = ?', [Str::lower($normalizedName)])
+            ->first();
+
+        if ($existingCategory) {
+            return response()->json([
+                'success' => true,
+                'existing' => true,
+                'category' => [
+                    'id' => $existingCategory->id,
+                    'name' => $existingCategory->name,
+                ],
+            ], 200);
+        }
+
+        try {
+            // Create the new category
+            $category = \App\Models\Category::create([
+                'name' => $normalizedName,
+                'slug' => Str::slug($normalizedName) . '-' . Str::lower(Str::random(4)),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'category' => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create category. Please try again.',
+            ], 500);
+        }
     }
 }

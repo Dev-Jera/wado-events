@@ -232,9 +232,9 @@
     <section class="tp-cta">
         <div class="tp-shell">
             <div class="tp-cta-box">
-                <h2>Not sure which package suits your event?</h2>
-                <p>Reach out and we'll walk you through the best option for your audience size, venue type, and budget. No commitment required.</p>
-                <button type="button" class="tp-cta-btn" onclick="openEnquiry()">Talk to us about your event</button>
+                <h2>Ready to create your event?</h2>
+                <p>Describe your event, set up your ticket categories, and get started immediately. Your event will be live for guests to purchase tickets once our team reviews and approves it.</p>
+                <a href="{{ route('host-event.create') }}" class="tp-cta-btn" style="text-decoration: none; display: inline-block;">Create your event</a>
             </div>
         </div>
     </section>
@@ -288,6 +288,55 @@
         color: rgba(255,255,255,.72);
     }
 
+    /* ── Host CTA Section ── */
+    .tp-host-cta {
+        padding: 3rem 1.25rem;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(139, 26, 26, 0.05) 100%);
+        border-top: 1px solid rgba(255,255,255,.06);
+        border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .tp-host-cta-inner {
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .tp-host-cta-heading {
+        margin: 0 0 1rem;
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #fff;
+    }
+
+    .tp-host-cta-text {
+        margin: 0 0 1.5rem;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: rgba(255,255,255,.7);
+    }
+
+    .tp-host-cta-btn {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .tp-host-cta-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        transform: translateY(-2px);
+    }
 
     /* ── Package sections ── */
     .tp-pkg {
@@ -586,6 +635,8 @@
         .tp-pkg { padding: 3rem 0; }
         .tp-pkg-title { font-size: 1.3rem; }
         .tp-cta-box { padding: 2rem 1.5rem; border-radius: 16px; }
+        .tp-host-cta { padding: 2rem 1rem; }
+        .tp-host-cta-heading { font-size: 1.4rem; }
     }
 
     @media (max-width: 580px) {
@@ -596,6 +647,7 @@
         .tp-pkg-body { padding: 1.35rem 1.1rem; }
         .tp-pkg-cta { width: 100%; justify-content: center; }
         .tp-cta { padding: 2rem 0 3.5rem; }
+        .tp-host-cta-btn { width: 100%; }
     }
 </style>
 

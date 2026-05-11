@@ -34,6 +34,13 @@ Route::get('/terms', fn() => view('pages.terms'))->name('terms');
 Route::get('/ticket-policy', fn() => view('pages.ticket-policy'))->name('ticket-policy');
 Route::get('/refund-policy', fn() => view('pages.refund-policy'))->name('refund-policy');
 
+// Host event creation (requires login)
+Route::middleware('auth')->group(function () {
+    Route::get('/host-event/create', [EventController::class, 'create'])->name('host-event.create');
+    Route::post('/host-event/store', [EventController::class, 'store'])->name('host-event.store');
+    Route::post('/api/categories', [EventController::class, 'createCategory'])->name('api.categories.store');
+});
+
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 

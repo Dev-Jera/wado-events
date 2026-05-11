@@ -29,6 +29,24 @@
         'free'       => 'icon-free',
     ];
 
+    $eventImageUrl = static function (?string $path): string {
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return asset('images/movie.jpg');
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/storage/') || str_starts_with($path, 'storage/')) {
+            return asset(ltrim($path, '/'));
+        }
+
+        return asset('storage/' . ltrim($path, '/'));
+    };
+
     // $heroImages, $packageSlides, $heroTitle, $heroSubtitle are passed by HomeController
 @endphp
 
@@ -210,10 +228,10 @@
                         data-time="{{ $event->starts_at->format('h:i A') }}"
                         data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                         data-date="{{ $event->starts_at->format('d M') }}"
-                        data-image="{{ asset(ltrim((string)$event->image_url,'/')) }}">
+                        data-image="{{ $eventImageUrl($event->image_url) }}">
 
                         <div class="hp-fcard-img"
-                             style="background-image:url('{{ asset(ltrim((string)$event->image_url,'/')) }}')">
+                             style="background-image:url('{{ $eventImageUrl($event->image_url) }}')">
                             <div class="hp-fcard-gradient"></div>
                             <span class="hp-fcard-date-badge">
                                 <span class="hp-fcard-day">{{ $event->starts_at->format('d') }}</span>
@@ -286,10 +304,10 @@
                         data-time="{{ $event->starts_at->format('h:i A') }}"
                         data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                         data-date="{{ $event->starts_at->format('d M') }}"
-                        data-image="{{ asset(ltrim((string)$event->image_url,'/')) }}">
+                        data-image="{{ $eventImageUrl($event->image_url) }}">
 
                         <div class="hp-fcard-img"
-                             style="background-image:url('{{ asset(ltrim((string)$event->image_url,'/')) }}')">
+                             style="background-image:url('{{ $eventImageUrl($event->image_url) }}')">
                             <div class="hp-fcard-gradient"></div>
                             <span class="hp-fcard-date-badge">
                                 <span class="hp-fcard-day">{{ $event->starts_at->format('d') }}</span>
@@ -364,10 +382,10 @@
                     data-time="{{ $event->starts_at->format('h:i A') }}"
                     data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                     data-date="{{ $event->starts_at->format('d M') }}"
-                    data-image="{{ asset(ltrim((string)$event->image_url,'/')) }}">
+                    data-image="{{ $eventImageUrl($event->image_url) }}">
 
                     <div class="hp-ecard-thumb"
-                         style="background-image:url('{{ asset(ltrim((string)$event->image_url,'/')) }}')">
+                         style="background-image:url('{{ $eventImageUrl($event->image_url) }}')">
                         <span class="hp-ecard-date-badge">
                             <span class="hp-ecard-day">{{ $event->starts_at->format('d') }}</span>
                             <span class="hp-ecard-mon">{{ $event->starts_at->format('M') }}</span>
@@ -489,10 +507,10 @@
                     data-time="{{ $event->starts_at->format('h:i A') }}"
                     data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                     data-date="{{ $event->starts_at->format('d M') }}"
-                    data-image="{{ asset(ltrim((string)$event->image_url,'/')) }}">
+                    data-image="{{ $eventImageUrl($event->image_url) }}">
 
                     <div class="hp-ecard-thumb"
-                         style="background-image:url('{{ asset(ltrim((string)$event->image_url,'/')) }}')">
+                         style="background-image:url('{{ $eventImageUrl($event->image_url) }}')">
                         <span class="hp-ecard-date-badge">
                             <span class="hp-ecard-day">{{ $event->starts_at->format('d') }}</span>
                             <span class="hp-ecard-mon">{{ $event->starts_at->format('M') }}</span>

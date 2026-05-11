@@ -30,6 +30,7 @@ class Event extends Model
         'status',
         'image_url',
         'is_featured',
+        'verification_mode',
         'is_free',
         'reentry_allowed',
         'reentry_limit',
@@ -43,6 +44,7 @@ class Event extends Model
             'ends_at' => 'datetime',
             'ticket_price' => 'decimal:2',
             'is_featured'              => 'boolean',
+            'verification_mode'        => 'string',
             'is_free'                  => 'boolean',
             'reentry_allowed'          => 'boolean',
             'reentry_limit'            => 'integer',
@@ -53,6 +55,11 @@ class Event extends Model
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->organizer();
     }
 
     public function category(): BelongsTo

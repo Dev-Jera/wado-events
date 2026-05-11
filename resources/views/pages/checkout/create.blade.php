@@ -23,7 +23,7 @@
             {{-- LEFT: Event info + order summary --}}
             <div class="checkout-left">
 
-                <div class="event-banner" style="background-image: linear-gradient(rgba(7,16,28,0.3), rgba(7,16,28,0.85)), url('{{ asset(ltrim((string) $event->image_url, '/')) }}')">
+                <div class="event-banner" style="background-image: linear-gradient(rgba(7,16,28,0.3), rgba(7,16,28,0.85)), url('{{ str_starts_with((string) $event->image_url, 'http') ? $event->image_url : asset('storage/' . ltrim((string) $event->image_url, '/')) }}')">
                     <p class="banner-cat">{{ $event->category?->name ?? 'Event' }}</p>
                     <p class="banner-title">{{ $event->title }}</p>
                     <div class="banner-meta">

@@ -22,6 +22,7 @@
             <a href="{{ route('home') }}" @class(['active' => request()->routeIs('home')])>Home</a>
             <a href="{{ route('events.index') }}" @class(['active' => request()->routeIs('events.*')])>Events</a>
             <a href="{{ route('ticket-packages.index') }}" @class(['active' => request()->routeIs('ticket-packages.*')])>Packages</a>
+            <a href="{{ route('host-event.create') }}" @class(['active' => request()->routeIs('host-event.*')])>Host Event</a>
             <a href="{{ route('contact') }}" @class(['active' => request()->routeIs('contact*')])>Contact</a>
             @auth
                 <a href="{{ $myTicketsUrl }}" @class(['active' => request()->routeIs('tickets.index')])>My Tickets</a>

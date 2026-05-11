@@ -65,6 +65,17 @@ class EventForm
                                             ->native(false)
                                             ->selectablePlaceholder(false),
 
+                                        Select::make('verification_mode')
+                                            ->label('Gate verification mode')
+                                            ->options([
+                                                'wado_managed' => 'WADO-managed verification',
+                                                'self_managed' => 'Self-managed verification',
+                                            ])
+                                            ->default('wado_managed')
+                                            ->required()
+                                            ->native(false)
+                                            ->selectablePlaceholder(false),
+
                                         TextInput::make('city')
                                             ->required()
                                             ->maxLength(120)

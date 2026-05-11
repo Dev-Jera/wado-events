@@ -1,7 +1,12 @@
 @extends('layouts.app')
 
 @php
-    $image = str_starts_with((string) $event->image_url, 'http') ? $event->image_url : asset(ltrim((string) $event->image_url, '/'));
+    $path = trim((string) $event->image_url);
+    $image = str_starts_with($path, 'http')
+        ? $path
+        : (str_starts_with($path, 'storage/') || str_starts_with($path, '/storage/')
+            ? asset(ltrim($path, '/'))
+            : asset('storage/' . ltrim($path, '/')));
 @endphp
 
 @section('content')

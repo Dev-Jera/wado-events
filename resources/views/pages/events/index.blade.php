@@ -55,7 +55,7 @@
                     @endphp
                     <div class="event-card event-card--{{ $liveStatus }}">
                         <a href="{{ $event->url ?? route('events.show', $event) }}" class="event-card-img-link">
-                            <div class="event-card-img" style="background-image: url('{{ asset(ltrim((string) $event->image_url, '/')) }}')">
+                            <div class="event-card-img" style="background-image: url('{{ str_starts_with((string) $event->image_url, 'http') ? $event->image_url : asset('storage/' . ltrim((string) $event->image_url, '/')) }}')">
                                 <span class="status-badge status-badge--{{ $liveStatus }}">{{ $statusLabel }}</span>
                                 @if ($liveStatus === 'live')
                                     <span class="live-badge">● Live now</span>

@@ -47,6 +47,12 @@ class EventsTable
                         : '')
                     ->sortable(),
 
+                TextColumn::make('verification_mode')
+                    ->label('Verification')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state === 'self_managed' ? 'Self-managed' : 'WADO-managed')
+                    ->color(fn (?string $state): string => $state === 'self_managed' ? 'warning' : 'info'),
+
                 TextColumn::make('access_mode')
                     ->label('Access')
                     ->state(fn (): string => auth()->user()?->isGateStaff() ? 'READ ONLY' : 'EDIT')
@@ -64,6 +70,12 @@ class EventsTable
                 SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship('category', 'name'),
+                SelectFilter::make('verification_mode')
+                    ->label('Verification Mode')
+                    ->options([
+                        'wado_managed' => 'WADO-managed',
+                        'self_managed' => 'Self-managed',
+                    ]),
             ])
 
             // Clicking a row calls selectEvent() on the ListEvents Livewire component.

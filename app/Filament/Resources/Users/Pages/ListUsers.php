@@ -17,7 +17,21 @@ class ListUsers extends ListRecords
         return [
             CreateAction::make()
                 ->label('Create Agent / User')
-                ->visible(fn (): bool => (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->isAdmin())),
+                ->visible(function (): bool {
+                    $user = auth()->user();
+
+                    // Super admin and admin can always create agents
+                    if ($user?->isSuperAdmin() || $user?->isAdmin()) {
+                        return true;
+                    }
+
+                    // Event owners can only create agents if they have self_managed events
+                    if ($user?->role === 'event_owner') {
+                        return $user->events()->where('verification_mode', 'self_managed')->exists();
+                    }
+
+                    return false;
+                }),
         ];
     }
 }
