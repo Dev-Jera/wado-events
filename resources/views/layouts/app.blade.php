@@ -101,24 +101,25 @@
         }
 
         /* ── Policy pages ─────────────────────────────── */
-        .policy-page { min-height: 70vh; background: #fff; }
+        .policy-page { min-height: 70vh; background: #f9f5f5; padding-top: 3rem; }
 
-        /* Hero — solid red */
+        /* Hero — clean minimal design */
         .policy-hero {
-            background: #c0283c;
-            padding: 4rem 1.25rem 3rem;
-            text-align: center;
+            background: #f9f5f5;
+            padding: 3.5rem 1.25rem 2.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e8dedd;
         }
-        .policy-hero-inner { max-width: 700px; margin: 0 auto; }
+        .policy-hero-inner { max-width: var(--site-width, 1140px); margin: 0 auto; }
         .policy-eyebrow {
-            font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
-            color: rgba(255,255,255,.75); font-weight: 700; margin-bottom: .6rem;
+            font-size: .65rem; letter-spacing: .25em; text-transform: uppercase;
+            color: #8b1a1a; font-weight: 800; margin-bottom: .4rem;
         }
         .policy-heading {
-            font-size: clamp(1.8rem, 4vw, 2.8rem);
-            font-weight: 800; color: #fff; margin: 0 0 .75rem; line-height: 1.15;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800; color: #8b1a1a; margin: 0 0 .5rem; line-height: 1.2;
         }
-        .policy-sub { color: rgba(255,255,255,.7); font-size: .9rem; margin: 0; }
+        .policy-sub { color: #8b8b8b; font-size: .85rem; margin: 0; }
 
         /* Shell layout */
         .policy-shell {
@@ -126,55 +127,58 @@
             margin: 0 auto;
             padding: 3rem 1.25rem 4rem;
             display: grid;
-            grid-template-columns: 220px 1fr;
+            grid-template-columns: 260px 1fr;
             gap: 3rem;
             align-items: start;
         }
 
-        /* TOC sidebar — red accent border */
+        /* TOC sidebar — blue accent border (reference style) */
         .policy-toc {
             position: sticky; top: 90px;
             background: #fff;
-            border: 1px solid #e5e7eb;
-            border-left: 4px solid #c0283c;
-            border-radius: 8px;
-            padding: 1.25rem 1rem;
+            border: 1px solid #e8dedd;
+            border-left: 4px solid #0088cc;
+            border-radius: 6px;
+            padding: 1.5rem 1.25rem;
+            margin-bottom: 2rem;
         }
         .policy-toc-title {
-            font-size: .68rem; letter-spacing: .15em; text-transform: uppercase;
-            color: #c0283c; font-weight: 700; margin: 0 0 .85rem .1rem;
+            font-size: .65rem; letter-spacing: .2em; text-transform: uppercase;
+            color: #8b1a1a; font-weight: 800; margin: 0 0 1rem .1rem;
         }
-        .policy-toc nav { display: flex; flex-direction: column; gap: .25rem; }
+        .policy-toc nav { display: flex; flex-direction: column; gap: .5rem; }
         .policy-toc nav a {
-            color: #1e3a8a; text-decoration: none;
-            font-size: .84rem; padding: .35rem .6rem; border-radius: 5px;
-            transition: background .15s, color .15s; display: block;
+            color: #555; text-decoration: none;
+            font-size: .9rem; padding: .4rem .8rem; border-radius: 4px;
+            transition: all .15s; display: block;
         }
-        .policy-toc nav a:hover { background: #fef2f4; color: #c0283c; }
+        .policy-toc nav a:hover { background: #f0e8e8; color: #8b1a1a; }
 
         /* Article body — white bg, dark text */
         .policy-body section {
-            margin-bottom: 2.5rem; padding-bottom: 2.5rem;
-            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 2.2rem; padding-bottom: 2.2rem;
+            border-bottom: 1px solid #e8dedd;
         }
         .policy-body section:last-child { border-bottom: none; margin-bottom: 0; }
         .policy-body h2 {
-            font-size: 1.15rem; font-weight: 700;
-            color: #c0283c; margin: 0 0 .9rem;
+            font-size: 1.1rem; font-weight: 700;
+            color: #333; margin: 0 0 1rem;
         }
         .policy-body p {
-            color: #374151; line-height: 1.8; margin-bottom: .9rem; font-size: .95rem;
+            color: #555; line-height: 1.8; margin-bottom: .9rem; font-size: .95rem;
         }
         .policy-body p:last-child { margin-bottom: 0; }
-        .policy-body ul { margin: .5rem 0 1rem 1.25rem; display: flex; flex-direction: column; gap: .45rem; }
-        .policy-body ul li { color: #4b5563; line-height: 1.7; font-size: .93rem; }
-        .policy-body strong { color: #111827; }
-        .policy-body a { color: #1e3a8a; text-decoration: none; font-weight: 600; }
-        .policy-body a:hover { text-decoration: underline; color: #c0283c; }
+        .policy-body ul { margin: .6rem 0 1rem 1.5rem; display: flex; flex-direction: column; gap: .5rem; }
+        .policy-body ul li { color: #555; line-height: 1.7; font-size: .95rem; }
+        .policy-body strong { color: #222; }
+        .policy-body a { color: #0088cc; text-decoration: none; font-weight: 600; }
+        .policy-body a:hover { text-decoration: underline; color: #8b1a1a; }
 
         @media (max-width: 760px) {
+            .policy-hero { padding: 2.5rem 1.25rem 1.75rem; }
             .policy-shell { grid-template-columns: 1fr; gap: 1.5rem; }
             .policy-toc { position: static; }
+            .policy-heading { font-size: clamp(1.5rem, 4vw, 2rem); }
         }
     </style>
 

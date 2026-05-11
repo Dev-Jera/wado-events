@@ -7,9 +7,8 @@
 
     <div class="policy-hero">
         <div class="policy-hero-inner">
-            <p class="policy-eyebrow">LEGAL</p>
             <h1 class="policy-heading">Refund &amp; Returns Policy</h1>
-            <p class="policy-sub">Last updated: {{ date('d F Y') }}</p>
+            <p class="policy-sub">Last Updated: {{ date('d/m/Y') }}</p>
         </div>
     </div>
 

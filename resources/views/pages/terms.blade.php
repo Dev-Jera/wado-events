@@ -7,9 +7,8 @@
 
     <div class="policy-hero">
         <div class="policy-hero-inner">
-            <p class="policy-eyebrow">LEGAL</p>
-            <h1 class="policy-heading">Terms &amp; Conditions</h1>
-            <p class="policy-sub">Last updated: {{ date('d F Y') }}</p>
+            <h1 class="policy-heading">Terms of Service</h1>
+            <p class="policy-sub">Last Updated: {{ date('d/m/Y') }}</p>
         </div>
     </div>
 
