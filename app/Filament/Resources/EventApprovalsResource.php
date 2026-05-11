@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Mail\EventApprovedOwnerNextSteps;
 use App\Models\Event;
 use App\Models\User;
 use App\Filament\Resources\EventApprovals\Pages\ListEventApprovals;
@@ -21,7 +20,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use BackedEnum;
@@ -309,13 +309,50 @@ class EventApprovalsResource extends Resource
         $dashboardAlias = static::generateDashboardAlias((string) $event->title);
         $dashboardLoginUrl = route('filament.admin.auth.login');
 
-        Mail::to($owner)->send(new EventApprovedOwnerNextSteps(
-            event: $event,
-            owner: $owner,
-            dashboardAlias: $dashboardAlias,
-            dashboardLoginUrl: $dashboardLoginUrl,
-            setPasswordUrl: $resetUrl,
-        ));
+        try {
+            $apiKey = (string) config('services.brevo.api_key', '');
+
+            if ($apiKey === '') {
+                throw new \RuntimeException('Brevo API key not configured (BREVO_API_KEY)');
+            }
+
+            $html = view('emails.events.approved-owner-next-steps', [
+                'event' => $event,
+                'owner' => $owner,
+                'dashboardAlias' => $dashboardAlias,
+                'dashboardLoginUrl' => $dashboardLoginUrl,
+                'setPasswordUrl' => $resetUrl,
+            ])->render();
+
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'api-key' => $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender' => [
+                        'name' => (string) config('mail.from.name', config('app.name', 'WADO Events')),
+                        'email' => (string) config('mail.from.address', 'noreply@wado-events.com'),
+                    ],
+                    'to' => [[
+                        'email' => $owner->email,
+                        'name' => $owner->name,
+                    ]],
+                    'subject' => 'Your event is approved - next steps on WADO Ticketing',
+                    'htmlContent' => $html,
+                ]);
+
+            if (! $response->successful()) {
+                throw new \RuntimeException('Brevo API error ' . $response->status() . ': ' . $response->body());
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Event approval owner email failed.', [
+                'event_id' => $event->id,
+                'owner_id' => $owner->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected static function generateDashboardAlias(string $eventTitle): string
