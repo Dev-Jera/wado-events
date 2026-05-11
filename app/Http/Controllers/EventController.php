@@ -3,16 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Mail\EventSubmitted;
 use App\Support\StaticEventCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Throwable;
 
 /**
  * @group Events
@@ -202,11 +200,43 @@ class EventController extends Controller
             return $event;
         });
 
-        // Try sending confirmation email, but do not fail event submission if mail transport is unavailable.
+        // Send confirmation email via Brevo API (HTTP), but never block event submission on email failure.
         $event->loadMissing(['category', 'ticketCategories']);
         try {
-            Mail::to($user)->send(new EventSubmitted($event, $user));
-        } catch (Throwable $e) {
+            $apiKey = (string) config('services.brevo.api_key', '');
+
+            if ($apiKey === '') {
+                throw new \RuntimeException('Brevo API key not configured (BREVO_API_KEY)');
+            }
+
+            $html = view('emails.events.submitted', [
+                'event' => $event,
+                'user' => $user,
+            ])->render();
+
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'api-key' => $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender' => [
+                        'name' => (string) config('mail.from.name', config('app.name', 'WADO Events')),
+                        'email' => (string) config('mail.from.address', 'noreply@wado-events.com'),
+                    ],
+                    'to' => [[
+                        'email' => $user->email,
+                        'name' => $user->name,
+                    ]],
+                    'subject' => 'Event Submitted - ' . $event->title,
+                    'htmlContent' => $html,
+                ]);
+
+            if (! $response->successful()) {
+                throw new \RuntimeException('Brevo API error ' . $response->status() . ': ' . $response->body());
+            }
+        } catch (\Throwable $e) {
             Log::warning('Event submission confirmation email failed.', [
                 'event_id' => $event->id,
                 'user_id' => $user->id,
