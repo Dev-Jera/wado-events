@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Wado Events</title>
+    <title>@yield('title', 'WADO Ticketing')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#c0283c">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -100,15 +100,85 @@
             border: 1px solid #f0a0a8;
         }
 
-        .site-footer {
-            padding: 1.25rem 1rem 1.5rem;
+        /* ── Policy pages ─────────────────────────────── */
+        .policy-page { min-height: 70vh; background: #fff; }
+
+        /* Hero — solid red */
+        .policy-hero {
+            background: #c0283c;
+            padding: 4rem 1.25rem 3rem;
             text-align: center;
-            color: rgba(180, 200, 240, .55);
-            font-size: 0.92rem;
-            background: rgba(255,255,255,.04);
-            border-top: 1px solid rgba(255,255,255,.07);
+        }
+        .policy-hero-inner { max-width: 700px; margin: 0 auto; }
+        .policy-eyebrow {
+            font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+            color: rgba(255,255,255,.75); font-weight: 700; margin-bottom: .6rem;
+        }
+        .policy-heading {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800; color: #fff; margin: 0 0 .75rem; line-height: 1.15;
+        }
+        .policy-sub { color: rgba(255,255,255,.7); font-size: .9rem; margin: 0; }
+
+        /* Shell layout */
+        .policy-shell {
+            max-width: var(--site-width, 1140px);
+            margin: 0 auto;
+            padding: 3rem 1.25rem 4rem;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        /* TOC sidebar — red accent border */
+        .policy-toc {
+            position: sticky; top: 90px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #c0283c;
+            border-radius: 8px;
+            padding: 1.25rem 1rem;
+        }
+        .policy-toc-title {
+            font-size: .68rem; letter-spacing: .15em; text-transform: uppercase;
+            color: #c0283c; font-weight: 700; margin: 0 0 .85rem .1rem;
+        }
+        .policy-toc nav { display: flex; flex-direction: column; gap: .25rem; }
+        .policy-toc nav a {
+            color: #1e3a8a; text-decoration: none;
+            font-size: .84rem; padding: .35rem .6rem; border-radius: 5px;
+            transition: background .15s, color .15s; display: block;
+        }
+        .policy-toc nav a:hover { background: #fef2f4; color: #c0283c; }
+
+        /* Article body — white bg, dark text */
+        .policy-body section {
+            margin-bottom: 2.5rem; padding-bottom: 2.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .policy-body section:last-child { border-bottom: none; margin-bottom: 0; }
+        .policy-body h2 {
+            font-size: 1.15rem; font-weight: 700;
+            color: #c0283c; margin: 0 0 .9rem;
+        }
+        .policy-body p {
+            color: #374151; line-height: 1.8; margin-bottom: .9rem; font-size: .95rem;
+        }
+        .policy-body p:last-child { margin-bottom: 0; }
+        .policy-body ul { margin: .5rem 0 1rem 1.25rem; display: flex; flex-direction: column; gap: .45rem; }
+        .policy-body ul li { color: #4b5563; line-height: 1.7; font-size: .93rem; }
+        .policy-body strong { color: #111827; }
+        .policy-body a { color: #1e3a8a; text-decoration: none; font-weight: 600; }
+        .policy-body a:hover { text-decoration: underline; color: #c0283c; }
+
+        @media (max-width: 760px) {
+            .policy-shell { grid-template-columns: 1fr; gap: 1.5rem; }
+            .policy-toc { position: static; }
         }
     </style>
+
+    @stack('styles')
 </head>
 <body>
     @php($isFullBleed = trim((string) $__env->yieldContent('fullbleed')) === '1')
@@ -129,9 +199,7 @@
     </main>
 
     @unless($isFullBleed)
-        <footer class="site-footer">
-            @include('components.footer')
-        </footer>
+        @include('components.footer')
     @endunless
 
     <script>

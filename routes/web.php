@@ -29,6 +29,11 @@ Route::post('/contact', [ContactController::class, 'send'])->name('contact.send'
 Route::get('/events', [EventController::class, 'index'])->middleware('throttle:60,1')->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->middleware('throttle:60,1')->name('events.show');
 
+// Policy pages
+Route::get('/terms', fn() => view('pages.terms'))->name('terms');
+Route::get('/ticket-policy', fn() => view('pages.ticket-policy'))->name('ticket-policy');
+Route::get('/refund-policy', fn() => view('pages.refund-policy'))->name('refund-policy');
+
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 
