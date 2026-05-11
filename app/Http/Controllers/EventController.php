@@ -8,9 +8,11 @@ use App\Support\StaticEventCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * @group Events
@@ -200,9 +202,17 @@ class EventController extends Controller
             return $event;
         });
 
-        // Send confirmation email to the event owner
+        // Try sending confirmation email, but do not fail event submission if mail transport is unavailable.
         $event->loadMissing(['category', 'ticketCategories']);
-        Mail::to($user)->send(new EventSubmitted($event, $user));
+        try {
+            Mail::to($user)->send(new EventSubmitted($event, $user));
+        } catch (Throwable $e) {
+            Log::warning('Event submission confirmation email failed.', [
+                'event_id' => $event->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->route('home')->with('success', 'Your event has been submitted for review. We\'ll notify you once it\'s approved.');
     }
