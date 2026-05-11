@@ -256,7 +256,7 @@ class SecurityAttackTest extends TestCase
         $event = $this->makeEvent();
 
         $response = $this
-            ->actingAs($agent)
+            ->actingAs($agent, 'admin')
             ->postJson(route('tickets.verify.scan-json'), [
                 'ticket_code'       => 'WADO-FAKE-9999-XXXXXX',
                 'selected_event_id' => $event->id,
@@ -292,7 +292,7 @@ class SecurityAttackTest extends TestCase
 
         // Try to scan it at Event B's gate
         $response = $this
-            ->actingAs($agent)
+            ->actingAs($agent, 'admin')
             ->postJson(route('tickets.verify.scan-json'), [
                 'ticket_code'       => $ticket->ticket_code,
                 'selected_event_id' => $eventB->id, // wrong event
@@ -332,7 +332,7 @@ class SecurityAttackTest extends TestCase
         ]);
 
         $response = $this
-            ->actingAs($agent)
+            ->actingAs($agent, 'admin')
             ->postJson(route('tickets.verify.scan-json'), [
                 'ticket_code'       => $ticket->ticket_code,
                 'selected_event_id' => $event->id,
