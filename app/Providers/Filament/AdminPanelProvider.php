@@ -377,7 +377,158 @@ textarea.fi-fo-textarea:focus { border-color: #0d1b3e !important; background: #f
 }
 .fi-fo-repeater-add-action button:hover,
 .fi-fo-repeater-add-action .fi-btn:hover { border-color: #0d1b3e !important; color: #0d1b3e !important; background: #f0f4fb !important; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DATABASE NOTIFICATIONS (BELL PANEL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.fi-no-database .fi-modal-content {
+    overflow-x: hidden !important;
+}
+
+.fi-no-database .fi-no-notification-read-ctn,
+.fi-no-database .fi-no-notification-unread-ctn {
+    position: relative;
+    padding: .2rem .25rem;
+}
+
+.fi-no-database .fi-no-notification {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin: .1rem .45rem;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .18s ease;
+}
+
+.fi-no-database .fi-no-notification:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1;
+}
+
+.fi-no-database .fi-no-notification-title,
+.fi-no-database .fi-no-notification-date,
+.fi-no-database .fi-no-notification-body {
+    cursor: pointer;
+}
+
+.fi-no-database .fi-no-notification-title {
+    padding-right: 3rem;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.fi-no-database .fi-no-notification-date {
+    color: #64748b;
+    font-size: .82rem;
+}
+
+.fi-no-database .fi-no-notification-body {
+    color: #475569;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    max-height: 3.1em;
+    position: relative;
+}
+
+.fi-no-database .fi-no-notification-read-ctn {
+    background: #ffffff !important;
+    opacity: .9;
+}
+
+.fi-no-database .fi-no-notification-unread-ctn {
+    background: #f7fbff !important;
+}
+
+.fi-no-database .fi-no-notification-unread-ctn .fi-no-notification {
+    border-color: #bfdbfe;
+    box-shadow: 0 1px 10px rgba(37, 99, 235, .08);
+}
+
+.fi-no-database .fi-no-notification-unread-ctn::before {
+    content: "";
+    position: absolute;
+    top: .75rem;
+    left: .2rem;
+    width: 3px;
+    height: calc(100% - 1.5rem);
+    border-radius: 999px;
+    background: #2563eb;
+}
+
+.fi-no-database .fi-no-notification-unread-ctn::after {
+    content: "NEW";
+    position: absolute;
+    top: .65rem;
+    right: .9rem;
+    font-size: .6rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    color: #0b57d0;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    border-radius: 999px;
+    padding: .05rem .35rem;
+}
+
+.fi-no-database .fi-no-notification.wado-notification-expanded {
+    background: #ffffff;
+    border-color: #93c5fd;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+}
+
+.fi-no-database .fi-no-notification.wado-notification-expanded .fi-no-notification-body {
+    display: block;
+    -webkit-line-clamp: unset;
+    max-height: none;
+}
+
+.fi-no-database .fi-no-notification.wado-notification-opened:not(.wado-notification-expanded) {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.fi-no-database .fi-no-notification-actions {
+    margin-top: .1rem;
+}
+
+.fi-no-database .fi-no-notification-actions a {
+    font-weight: 600;
+    font-size: .86rem;
+}
+
+.fi-no-database .fi-no-notification-close-btn {
+    opacity: .7;
+}
+
+.fi-no-database .fi-no-notification-close-btn:hover {
+    opacity: 1;
+}
 </style>
+
+<script>
+document.addEventListener("click", function (event) {
+    var card = event.target.closest(".fi-no-database .fi-no-notification");
+    if (!card) {
+        return;
+    }
+
+    if (event.target.closest(".fi-no-notification-actions, .fi-no-notification-close-btn, a, button")) {
+        return;
+    }
+
+    var all = document.querySelectorAll(".fi-no-database .fi-no-notification");
+    all.forEach(function (item) {
+        if (item !== card) {
+            item.classList.remove("wado-notification-expanded");
+        }
+    });
+
+    card.classList.add("wado-notification-opened");
+    card.classList.toggle("wado-notification-expanded");
+});
+</script>
 ')
 
             // ── Sidebar footer: user info + logout ────────

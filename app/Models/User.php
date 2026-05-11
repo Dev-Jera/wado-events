@@ -76,16 +76,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         return $this->hasMany(EventBookmark::class);
     }
 
-    /**
-     * Get the notifications relationship.
-     * Override the default Notifiable trait to use our custom Notification model.
-     */
-    public function notifications()
-    {
-        return $this->morphMany(Notification::class, 'notifiable')
-            ->orderByDesc('created_at');
-    }
-
     public function gateAssignedEvents(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'event_gate_agent', 'user_id', 'event_id')
@@ -254,15 +244,5 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         }
 
         return Storage::disk('public')->url($this->profile_image_path);
-    }
-
-    /**
-     * Get the count of unread notifications for the admin.
-     */
-    public function getUnreadNotificationsCount(): int
-    {
-        return (int) $this->notifications()
-            ->whereNull('read_at')
-            ->count();
     }
 }
