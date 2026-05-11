@@ -52,10 +52,27 @@
                             'ended' => 'Passed',
                             default => 'Upcoming',
                         };
+
+                        $imagePath = trim((string) $event->image_url);
+                        if ($imagePath === '') {
+                            $imageUrl = asset('images/movie.jpg');
+                        } elseif (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://')) {
+                            $imageUrl = $imagePath;
+                        } else {
+                            $normalizedImagePath = ltrim($imagePath, '/');
+
+                            if (str_starts_with($normalizedImagePath, 'storage/') || str_starts_with($normalizedImagePath, 'images/')) {
+                                $imageUrl = asset($normalizedImagePath);
+                            } elseif (str_starts_with($normalizedImagePath, 'event-images/')) {
+                                $imageUrl = asset('storage/' . $normalizedImagePath);
+                            } else {
+                                $imageUrl = asset($normalizedImagePath);
+                            }
+                        }
                     @endphp
                     <div class="event-card event-card--{{ $liveStatus }}">
                         <a href="{{ $event->url ?? route('events.show', $event) }}" class="event-card-img-link">
-                            <div class="event-card-img" style="background-image: url('{{ str_starts_with((string) $event->image_url, 'http') ? $event->image_url : asset('storage/' . ltrim((string) $event->image_url, '/')) }}')">
+                            <div class="event-card-img" style="background-image: url('{{ $imageUrl }}')">
                                 <span class="status-badge status-badge--{{ $liveStatus }}">{{ $statusLabel }}</span>
                                 @if ($liveStatus === 'live')
                                     <span class="live-badge">● Live now</span>
@@ -184,7 +201,7 @@
             height: 42px;
             border: 0;
             border-radius: 8px;
-            background: #c0283c;
+            background: #444;
             color: #fff;
             font-weight: 700;
             padding: 0 18px;
@@ -334,6 +351,13 @@
             flex-direction: column;
             gap: 10px;
             flex: 1;
+        }
+
+        /* Blue footer for non-passed events */
+        .event-card--live .event-card-body,
+        .event-card--upcoming .event-card-body {
+            background: rgba(0, 132, 255, 0.25);
+            border-top: 2px solid #0084FF;
         }
 
         .event-card-top {

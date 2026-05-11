@@ -40,11 +40,17 @@
             return $path;
         }
 
-        if (str_starts_with($path, '/storage/') || str_starts_with($path, 'storage/')) {
-            return asset(ltrim($path, '/'));
+        $normalizedPath = ltrim($path, '/');
+
+        if (str_starts_with($normalizedPath, 'storage/') || str_starts_with($normalizedPath, 'images/')) {
+            return asset($normalizedPath);
         }
 
-        return asset('storage/' . ltrim($path, '/'));
+        if (str_starts_with($normalizedPath, 'event-images/')) {
+            return asset('storage/' . $normalizedPath);
+        }
+
+        return asset($normalizedPath);
     };
 
     // $heroImages, $packageSlides, $heroTitle, $heroSubtitle are passed by HomeController
@@ -228,6 +234,7 @@
                         data-time="{{ $event->starts_at->format('h:i A') }}"
                         data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                         data-date="{{ $event->starts_at->format('d M') }}"
+                        data-checkout="{{ route('checkout.create', $event) }}"
                         data-image="{{ $eventImageUrl($event->image_url) }}">
 
                         <div class="hp-fcard-img"
@@ -255,7 +262,7 @@
                                     {{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}
                                 </span>
                                 <a href="{{ $event->url }}" class="hp-fcard-btn"
-                                   onclick="event.stopPropagation()">Join Event</a>
+                                   onclick="event.stopPropagation()">Get Tickets</a>
                             </div>
                         </div>
                     </article>
@@ -304,6 +311,7 @@
                         data-time="{{ $event->starts_at->format('h:i A') }}"
                         data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                         data-date="{{ $event->starts_at->format('d M') }}"
+                        data-checkout="{{ route('checkout.create', $event) }}"
                         data-image="{{ $eventImageUrl($event->image_url) }}">
 
                         <div class="hp-fcard-img"
@@ -331,7 +339,7 @@
                                     {{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}
                                 </span>
                                 <a href="{{ $event->url }}" class="hp-fcard-btn"
-                                   onclick="event.stopPropagation()">Join Event</a>
+                                   onclick="event.stopPropagation()">Get Tickets</a>
                             </div>
                         </div>
                     </article>
@@ -382,6 +390,7 @@
                     data-time="{{ $event->starts_at->format('h:i A') }}"
                     data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                     data-date="{{ $event->starts_at->format('d M') }}"
+                    data-checkout="{{ route('checkout.create', $event) }}"
                     data-image="{{ $eventImageUrl($event->image_url) }}">
 
                     <div class="hp-ecard-thumb"
@@ -507,6 +516,7 @@
                     data-time="{{ $event->starts_at->format('h:i A') }}"
                     data-price="{{ $price <= 0 ? 'Free' : 'UGX '.number_format($price,0) }}"
                     data-date="{{ $event->starts_at->format('d M') }}"
+                    data-checkout="{{ route('checkout.create', $event) }}"
                     data-image="{{ $eventImageUrl($event->image_url) }}">
 
                     <div class="hp-ecard-thumb"
@@ -600,9 +610,17 @@
             </div>
             <div class="event-modal-actions">
                 <button class="event-modal-buy" id="event-modal-buy" type="button">Get Ticket</button>
-                <a class="event-modal-link" id="event-modal-link" href="/events">View details</a>
+                <button class="event-modal-link" id="event-modal-poster" type="button">View full poster</button>
             </div>
         </div>
+    </article>
+</div>
+
+<div class="poster-modal" id="poster-modal" aria-hidden="true">
+    <div class="poster-modal-backdrop" data-poster-close></div>
+    <article class="poster-modal-card" role="dialog" aria-modal="true" aria-label="Full event poster">
+        <button class="poster-modal-close" type="button" data-poster-close aria-label="Close poster">×</button>
+        <img class="poster-modal-image" id="poster-modal-image" alt="Event poster preview" />
     </article>
 </div>
 
@@ -1477,8 +1495,10 @@ body {
 .event-modal.is-open .event-modal-backdrop { opacity: 1; }
 .event-modal-card {
     position: relative;
-    width: min(960px, calc(100% - 1rem));
-    max-height: 90vh; overflow: hidden;
+    width: min(1180px, calc(100% - 1rem));
+    height: min(78vh, 760px);
+    max-height: 94vh;
+    overflow: hidden;
     border-radius: 20px;
     background: rgba(10, 14, 26, .72);
     backdrop-filter: var(--glass-blur);
@@ -1486,7 +1506,7 @@ body {
     border: 1px solid rgba(26,115,232,.22);
     box-shadow: 0 30px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.04);
     z-index: 1;
-    display: grid; grid-template-columns: minmax(280px,40%) 1fr;
+    display: grid; grid-template-columns: minmax(380px,47%) 1fr;
     transform: translateY(18px) scale(.985);
     opacity: 0; transition: transform .3s ease, opacity .24s ease;
 }
@@ -1507,10 +1527,18 @@ body {
 .event-modal-close:hover { transform: scale(1.08); background: rgba(160,32,46,.35); }
 .event-modal-image {
     width: 100%; height: 100%;
+    min-height: 100%;
     background-size: cover; background-position: center;
     background-color: rgba(10,14,26,.8);
+    cursor: zoom-in;
 }
-.event-modal-content { padding: 1.4rem; overflow: auto; }
+.event-modal-content {
+    padding: 1.4rem;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .event-modal-category { margin:0; color: rgba(255,180,185,.9); font-size:.68rem; letter-spacing:.12em; font-weight:700; text-transform:uppercase; }
 .event-modal-title { margin:.3rem 0 .7rem; color:#fff; font-size:clamp(1.1rem,2.4vw,1.8rem); line-height:1.2; }
 .event-modal-description { margin:0 0 1rem; color:var(--muted); font-size:.9rem; line-height:1.65; }
@@ -1552,6 +1580,50 @@ body {
     transition:border-color .15s, color .15s;
 }
 .event-modal-link:hover { border-color:rgba(160,32,46,.6); color:#fff; }
+
+.poster-modal {
+    position: fixed; inset: 0; z-index: 140;
+    display: grid; align-items: center; justify-items: center;
+    padding: 1rem;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .24s ease, visibility .24s ease;
+}
+.poster-modal.is-open { opacity: 1; visibility: visible; pointer-events: auto; }
+.poster-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(5, 8, 15, .88);
+    backdrop-filter: blur(6px);
+}
+.poster-modal-card {
+    position: relative;
+    width: min(96vw, 1120px);
+    max-height: 94vh;
+    border-radius: 16px;
+    background: rgba(10, 14, 26, .78);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 24px 70px rgba(0,0,0,.72);
+    overflow: hidden;
+    z-index: 1;
+}
+.poster-modal-image {
+    width: 100%;
+    height: min(94vh, 920px);
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    background: rgba(0,0,0,.3);
+}
+.poster-modal-close {
+    position: absolute; right: .85rem; top: .85rem;
+    width: 2rem; height: 2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.16);
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    font-size: 1.05rem;
+    cursor: pointer;
+    z-index: 2;
+}
 .event-payment-options {
     margin-top:.8rem;
     background: rgba(255,255,255,.05);
@@ -1628,7 +1700,13 @@ body.modal-open { overflow:hidden; }
     .hp-cat-bar { top: 3.9rem; }
     .hp-cat-bar-inner { padding: .58rem 1rem; }
     .event-modal-card { grid-template-columns:1fr; grid-template-rows:220px 1fr; max-height:92vh; }
+    .event-modal-image {
+        min-height: 220px;
+        background-position: center top;
+    }
+    .event-modal-content { justify-content: flex-start; }
     .event-modal-meta-grid { grid-template-columns:1fr; }
+    .poster-modal-card { width: min(96vw, 760px); }
 }
 
 /* mobile */
@@ -1682,8 +1760,15 @@ body.modal-open { overflow:hidden; }
         grid-template-columns: 1fr;
         grid-template-rows: 200px 1fr;
     }
+    .event-modal-image {
+        min-height: 200px;
+        background-position: center top;
+    }
     .event-modal-card::before { display: none; }
     .event-modal-content { padding: 1rem; }
+    .poster-modal { padding: .5rem; }
+    .poster-modal-card { width: 100%; max-height: 96vh; border-radius: 14px; }
+    .poster-modal-image { height: min(92vh, 760px); }
 }
 
 /* small phones */
@@ -1956,11 +2041,13 @@ body.modal-open { overflow:hidden; }
     const modalTime     = document.getElementById('event-modal-time');
     const modalLocation = document.getElementById('event-modal-location');
     const modalPrice    = document.getElementById('event-modal-price');
-    const modalLink     = document.getElementById('event-modal-link');
     const modalDesc     = document.getElementById('event-modal-description');
     const modalArtists  = document.getElementById('event-modal-artists');
     const modalArtistsSec = document.getElementById('event-modal-artists-section');
     const modalBuy      = document.getElementById('event-modal-buy');
+    const modalPosterBtn = document.getElementById('event-modal-poster');
+    const posterModal   = document.getElementById('poster-modal');
+    const posterImageEl = document.getElementById('poster-modal-image');
     const paymentOpts   = document.getElementById('event-payment-options');
     const paymentAmt    = document.getElementById('event-payment-amount');
     const paymentBtns   = document.querySelectorAll('.payment-option');
@@ -1968,6 +2055,29 @@ body.modal-open { overflow:hidden; }
     const qtyPlus       = document.getElementById('ticket-qty-plus');
     const qtyVal        = document.getElementById('ticket-qty-value');
     if (!modal) return;
+
+    let activePosterImage = '';
+
+    const openPosterModal = imageUrl => {
+        if (!posterModal || !posterImageEl || !imageUrl) return;
+
+        posterImageEl.src = imageUrl;
+        posterModal.classList.add('is-open');
+        posterModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    };
+
+    const closePosterModal = () => {
+        if (!posterModal || !posterImageEl) return;
+
+        posterModal.classList.remove('is-open');
+        posterModal.setAttribute('aria-hidden', 'true');
+        posterImageEl.removeAttribute('src');
+
+        if (!modal.classList.contains('is-open')) {
+            document.body.classList.remove('modal-open');
+        }
+    };
 
     let unitPrice = 0, qty = 1;
     const parsePriceToNum = t => (!t || /free/i.test(t)) ? 0 : Number((t.replace(/[^0-9.]/g,'')||'0'));
@@ -1984,7 +2094,7 @@ body.modal-open { overflow:hidden; }
         title:       card.dataset.title || card.querySelector('.hp-ecard-title,.hp-fcard-title')?.textContent || '',
         description: card.dataset.description || '',
         artists:     (() => { try { return JSON.parse(card.dataset.artists||'[]'); } catch { return []; } })(),
-        href:        card.dataset.href || '/events',
+        checkout:    card.dataset.checkout || '',
         location:    card.dataset.location || '',
         time:        card.dataset.time || '',
         price:       card.dataset.price || '',
@@ -1993,6 +2103,7 @@ body.modal-open { overflow:hidden; }
 
     const openModal = data => {
         modalImage.style.backgroundImage = data.image ? `url('${data.image}')` : 'none';
+        activePosterImage = data.image || '';
         modalCategory.textContent = data.category || 'Event';
         modalTitle.textContent    = data.title    || 'Event Details';
         modalDate.textContent     = data.date     || 'Upcoming';
@@ -2000,7 +2111,7 @@ body.modal-open { overflow:hidden; }
         modalLocation.textContent = data.location || 'Venue details available';
         modalPrice.textContent    = data.price    || 'Check listing';
         modalDesc.textContent     = data.description || '';
-        modalLink.href            = data.href     || '/events';
+        modalBuy.dataset.checkout = data.checkout || '';
         unitPrice = parsePriceToNum(data.price); qty = 1;
         updateTotal();
         if (paymentOpts) paymentOpts.hidden = true;
@@ -2014,11 +2125,21 @@ body.modal-open { overflow:hidden; }
     const closeModal = () => {
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden','true');
-        document.body.classList.remove('modal-open');
+        if (!posterModal || !posterModal.classList.contains('is-open')) {
+            document.body.classList.remove('modal-open');
+        }
         if (paymentOpts) paymentOpts.hidden = true;
         paymentBtns.forEach(b => b.classList.remove('is-selected'));
         qty = 1;
     };
+
+    if (modalImage) {
+        modalImage.addEventListener('click', () => openPosterModal(activePosterImage));
+    }
+
+    if (modalPosterBtn) {
+        modalPosterBtn.addEventListener('click', () => openPosterModal(activePosterImage));
+    }
 
     document.querySelectorAll('.hp-fcard,.hp-ecard').forEach(card => {
         card.setAttribute('tabindex','0');
@@ -2027,11 +2148,30 @@ body.modal-open { overflow:hidden; }
     });
 
     modal.querySelectorAll('[data-modal-close]').forEach(el => el.addEventListener('click', closeModal));
-    document.addEventListener('keydown', e => { if (e.key==='Escape'&&modal.classList.contains('is-open')) closeModal(); });
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+
+        if (posterModal && posterModal.classList.contains('is-open')) {
+            closePosterModal();
+            return;
+        }
+
+        if (modal.classList.contains('is-open')) {
+            closeModal();
+        }
+    });
+
+    if (posterModal) {
+        posterModal.querySelectorAll('[data-poster-close]').forEach(el => el.addEventListener('click', closePosterModal));
+    }
 
     if (modalBuy) {
         modalBuy.addEventListener('click', () => {
-            window.location.href = `${modalLink.href}/checkout`;
+            const checkoutUrl = modalBuy.dataset.checkout || '';
+
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+            }
         });
     }
 })();

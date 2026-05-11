@@ -4,6 +4,22 @@
     <section class="checkout-page">
         @php
             $paymentNotice = session('payment_notice');
+            $bannerPath = trim((string) $event->image_url);
+            if ($bannerPath === '') {
+                $bannerImageUrl = asset('images/movie.jpg');
+            } elseif (str_starts_with($bannerPath, 'http://') || str_starts_with($bannerPath, 'https://')) {
+                $bannerImageUrl = $bannerPath;
+            } else {
+                $normalizedBannerPath = ltrim($bannerPath, '/');
+
+                if (str_starts_with($normalizedBannerPath, 'storage/') || str_starts_with($normalizedBannerPath, 'images/')) {
+                    $bannerImageUrl = asset($normalizedBannerPath);
+                } elseif (str_starts_with($normalizedBannerPath, 'event-images/')) {
+                    $bannerImageUrl = asset('storage/' . $normalizedBannerPath);
+                } else {
+                    $bannerImageUrl = asset($normalizedBannerPath);
+                }
+            }
         @endphp
 
         @if (is_array($paymentNotice) && !empty($paymentNotice['message']))
@@ -23,7 +39,7 @@
             {{-- LEFT: Event info + order summary --}}
             <div class="checkout-left">
 
-                <div class="event-banner" style="background-image: linear-gradient(rgba(7,16,28,0.3), rgba(7,16,28,0.85)), url('{{ str_starts_with((string) $event->image_url, 'http') ? $event->image_url : asset('storage/' . ltrim((string) $event->image_url, '/')) }}')">
+                <div class="event-banner" style="background-image: linear-gradient(rgba(7,16,28,0.3), rgba(7,16,28,0.85)), url('{{ $bannerImageUrl }}')">
                     <p class="banner-cat">{{ $event->category?->name ?? 'Event' }}</p>
                     <p class="banner-title">{{ $event->title }}</p>
                     <div class="banner-meta">

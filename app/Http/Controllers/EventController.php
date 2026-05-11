@@ -97,23 +97,11 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        $event = Cache::tags(["event:{$event->id}"])->remember(
-            "event:{$event->id}:detail",
-            600,
-            fn () => Event::query()->with(['category', 'ticketCategories', 'artists'])->findOrFail($event->id)
-        );
-
-        if ($event->ticketCategories->isNotEmpty()) {
-            $event->forceFill([
-                'capacity'          => (int) $event->ticketCategories->sum('ticket_count'),
-                'tickets_available' => (int) $event->ticketCategories->sum('tickets_remaining'),
-                'ticket_price'      => (float) $event->ticketCategories->min('price'),
-            ]);
+        if ($event->ticketCategories()->exists()) {
+            return redirect()->route('checkout.create', $event);
         }
 
-        return view('pages.events.show', [
-            'event' => $event,
-        ]);
+        return redirect()->route('events.index');
     }
 
     public function create()
