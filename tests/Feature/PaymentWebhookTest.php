@@ -129,6 +129,7 @@ class PaymentWebhookTest extends TestCase
             'reference' => $payment->idempotency_key,
             'status' => 'success',
             'message' => 'Payment complete',
+            'amount' => 5000,
         ];
         $signature = $this->signPayload($payload);
 
@@ -155,6 +156,7 @@ class PaymentWebhookTest extends TestCase
             'reference' => $payment->idempotency_key,
             'status' => 'success',
             'message' => 'Payment complete',
+            'amount' => 5000,
         ];
 
         $raw = json_encode($payload, JSON_UNESCAPED_SLASHES);
@@ -203,6 +205,59 @@ class PaymentWebhookTest extends TestCase
                 'ok' => false,
                 'message' => 'Invalid webhook signature.',
             ]);
+    }
+
+    public function test_webhook_rejects_missing_identifiers(): void
+    {
+        config(['services.marzepay.webhook_secret' => 'test-secret']);
+
+        $payload = [
+            'status' => 'success',
+            'message' => 'Payment complete',
+            'amount' => 5000,
+        ];
+
+        $response = $this
+            ->withHeader('X-Marze-Signature', $this->signPayload($payload))
+            ->postJson(route('payments.webhook.marzepay'), $payload);
+
+        $response
+            ->assertStatus(422)
+            ->assertJson([
+                'ok' => false,
+                'message' => 'Missing required identifiers.',
+            ]);
+    }
+
+    public function test_webhook_with_missing_amount_does_not_confirm_payment(): void
+    {
+        Queue::fake();
+        config(['services.marzepay.webhook_secret' => 'test-secret']);
+
+        $records = $this->makePaymentContext();
+        $payment = $records['payment'];
+
+        $payload = [
+            'reference' => $payment->idempotency_key,
+            'status' => 'success',
+            'message' => 'Payment complete',
+        ];
+
+        $response = $this
+            ->withHeader('X-Marze-Signature', $this->signPayload($payload))
+            ->postJson(route('payments.webhook.marzepay'), $payload);
+
+        $response->assertOk()->assertJson([
+            'ok' => true,
+            'message' => 'Invalid or missing amount in webhook — ticket not issued.',
+        ]);
+
+        $this->assertDatabaseHas('payment_transactions', [
+            'id' => $payment->id,
+            'status' => PaymentTransaction::STATUS_INITIATED,
+        ]);
+
+        Queue::assertNothingPushed();
     }
 
     /**

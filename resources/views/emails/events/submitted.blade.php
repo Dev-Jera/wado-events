@@ -5,68 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Event Submitted — WADO Ticketing</title>
 <style>
-    body { margin:0; padding:0; background:#eceff5; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#0f172a; }
-    .wrap { max-width:620px; margin:28px auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 8px 28px rgba(15,23,42,.12); }
+    body { margin:0; padding:0; background:#f4f1f1; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#2b1320; }
+    .wrap { max-width:620px; margin:28px auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 10px 34px rgba(52,18,35,.14); }
     .header {
-        padding:34px 36px 30px;
-        background:linear-gradient(135deg,#1d4ed8 0%,#0f3a8f 55%,#1e3a8a 100%);
+        padding:34px 36px 28px;
+        background:linear-gradient(130deg,#6f1237 0%,#4e0f2d 55%,#320a1e 100%);
         color:#ffffff;
     }
     .brand { font-size:1.3rem; font-weight:800; letter-spacing:.02em; margin:0; }
-    .subtitle { margin:8px 0 18px; color:rgba(255,255,255,.85); font-size:.9rem; }
+    .subtitle { margin:8px 0 18px; color:rgba(255,255,255,.86); font-size:.9rem; }
     .status-pill {
         display:inline-block;
         font-size:.73rem;
         font-weight:700;
         text-transform:uppercase;
         letter-spacing:.08em;
-        color:#1e3a8a;
-        background:#dbeafe;
+        color:#5d1130;
+        background:#fde8f1;
         padding:6px 12px;
         border-radius:999px;
     }
-    .body { padding:32px 36px 20px; }
-    .greeting { margin:0 0 12px; font-size:1.02rem; color:#111827; }
-    .intro { margin:0 0 22px; line-height:1.72; font-size:.95rem; color:#334155; }
+    .body { padding:32px 36px 22px; }
+    .greeting { margin:0 0 12px; font-size:1.02rem; color:#3a1328; }
+    .intro { margin:0 0 22px; line-height:1.72; font-size:.95rem; color:#4d2a3c; }
     .event-card {
-        background:linear-gradient(180deg,#f8fbff 0%,#f6f8fc 100%);
-        border:1px solid #dbe5f4;
+        background:linear-gradient(180deg,#fffdfd 0%,#faf5f7 100%);
+        border:1px solid #ead7de;
         border-radius:14px;
         padding:20px 20px 14px;
         margin-bottom:24px;
     }
-    .event-title { margin:0 0 14px; font-size:1.16rem; font-weight:800; color:#0f172a; letter-spacing:-.01em; }
+    .event-title { margin:0 0 14px; font-size:1.16rem; font-weight:800; color:#4d0f2f; letter-spacing:-.01em; }
     .detail-row {
         display:flex;
         justify-content:space-between;
         gap:14px;
-        border-bottom:1px dashed #d6deea;
+        border-bottom:1px dashed #e4ccd6;
         padding:9px 0;
     }
     .detail-row:last-child { border-bottom:none; }
     .detail-label {
         font-size:.75rem;
         font-weight:700;
-        color:#64748b;
+        color:#8e6077;
         letter-spacing:.06em;
         text-transform:uppercase;
     }
-    .detail-value { text-align:right; font-size:.9rem; color:#1f2937; line-height:1.45; }
+    .detail-value { text-align:right; font-size:.9rem; color:#4a2236; line-height:1.45; }
     .notice {
-        background:#eff6ff;
-        border:1px solid #bfdbfe;
+        background:#fff6fa;
+        border:1px solid #f1ccd9;
         border-radius:12px;
         padding:14px 16px;
         margin:0 0 24px;
     }
-    .notice p { margin:0; font-size:.9rem; color:#1e3a8a; line-height:1.65; }
+    .notice p { margin:0; font-size:.9rem; color:#6a1a3e; line-height:1.65; }
+    .actions { margin:0 0 24px; }
+    .cta {
+        display:inline-block;
+        background:#0f4bb6;
+        color:#ffffff !important;
+        text-decoration:none;
+        font-size:.87rem;
+        font-weight:700;
+        letter-spacing:.01em;
+        padding:11px 18px;
+        border-radius:10px;
+        box-shadow:0 6px 18px rgba(15,75,182,.25);
+    }
     .section-title {
         margin:0 0 12px;
         font-size:.78rem;
         font-weight:700;
         text-transform:uppercase;
         letter-spacing:.08em;
-        color:#94a3b8;
+        color:#8e6077;
     }
     .timeline { margin:0 0 24px; }
     .step {
@@ -79,7 +92,7 @@
         width:24px;
         height:24px;
         border-radius:50%;
-        background:#1d4ed8;
+        background:#651633;
         color:#fff;
         font-size:.75rem;
         font-weight:700;
@@ -88,20 +101,20 @@
         justify-content:center;
         flex-shrink:0;
     }
-    .step-text { font-size:.89rem; color:#334155; line-height:1.58; padding-top:2px; }
+    .step-text { font-size:.89rem; color:#4d2a3c; line-height:1.58; padding-top:2px; }
     .support {
         margin:0;
         font-size:.87rem;
-        color:#64748b;
+        color:#795166;
         line-height:1.6;
     }
-    .support a { color:#2563eb; text-decoration:none; }
+    .support a { color:#0f4bb6; text-decoration:none; }
     .footer {
-        background:#f8fafc;
-        border-top:1px solid #e2e8f0;
+        background:#faf5f7;
+        border-top:1px solid #efdde4;
         padding:18px 36px 22px;
     }
-    .footer p { margin:0; font-size:.77rem; color:#94a3b8; line-height:1.62; }
+    .footer p { margin:0; font-size:.77rem; color:#936a7d; line-height:1.62; }
     @media (max-width:520px) {
         .header,.body,.footer { padding-left:20px; padding-right:20px; }
         .detail-row { flex-direction:column; align-items:flex-start; }
@@ -155,6 +168,10 @@
             <p>
                 Your event is currently <strong>pending approval</strong>. After approval, it will appear on our platform and guests can begin purchasing tickets.
             </p>
+        </div>
+
+        <div class="actions">
+            <a class="cta" href="{{ route('host-event.create') }}">Open Host Dashboard</a>
         </div>
 
         <div class="timeline">

@@ -242,6 +242,7 @@
                                     type="checkbox" 
                                     id="is_free" 
                                     name="is_free" 
+                                    value="1"
                                     class="hec-toggle-input"
                                     @checked(old('is_free'))
                                 >
@@ -298,6 +299,7 @@
                                     type="checkbox" 
                                     id="reentry_allowed" 
                                     name="reentry_allowed" 
+                                    value="1"
                                     class="hec-toggle-input"
                                     @checked(old('reentry_allowed'))
                                 >

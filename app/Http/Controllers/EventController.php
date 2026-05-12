@@ -115,6 +115,11 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'is_free' => $request->boolean('is_free'),
+            'reentry_allowed' => $request->boolean('reentry_allowed'),
+        ]);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',

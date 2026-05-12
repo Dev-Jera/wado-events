@@ -14,8 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
+        $trustedProxies = array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', implode(',', [
+            '127.0.0.1',
+            '::1',
+            '10.0.0.0/8',
+            '172.16.0.0/12',
+            '192.168.0.0/16',
+        ])))));
+
+        // Restrict proxy trust to known trusted proxies to prevent IP spoofing via X-Forwarded-* headers.
+        // This prevents attackers from manipulating client IP for rate limiting bypass or security logging evasion.
         $middleware->trustProxies(
-            at: '*',
+            at: $trustedProxies,
             headers: Request::HEADER_X_FORWARDED_FOR
                 | Request::HEADER_X_FORWARDED_HOST
                 | Request::HEADER_X_FORWARDED_PORT

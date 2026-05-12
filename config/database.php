@@ -64,6 +64,21 @@ return [
             ]) : [],
         ],
 
+        'archive' => [
+            'driver' => 'mysql',
+            'host' => env('ARCHIVE_DB_HOST', '127.0.0.1'),
+            'port' => env('ARCHIVE_DB_PORT', '3306'),
+            'database' => env('ARCHIVE_DB_DATABASE', 'wado_archive'),
+            'username' => env('ARCHIVE_DB_USERNAME', 'root'),
+            'password' => env('ARCHIVE_DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

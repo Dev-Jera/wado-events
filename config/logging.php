@@ -127,6 +127,30 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'monitoring' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/monitoring.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
+        'webhooks' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/webhooks.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
+        'payments' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payments.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

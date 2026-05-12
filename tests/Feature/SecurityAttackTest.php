@@ -173,7 +173,7 @@ class SecurityAttackTest extends TestCase
         config(['services.marzepay.webhook_secret' => 'test-secret']);
 
         $ctx     = $this->makePaymentContext();
-        $payload = ['reference' => $ctx['payment']->idempotency_key, 'status' => 'confirmed'];
+        $payload = ['reference' => $ctx['payment']->idempotency_key, 'status' => 'confirmed', 'amount' => 5000];
         $sig     = $this->sign($payload);
 
         for ($i = 0; $i < 3; $i++) {
@@ -376,6 +376,32 @@ class SecurityAttackTest extends TestCase
             'id'     => $ctx['payment']->id,
             'status' => PaymentTransaction::STATUS_INITIATED,
         ]);
+    }
+
+    /** A regular customer cannot access admin finance event detail. */
+    public function test_customer_cannot_access_admin_finance_event_detail(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+        $ctx      = $this->makePaymentContext();
+
+        $response = $this
+            ->actingAs($customer)
+            ->get(route('admin.finance.show', $ctx['event']));
+
+        $response->assertForbidden();
+    }
+
+    /** Admin can access finance detail for an event. */
+    public function test_admin_can_access_admin_finance_event_detail(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $ctx   = $this->makePaymentContext();
+
+        $response = $this
+            ->actingAs($admin)
+            ->get(route('admin.finance.show', $ctx['event']));
+
+        $response->assertOk();
     }
 
     /** Unauthenticated user cannot hit the scan endpoint. */

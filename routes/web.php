@@ -39,6 +39,57 @@ Route::middleware('auth')->group(function () {
     Route::get('/host-event/create', [EventController::class, 'create'])->name('host-event.create');
     Route::post('/host-event/store', [EventController::class, 'store'])->name('host-event.store');
     Route::post('/api/categories', [EventController::class, 'createCategory'])->name('api.categories.store');
+
+    Route::get('/preview/emails/events/submitted/{event?}', function (?\App\Models\Event $event) {
+        abort_unless(config('app.debug'), 404);
+
+        $user = auth()->user();
+        $resolvedEvent = ($event && (int) $event->user_id === (int) $user->id)
+            ? $event
+            : \App\Models\Event::query()->where('user_id', $user->id)->latest('id')->first();
+
+        abort_if(! $resolvedEvent, 404, 'No event found to preview this email.');
+
+        $resolvedEvent->loadMissing(['category', 'ticketCategories']);
+
+        return view('emails.events.submitted', [
+            'event' => $resolvedEvent,
+            'user' => $user,
+        ]);
+    })->name('preview.emails.events.submitted');
+
+    Route::get('/preview/emails/events/approved/{event?}', function (?\App\Models\Event $event) {
+        abort_unless(config('app.debug'), 404);
+
+        $owner = auth()->user();
+        $resolvedEvent = ($event && (int) $event->user_id === (int) $owner->id)
+            ? $event
+            : \App\Models\Event::query()->where('user_id', $owner->id)->latest('id')->first();
+
+        abort_if(! $resolvedEvent, 404, 'No event found to preview this email.');
+
+        $resolvedEvent->loadMissing(['category', 'ticketCategories']);
+
+        $token = \Illuminate\Support\Facades\Password::broker()->createToken($owner);
+        $setPasswordUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $owner->email,
+        ], false));
+
+        $slug = \Illuminate\Support\Str::slug((string) $resolvedEvent->title);
+        $parts = array_values(array_filter(explode('-', $slug)));
+        $dashboardAlias = count($parts) >= 3
+            ? implode('-', array_slice($parts, 0, 3))
+            : (count($parts) > 1 ? implode('-', $parts) : ($parts[0] ?? 'owner-dashboard'));
+
+        return view('emails.events.approved-owner-next-steps', [
+            'event' => $resolvedEvent,
+            'owner' => $owner,
+            'dashboardAlias' => \Illuminate\Support\Str::limit($dashboardAlias, 24, ''),
+            'dashboardLoginUrl' => route('filament.admin.auth.login'),
+            'setPasswordUrl' => $setPasswordUrl,
+        ]);
+    })->name('preview.emails.events.approved');
 });
 
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');

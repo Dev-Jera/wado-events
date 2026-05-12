@@ -39,6 +39,8 @@ class FinanceController extends Controller
 
     public function show(Event $event, Request $request)
     {
+        $this->authorize('viewFinance', $event);
+
         if ($request->boolean('export')) {
             return $this->exportCsv($event);
         }

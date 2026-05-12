@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\AgentOverviewWidget;
+use App\Filament\Widgets\ErrorLogsWidget;
 use App\Filament\Widgets\QuickActionsWidget;
 use App\Filament\Widgets\SuperAdminOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
@@ -591,6 +592,7 @@ document.addEventListener("click", function (event) {
                 AgentOverviewWidget::class,
                 QuickActionsWidget::class,
                 SuperAdminOverviewWidget::class,
+                ErrorLogsWidget::class,
             ])
 
             // ── Middleware ─────────────────────────────────

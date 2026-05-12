@@ -49,6 +49,33 @@ Schedule::call(function () {
     }
 })->everyFiveMinutes()->name('queue:health-monitor')->withoutOverlapping();
 
+// ── Database backup ─────────────────────────────────────────────────────────
+// Daily backup at 2 AM local time. Keeps 30 days locally.
+Schedule::command('backup:database')
+    ->dailyAt('02:00')
+    ->name('backup:database-daily')
+    ->withoutOverlapping(12);
+
+// Weekly backup push to remote at 3 AM every Monday. Keeps 4 weeks remote.
+Schedule::command('backup:database --remote')
+    ->weeklyOn(1, '03:00')
+    ->name('backup:database-remote-weekly')
+    ->withoutOverlapping(12);
+
+// ── Data archival ───────────────────────────────────────────────────────────
+// Nightly at 1 AM: Archive old data to keep live DB lite
+Schedule::command('archive:data')
+    ->dailyAt('01:00')
+    ->name('archive:data-nightly')
+    ->withoutOverlapping(12);
+
+// ── Application health monitoring ───────────────────────────────────────────
+// Every 30 minutes: check queue backlog, stuck payments, failed jobs, etc.
+Schedule::command('monitor:health')
+    ->everyThirtyMinutes()
+    ->name('monitor:health-check')
+    ->withoutOverlapping();
+
 // ── Disk space monitor ──────────────────────────────────────────────────────
 // Runs hourly. Warns below 20 %, critical below 10 %.
 Schedule::call(function () {

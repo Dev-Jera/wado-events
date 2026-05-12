@@ -52,6 +52,15 @@ class PaymentWebhookController extends Controller
             ?? ''
         );
 
+        // Require at least one identifier to prevent binding to unrelated payments
+        if ($idempotencyKey === '' && $providerReference === '') {
+            Log::error('Webhook received without idempotency_key or provider_reference', [
+                'payload' => $payload,
+            ]);
+
+            return response()->json(['ok' => false, 'message' => 'Missing required identifiers.'], 422);
+        }
+
         $payment = PaymentTransaction::query()
             ->when($idempotencyKey !== '', fn ($q) => $q->where('idempotency_key', $idempotencyKey))
             ->when($idempotencyKey === '' && $providerReference !== '', fn ($q) => $q->where('provider_reference', $providerReference))
@@ -98,7 +107,23 @@ class PaymentWebhookController extends Controller
                     ?? 0
                 );
 
-                if ($paidAmount > 0 && abs($paidAmount - (float) $locked->total_amount) > 1) {
+                // Require positive amount - reject confirmation if missing or zero
+                if ($paidAmount <= 0) {
+                    Log::error('Webhook amount validation failed — missing or zero amount', [
+                        'payment_id'      => $locked->id,
+                        'expected_amount' => $locked->total_amount,
+                        'received_amount' => $paidAmount,
+                        'idempotency_key' => $locked->idempotency_key,
+                    ]);
+
+                    $locked->forceFill([
+                        'last_error' => "Invalid amount in webhook: {$paidAmount}. Expected positive amount.",
+                    ])->save();
+
+                    return 'Invalid or missing amount in webhook — ticket not issued.';
+                }
+
+                if (abs($paidAmount - (float) $locked->total_amount) > 1) {
                     Log::error('Webhook amount mismatch — ticket not issued', [
                         'payment_id'      => $locked->id,
                         'expected_amount' => $locked->total_amount,
