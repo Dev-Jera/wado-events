@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Models\EmailLog;
 use App\Models\Event;
 use App\Models\User;
 use App\Filament\Resources\EventApprovals\Pages\ListEventApprovals;
@@ -321,6 +322,8 @@ class EventApprovalsResource extends Resource
         );
 
         $dashboardLoginUrl = route('owner.dashboard-access', ['eventSlug' => $slug], false);
+        $recipient = (string) ($owner->email ?? '');
+        $subject = 'Your event is approved - next steps on WADO Ticketing';
 
         try {
             $apiKey = (string) config('services.brevo.api_key', '');
@@ -354,17 +357,32 @@ class EventApprovalsResource extends Resource
                         'email' => $owner->email,
                         'name' => $owner->name,
                     ]],
-                    'subject' => 'Your event is approved - next steps on WADO Ticketing',
+                    'subject' => $subject,
                     'htmlContent' => $html,
                 ]);
 
             if (! $response->successful()) {
                 throw new \RuntimeException('Brevo API error ' . $response->status() . ': ' . $response->body());
             }
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'event.approved',
+                'status' => 'sent',
+            ]);
         } catch (\Throwable $e) {
             Log::warning('Event approval owner email failed.', [
                 'event_id' => $event->id,
                 'owner_id' => $owner->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'event.approved',
+                'status' => 'failed',
                 'error' => $e->getMessage(),
             ]);
         }

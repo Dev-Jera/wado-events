@@ -148,6 +148,7 @@ class PaymentNotificationService
                 'ticket_id' => $ticket->id,
                 'recipient' => $recipient,
                 'subject'   => $subject,
+                'source'    => 'ticket.confirmation',
                 'status'    => 'sent',
             ]);
 
@@ -165,6 +166,7 @@ class PaymentNotificationService
                 'ticket_id' => $ticket->id ?? null,
                 'recipient' => $recipient,
                 'subject'   => $subject,
+                'source'    => 'ticket.confirmation',
                 'status'    => 'failed',
                 'error'     => $e->getMessage(),
             ]);

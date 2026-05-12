@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmailLog;
 use App\Models\Enquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -33,9 +34,21 @@ class ContactController extends Controller
 
     private function notify(Enquiry $enquiry, array $data): void
     {
+        $recipient = 'wadoconcepts@gmail.com, aloyobrendaojera@gmail.com';
+        $subject = 'Contact: ' . $data['package'] . ' — ' . $data['name'];
+
         $apiKey = (string) config('services.brevo.api_key', '');
         if ($apiKey === '') {
             Log::warning('Contact: BREVO_API_KEY not set', ['enquiry_id' => $enquiry->id]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'contact.enquiry',
+                'status' => 'failed',
+                'error' => 'BREVO_API_KEY not configured.',
+            ]);
+
             return;
         }
 
@@ -50,7 +63,7 @@ class ContactController extends Controller
                 <p style="background:#f9f9f9;padding:12px;border-radius:6px">' . nl2br(e($data['message'])) . '</p>
             ';
 
-            Http::timeout(15)
+            $response = Http::timeout(15)
                 ->withHeaders([
                     'api-key'      => $apiKey,
                     'Content-Type' => 'application/json',
@@ -61,11 +74,30 @@ class ContactController extends Controller
                     'to'          => [['email' => 'wadoconcepts@gmail.com']],
                     'cc'          => [['email' => 'aloyobrendaojera@gmail.com']],
                     'replyTo'     => ['email' => $data['email'], 'name' => $data['name']],
-                    'subject'     => 'Contact: ' . $data['package'] . ' — ' . $data['name'],
+                    'subject'     => $subject,
                     'htmlContent' => $html,
                 ]);
+
+            if (! $response->successful()) {
+                throw new \RuntimeException('Brevo API error ' . $response->status() . ': ' . $response->body());
+            }
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'contact.enquiry',
+                'status' => 'sent',
+            ]);
         } catch (\Throwable $e) {
             Log::error('Contact: failed to send notification', ['enquiry_id' => $enquiry->id, 'error' => $e->getMessage()]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'contact.enquiry',
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

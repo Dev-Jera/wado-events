@@ -85,9 +85,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     public function sendEmailVerificationNotification(): void
     {
         $apiKey = (string) config('services.brevo.api_key', '');
+        $recipient = (string) $this->email;
+        $subject = 'Verify your email — WADO Events';
 
         if ($apiKey === '') {
             Log::warning('Email verification: BREVO_API_KEY not set', ['user_id' => $this->id]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'auth.verification',
+                'status' => 'failed',
+                'error' => 'BREVO_API_KEY not configured.',
+            ]);
+
             return;
         }
 
@@ -103,7 +114,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
                 'verifyUrl' => $verifyUrl,
             ])->render();
 
-            Http::timeout(15)
+            $response = Http::timeout(15)
                 ->withHeaders([
                     'api-key'      => $apiKey,
                     'Content-Type' => 'application/json',
@@ -115,13 +126,32 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
                         'email' => config('mail.from.address', 'wadoconcepts@gmail.com'),
                     ],
                     'to'          => [['email' => $this->email, 'name' => $this->name]],
-                    'subject'     => 'Verify your email — WADO Events',
+                    'subject'     => $subject,
                     'htmlContent' => $html,
                 ]);
+
+            if (! $response->successful()) {
+                throw new \RuntimeException('Brevo API error ' . $response->status() . ': ' . $response->body());
+            }
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'auth.verification',
+                'status' => 'sent',
+            ]);
 
             Log::info('Verification email sent via Brevo', ['user_id' => $this->id]);
         } catch (\Throwable $e) {
             Log::error('Verification email failed', ['user_id' => $this->id, 'error' => $e->getMessage()]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'auth.verification',
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -193,6 +223,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     {
         $resetUrl = url(route('password.reset', ['token' => $token, 'email' => $this->email], false));
         $name     = $this->name ?: 'there';
+        $recipient = (string) $this->email;
+        $subject = 'Reset your WADO Tickets password';
 
         $html = <<<HTML
         <!DOCTYPE html>
@@ -213,6 +245,15 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
 
         if ($apiKey === '') {
             Log::error('Password reset email failed: BREVO_API_KEY not configured');
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'auth.password_reset',
+                'status' => 'failed',
+                'error' => 'BREVO_API_KEY not configured.',
+            ]);
+
             return;
         }
 
@@ -221,7 +262,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
             ->post('https://api.brevo.com/v3/smtp/email', [
                 'sender'      => ['name' => 'WADO Tickets', 'email' => config('mail.from.address')],
                 'to'          => [['email' => $this->email, 'name' => $this->name]],
-                'subject'     => 'Reset your WADO Tickets password',
+                'subject'     => $subject,
                 'htmlContent' => $html,
             ]);
 
@@ -230,7 +271,24 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
                 'status' => $response->status(),
                 'body'   => $response->body(),
             ]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'auth.password_reset',
+                'status' => 'failed',
+                'error' => 'Brevo API error ' . $response->status() . ': ' . $response->body(),
+            ]);
+
+            return;
         }
+
+        EmailLog::create([
+            'recipient' => $recipient,
+            'subject' => $subject,
+            'source' => 'auth.password_reset',
+            'status' => 'sent',
+        ]);
     }
 
     public function getFilamentAvatarUrl(): ?string

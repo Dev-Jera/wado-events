@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -63,6 +64,11 @@ class EmailLogResource extends Resource
                     ->limit(40)
                     ->toggleable(),
 
+                TextColumn::make('source')
+                    ->badge()
+                    ->color('info')
+                    ->searchable(),
+
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'sent' ? 'success' : 'danger'),
@@ -73,7 +79,24 @@ class EmailLogResource extends Resource
                     ->default('—')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'sent' => 'Sent',
+                        'failed' => 'Failed',
+                    ]),
+                SelectFilter::make('source')
+                    ->options([
+                        'ticket.confirmation' => 'Ticket Confirmation',
+                        'event.submitted' => 'Event Submitted',
+                        'event.approved' => 'Event Approved',
+                        'event.fulfilment_ready' => 'Fulfilment Ready',
+                        'auth.verification' => 'Email Verification',
+                        'auth.password_reset' => 'Password Reset',
+                        'contact.enquiry' => 'Contact Enquiry',
+                        'package.enquiry' => 'Package Enquiry',
+                    ]),
+            ])
             ->recordActions([
                 Action::make('preview')
                     ->label('Preview PDF')

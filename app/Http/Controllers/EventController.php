@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\EmailLog;
 use App\Support\StaticEventCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -222,6 +223,8 @@ class EventController extends Controller
 
         // Send confirmation email via Brevo API (HTTP), but never block event submission on email failure.
         $event->loadMissing(['category', 'ticketCategories']);
+        $recipient = (string) ($user->email ?? '');
+        $subject = 'Event Submitted - ' . $event->title;
         try {
             $apiKey = (string) config('services.brevo.api_key', '');
 
@@ -249,17 +252,32 @@ class EventController extends Controller
                         'email' => $user->email,
                         'name' => $user->name,
                     ]],
-                    'subject' => 'Event Submitted - ' . $event->title,
+                    'subject' => $subject,
                     'htmlContent' => $html,
                 ]);
 
             if (! $response->successful()) {
                 throw new \RuntimeException('Brevo API error ' . $response->status() . ': ' . $response->body());
             }
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'event.submitted',
+                'status' => 'sent',
+            ]);
         } catch (\Throwable $e) {
             Log::warning('Event submission confirmation email failed.', [
                 'event_id' => $event->id,
                 'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'event.submitted',
+                'status' => 'failed',
                 'error' => $e->getMessage(),
             ]);
         }

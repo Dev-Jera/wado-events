@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmailLog;
 use App\Models\Enquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -56,11 +57,23 @@ class TicketPackageController extends Controller
 
     protected function sendEnquiryNotification(Enquiry $enquiry, array $data): void
     {
+        $recipient = 'wadoconcepts@gmail.com, aloyobrendaojera@gmail.com';
+        $subject = 'New Package Enquiry — ' . $data['package'];
+
         $apiKey = (string) config('services.brevo.api_key', '');
         if ($apiKey === '') {
             Log::warning('PackageEnquiry: BREVO_API_KEY not set, skipping admin notification', [
                 'enquiry_id' => $enquiry->id,
             ]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'package.enquiry',
+                'status' => 'failed',
+                'error' => 'BREVO_API_KEY not configured.',
+            ]);
+
             return;
         }
 
@@ -81,23 +94,46 @@ class TicketPackageController extends Controller
                     'to'          => [['email' => 'wadoconcepts@gmail.com']],
                     'cc'          => [['email' => 'aloyobrendaojera@gmail.com']],
                     'replyTo'     => ['email' => $data['email'], 'name' => $data['name']],
-                    'subject'     => 'New Package Enquiry — ' . $data['package'],
+                    'subject'     => $subject,
                     'htmlContent' => $html,
                 ]);
 
             if (! $response->successful()) {
+                EmailLog::create([
+                    'recipient' => $recipient,
+                    'subject' => $subject,
+                    'source' => 'package.enquiry',
+                    'status' => 'failed',
+                    'error' => 'Brevo API error ' . $response->status() . ': ' . $response->body(),
+                ]);
+
                 Log::error('PackageEnquiry: Brevo API error', [
                     'enquiry_id' => $enquiry->id,
                     'status'     => $response->status(),
                     'body'       => $response->body(),
                 ]);
             } else {
+                EmailLog::create([
+                    'recipient' => $recipient,
+                    'subject' => $subject,
+                    'source' => 'package.enquiry',
+                    'status' => 'sent',
+                ]);
+
                 Log::info('PackageEnquiry: admin notification sent', ['enquiry_id' => $enquiry->id]);
             }
         } catch (\Throwable $e) {
             Log::error('PackageEnquiry: failed to send admin notification', [
                 'enquiry_id' => $enquiry->id,
                 'error'      => $e->getMessage(),
+            ]);
+
+            EmailLog::create([
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'source' => 'package.enquiry',
+                'status' => 'failed',
+                'error' => $e->getMessage(),
             ]);
         }
     }

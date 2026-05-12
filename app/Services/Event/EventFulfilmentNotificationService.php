@@ -3,6 +3,7 @@
 namespace App\Services\Event;
 
 use App\Models\Event;
+use App\Models\EmailLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,10 +19,19 @@ class EventFulfilmentNotificationService
 
         /** @var User|null $owner */
         $owner = $event->user;
+        $subject = 'Your physical tickets are ready - next steps';
 
         if (! $owner instanceof User || blank($owner->email)) {
             Log::warning('Fulfilment ready email skipped: missing owner email.', [
                 'event_id' => $event->id,
+            ]);
+
+            EmailLog::create([
+                'recipient' => (string) ($owner?->email ?? ''),
+                'subject' => $subject,
+                'source' => 'event.fulfilment_ready',
+                'status' => 'failed',
+                'error' => 'Missing owner email.',
             ]);
 
             return;
@@ -37,6 +47,14 @@ class EventFulfilmentNotificationService
             Log::warning('Fulfilment ready email skipped: BREVO_API_KEY not configured.', [
                 'event_id' => $event->id,
                 'owner_id' => $owner->id,
+            ]);
+
+            EmailLog::create([
+                'recipient' => (string) $owner->email,
+                'subject' => $subject,
+                'source' => 'event.fulfilment_ready',
+                'status' => 'failed',
+                'error' => 'BREVO_API_KEY not configured.',
             ]);
 
             return;
@@ -69,7 +87,7 @@ class EventFulfilmentNotificationService
                         'email' => (string) $owner->email,
                         'name' => (string) $owner->name,
                     ]],
-                    'subject' => 'Your physical tickets are ready - next steps',
+                    'subject' => $subject,
                     'htmlContent' => $html,
                 ]);
 
@@ -82,10 +100,25 @@ class EventFulfilmentNotificationService
                 'owner_id' => $owner->id,
                 'recipient' => $owner->email,
             ]);
+
+            EmailLog::create([
+                'recipient' => (string) $owner->email,
+                'subject' => $subject,
+                'source' => 'event.fulfilment_ready',
+                'status' => 'sent',
+            ]);
         } catch (\Throwable $e) {
             Log::warning('Fulfilment ready email failed.', [
                 'event_id' => $event->id,
                 'owner_id' => $owner->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            EmailLog::create([
+                'recipient' => (string) $owner->email,
+                'subject' => $subject,
+                'source' => 'event.fulfilment_ready',
+                'status' => 'failed',
                 'error' => $e->getMessage(),
             ]);
         }
