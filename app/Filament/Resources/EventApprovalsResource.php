@@ -307,7 +307,20 @@ class EventApprovalsResource extends Resource
         ], false));
 
         $dashboardAlias = static::generateDashboardAlias((string) $event->title);
-        $dashboardLoginUrl = route('filament.admin.auth.login');
+        $slug = \Illuminate\Support\Str::slug((string) $event->title);
+        
+        // Create or update event owner dashboard account with secure credentials
+        $dashboardPassword = \Illuminate\Support\Str::random(16);
+        $dashboardAccount = \App\Models\EventOwnerDashboardAccount::updateOrCreate(
+            ['event_id' => $event->id, 'user_id' => $owner->id],
+            [
+                'email' => $owner->email,
+                'password' => bcrypt($dashboardPassword),
+                'is_active' => true,
+            ]
+        );
+
+        $dashboardLoginUrl = route('owner.dashboard-access', ['eventSlug' => $slug], false);
 
         try {
             $apiKey = (string) config('services.brevo.api_key', '');
@@ -321,6 +334,8 @@ class EventApprovalsResource extends Resource
                 'owner' => $owner,
                 'dashboardAlias' => $dashboardAlias,
                 'dashboardLoginUrl' => $dashboardLoginUrl,
+                'dashboardEmail' => $dashboardAccount->email,
+                'dashboardPassword' => $dashboardPassword,
                 'setPasswordUrl' => $resetUrl,
             ])->render();
 
@@ -332,7 +347,7 @@ class EventApprovalsResource extends Resource
                 ])
                 ->post('https://api.brevo.com/v3/smtp/email', [
                     'sender' => [
-                        'name' => (string) config('mail.from.name', config('app.name', 'WADO Events')),
+                        'name' => 'WADO Events',
                         'email' => (string) config('mail.from.address', 'noreply@wado-events.com'),
                     ],
                     'to' => [[

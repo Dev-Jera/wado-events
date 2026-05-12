@@ -16,6 +16,9 @@ class Event extends Model
     protected $fillable = [
         'user_id',
         'category_id',
+        'service_package',
+        'service_package_notes',
+        'fulfilment_status',
         'title',
         'slug',
         'venue',
@@ -43,6 +46,8 @@ class Event extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'ticket_price' => 'decimal:2',
+            'service_package'          => 'string',
+            'fulfilment_status'        => 'string',
             'is_featured'              => 'boolean',
             'verification_mode'        => 'string',
             'is_free'                  => 'boolean',

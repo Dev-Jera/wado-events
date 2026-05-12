@@ -35,6 +35,11 @@ Route::get('/ticket-policy', fn() => view('pages.ticket-policy'))->name('ticket-
 Route::get('/refund-policy', fn() => view('pages.refund-policy'))->name('refund-policy');
 
 // Host event creation (requires login)
+// Event owner dashboard login
+Route::get('/owner/{eventSlug}/dashboard-access', [\App\Http\Controllers\EventOwnerDashboardController::class, 'showLogin'])->name('owner.dashboard-access');
+Route::post('/owner/{eventSlug}/dashboard-access', [\App\Http\Controllers\EventOwnerDashboardController::class, 'login'])->name('owner.dashboard-login');
+Route::post('/owner/dashboard/logout', [\App\Http\Controllers\EventOwnerDashboardController::class, 'logout'])->name('owner.dashboard-logout');
+
 Route::middleware('auth')->group(function () {
     Route::get('/host-event/create', [EventController::class, 'create'])->name('host-event.create');
     Route::post('/host-event/store', [EventController::class, 'store'])->name('host-event.store');
@@ -82,14 +87,42 @@ Route::middleware('auth')->group(function () {
             ? implode('-', array_slice($parts, 0, 3))
             : (count($parts) > 1 ? implode('-', $parts) : ($parts[0] ?? 'owner-dashboard'));
 
+        $dashboardPassword = \Illuminate\Support\Str::random(16);
+        $dashboardLoginUrl = route('owner.dashboard-access', ['eventSlug' => $slug], false);
+
         return view('emails.events.approved-owner-next-steps', [
             'event' => $resolvedEvent,
             'owner' => $owner,
             'dashboardAlias' => \Illuminate\Support\Str::limit($dashboardAlias, 24, ''),
-            'dashboardLoginUrl' => route('filament.admin.auth.login'),
+            'dashboardLoginUrl' => $dashboardLoginUrl,
+            'dashboardEmail' => $owner->email,
+            'dashboardPassword' => $dashboardPassword,
             'setPasswordUrl' => $setPasswordUrl,
         ]);
     })->name('preview.emails.events.approved');
+
+    Route::get('/preview/emails/events/fulfilment-ready/{event?}', function (?\App\Models\Event $event) {
+        abort_unless(config('app.debug'), 404);
+
+        $owner = auth()->user();
+        $resolvedEvent = ($event && (int) $event->user_id === (int) $owner->id)
+            ? $event
+            : \App\Models\Event::query()->where('user_id', $owner->id)->latest('id')->first();
+
+        abort_if(! $resolvedEvent, 404, 'No event found to preview this email.');
+
+        $resolvedEvent->loadMissing(['category']);
+
+        $slug = \Illuminate\Support\Str::slug((string) $resolvedEvent->title);
+        $dashboardLoginUrl = route('owner.dashboard-access', ['eventSlug' => $slug], false);
+
+        return view('emails.events.fulfilment-ready-owner-next-steps', [
+            'event' => $resolvedEvent,
+            'owner' => $owner,
+            'dashboardLoginUrl' => $dashboardLoginUrl,
+            'contactUrl' => route('contact'),
+        ]);
+    })->name('preview.emails.events.fulfilment-ready');
 });
 
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');

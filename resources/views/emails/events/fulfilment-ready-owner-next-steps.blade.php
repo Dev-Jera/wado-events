@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event Approved — WADO Ticketing</title>
+<title>Physical Fulfilment Ready - WADO Ticketing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,18 +23,15 @@
     .row:last-child { border-bottom:none; }
     .label { font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:#8e6077; }
     .value { font-size:.9rem; color:#4a2236; text-align:right; font-weight:500; }
-    .notice { background:#fff6fa; border:1px solid #f1ccd9; border-radius:12px; padding:14px 16px; margin:0 0 20px; }
-    .notice p { margin:0; color:#6a1a3e; font-size:.9rem; line-height:1.65; font-weight:500; }
-    .section-title { margin:0 0 10px; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:#8e6077; }
+    .section-title { margin:0 0 10px; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:#8e6077; font-weight:700; }
     .steps { margin:0 0 20px; }
     .step { display:flex; gap:12px; margin:0 0 10px; }
     .step-num { width:24px; height:24px; flex-shrink:0; border-radius:50%; background:#651633; color:#fff; font-size:.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
     .step-text { padding-top:2px; font-size:.89rem; line-height:1.58; color:#4d2a3c; font-weight:500; }
     .step-text strong { font-weight:700; }
     .panel-card { background:#fffdfd; border:1px solid #ead7de; border-radius:12px; padding:16px; margin:0 0 20px; }
-    .panel-card p { margin:0 0 8px; font-size:.9rem; color:#4d2a3c; line-height:1.6; font-weight:500; }
-    .meta { margin:0; font-size:.87rem; color:#795166; font-weight:500; }
-    .meta strong { color:#4d0f2f; }
+    .meta { margin:0 0 8px; font-size:.87rem; color:#795166; font-weight:500; }
+    .meta strong { color:#4d0f2f; font-weight:700; }
     .cta-wrap { margin:14px 0 6px; }
     .btn { display:inline-block; text-decoration:none; border-radius:10px; padding:11px 16px; font-size:.88rem; font-weight:700; font-family:inherit; }
     .btn-primary { background:#0f4bb6; color:#fff !important; box-shadow:0 6px 18px rgba(15,75,182,.25); }
@@ -53,21 +50,21 @@
 <div class="wrap">
     <div class="header">
         <p class="brand">WADO Ticketing</p>
-        <p class="subtitle">Event Approved</p>
-        <span class="status">Approved & Live</span>
+        <p class="subtitle">Physical Package Update</p>
+        <span class="status">Fulfilment Ready</span>
     </div>
 
     <div class="body">
         <p class="greeting">Hi {{ $owner->name }},</p>
         <p class="intro">
-            Great news. Your event has been reviewed and approved on WADO Ticketing. Your listing is now eligible to appear to guests and start selling tickets.
+            Your physical package for this event is now ready. Please contact our team with your preferred delivery details so we can complete handover.
         </p>
 
         <div class="event-card">
             <p class="event-title">{{ $event->title }}</p>
             <div class="row">
-                <span class="label">Category</span>
-                <span class="value">{{ $event->category?->name ?? 'Uncategorized' }}</span>
+                <span class="label">Package</span>
+                <span class="value">{{ $event->service_package === 'premium_wristbands' ? 'Premium wristbands' : 'Batch printed tickets' }}</span>
             </div>
             <div class="row">
                 <span class="label">Venue</span>
@@ -77,60 +74,37 @@
                 <span class="label">Starts</span>
                 <span class="value">{{ optional($event->starts_at)->format('D, d M Y \a\t g:i A') }}</span>
             </div>
-            <div class="row">
-                <span class="label">Dashboard Alias</span>
-                <span class="value">{{ $dashboardAlias }}</span>
-            </div>
         </div>
 
-        <div class="notice">
-            <p>
-                Your event owner dashboard access has been activated. Your unique login credentials are below. <strong>Keep this password safe</strong> — do not share it with others.
-            </p>
-        </div>
-
-        <h3 class="section-title">Your Dashboard Login</h3>
-        <div class="panel-card">
-            <p class="meta"><strong>Dashboard URL:</strong> <span style="word-break:break-all;">{{ $dashboardLoginUrl }}</span></p>
-            <p class="meta"><strong>Login Email:</strong> {{ $dashboardEmail ?? $owner->email }}</p>
-            <p class="meta"><strong>Temporary Password:</strong> <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;font-family:monospace;">{{ $dashboardPassword ?? 'Provided at approval time' }}</code></p>
-            <p style="margin-top:12px;font-size:.87rem;color:#795166;font-weight:500;">After login, you can change your password in the dashboard settings.</p>
-        </div>
-
-        <h3 class="section-title">Next Steps</h3>
+        <h3 class="section-title">What To Do Next</h3>
         <div class="steps">
             <div class="step">
                 <span class="step-num">1</span>
-                <span class="step-text"><strong>Visit the dashboard URL:</strong> Click the link above or copy/paste it into your browser.</span>
+                <span class="step-text"><strong>Contact us:</strong> Call our operations line or send a message using the Contact Us page with your preferred delivery location and contact person.</span>
             </div>
             <div class="step">
                 <span class="step-num">2</span>
-                <span class="step-text"><strong>Log in with your credentials:</strong> Use the email and temporary password provided above.</span>
+                <span class="step-text"><strong>Include key delivery details:</strong> Event name, preferred delivery address, preferred date/time, and active phone number.</span>
             </div>
             <div class="step">
                 <span class="step-num">3</span>
-                <span class="step-text"><strong>Change your password:</strong> Once logged in, go to settings and create a secure password you'll remember.</span>
-            </div>
-            <div class="step">
-                <span class="step-num">4</span>
-                <span class="step-text"><strong>Start monitoring:</strong> You can now track tickets, sales, attendance, and gate activity in real time.</span>
+                <span class="step-text"><strong>Use your dashboard while waiting:</strong> Log in to monitor event setup, gate/verification status, and owner-level event operations.</span>
             </div>
         </div>
 
-        <div class="cta-wrap" style="text-align:center;margin:24px 0;">
-            <a href="{{ $dashboardLoginUrl }}" class="btn btn-primary">Open Dashboard Now</a>
-        </div>
-
-        <div class="notice" style="background:#f0f9ff;border-color:#d4e8ff;">
-            <p style="color:#0f4bb6;">
-                <strong>Need help?</strong> If you have any questions or issues accessing your dashboard, please <a href="{{ route('contact') }}" style="color:#0f4bb6;text-decoration:underline;">contact our support team</a>.
-            </p>
+        <div class="panel-card">
+            <p class="meta"><strong>Dashboard login:</strong> {{ $dashboardLoginUrl }}</p>
+            <p class="meta"><strong>Contact us:</strong> {{ $contactUrl }}</p>
+            <div class="cta-wrap">
+                <a href="{{ $dashboardLoginUrl }}" class="btn btn-primary">Open Dashboard</a>
+                <a href="{{ $contactUrl }}" class="btn btn-secondary">Contact Support</a>
+            </div>
         </div>
     </div>
 
     <div class="footer">
         <p>
-            This email was sent because your event was approved on WADO Ticketing.<br>
+            This email was sent because your event fulfilment status was updated to "Ready" on WADO Ticketing.<br>
             &copy; {{ date('Y') }} WADO Ticketing. All rights reserved.
         </p>
     </div>

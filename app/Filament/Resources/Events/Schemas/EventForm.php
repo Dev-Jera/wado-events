@@ -49,6 +49,31 @@ class EventForm
                                             ->native(false)
                                             ->required(),
 
+                                        Select::make('service_package')
+                                            ->label('Package needed')
+                                            ->options([
+                                                'premium_wristbands' => 'Premium wristbands',
+                                                'batch_tickets' => 'Batch printed tickets',
+                                                'online_ticketing' => 'Online ticketing',
+                                            ])
+                                            ->default('online_ticketing')
+                                            ->native(false)
+                                            ->required(),
+
+                                        Select::make('fulfilment_status')
+                                            ->label('Fulfilment status')
+                                            ->options([
+                                                'not_required' => 'Not required (online)',
+                                                'pending' => 'Pending prep',
+                                                'in_progress' => 'In progress',
+                                                'ready' => 'Ready for owner',
+                                                'delivered' => 'Delivered to gate/owner',
+                                            ])
+                                            ->helperText('When changed to "Ready" for a physical package, the owner receives an automatic next-steps email.')
+                                            ->default('not_required')
+                                            ->native(false)
+                                            ->required(),
+
                                         TextInput::make('venue')
                                             ->required()
                                             ->maxLength(255)
@@ -103,6 +128,13 @@ class EventForm
                                         ->required()
                                         ->rows(4)
                                         ->placeholder('Describe your event…')
+                                        ->columnSpanFull(),
+
+                                    Textarea::make('service_package_notes')
+                                        ->label('Package notes')
+                                        ->rows(3)
+                                        ->maxLength(1000)
+                                        ->placeholder('Optional fulfilment notes for operations…')
                                         ->columnSpanFull(),
                                 ]),
                         ]),

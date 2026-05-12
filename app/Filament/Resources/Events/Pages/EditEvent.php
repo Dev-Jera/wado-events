@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
 use App\Models\PaymentTransaction;
+use App\Services\Event\EventFulfilmentNotificationService;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Str;
@@ -13,6 +14,8 @@ class EditEvent extends EditRecord
     protected static string $resource = EventResource::class;
 
     protected string $view = 'filament.resources.events.edit-event';
+
+    protected ?string $previousFulfilmentStatus = null;
 
     protected function getHeaderActions(): array
     {
@@ -81,6 +84,14 @@ class EditEvent extends EditRecord
             });
         }
 
+        $isPhysicalPackage = in_array((string) ($data['service_package'] ?? 'online_ticketing'), ['batch_tickets', 'premium_wristbands'], true);
+
+        if (! $isPhysicalPackage) {
+            $data['fulfilment_status'] = 'not_required';
+        } elseif (($data['fulfilment_status'] ?? null) === 'not_required') {
+            $data['fulfilment_status'] = 'pending';
+        }
+
         $data['capacity'] = (int) $ticketCategories->sum('ticket_count');
         $data['tickets_available'] = (int) $ticketCategories->sum('ticket_count');
         $data['ticket_price'] = (float) ($ticketCategories->min('price') ?? 0);
@@ -89,6 +100,28 @@ class EditEvent extends EditRecord
         unset($data['artists'], $data['ticketCategories'], $data['is_free']);
 
         return $data;
+    }
+
+    protected function beforeSave(): void
+    {
+        $this->previousFulfilmentStatus = (string) ($this->getRecord()->fulfilment_status ?? '');
+    }
+
+    protected function afterSave(): void
+    {
+        $event = $this->getRecord()->fresh(['user', 'category']);
+
+        if (! $event) {
+            return;
+        }
+
+        $isPhysicalPackage = in_array((string) $event->service_package, ['batch_tickets', 'premium_wristbands'], true);
+        $isNowReady = (string) $event->fulfilment_status === 'ready';
+        $wasReadyBefore = (string) $this->previousFulfilmentStatus === 'ready';
+
+        if ($isPhysicalPackage && $isNowReady && ! $wasReadyBefore) {
+            app(EventFulfilmentNotificationService::class)->sendReadyForDelivery($event);
+        }
     }
 
     protected function normalizeImageState(?string $path): ?string

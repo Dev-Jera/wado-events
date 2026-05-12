@@ -53,6 +53,38 @@ class EventsTable
                     ->formatStateUsing(fn (?string $state): string => $state === 'self_managed' ? 'Self-managed' : 'WADO-managed')
                     ->color(fn (?string $state): string => $state === 'self_managed' ? 'warning' : 'info'),
 
+                TextColumn::make('service_package')
+                    ->label('Mode')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'premium_wristbands' => 'PHYSICAL - Wristbands',
+                        'batch_tickets' => 'PHYSICAL - Batch tickets',
+                        default => 'ONLINE',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'premium_wristbands' => 'danger',
+                        'batch_tickets' => 'warning',
+                        default => 'success',
+                    }),
+
+                TextColumn::make('fulfilment_status')
+                    ->label('Fulfilment')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'pending' => 'Pending prep',
+                        'in_progress' => 'In progress',
+                        'ready' => 'Ready',
+                        'delivered' => 'Delivered',
+                        default => 'Not required',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'in_progress' => 'info',
+                        'ready' => 'primary',
+                        'delivered' => 'success',
+                        default => 'gray',
+                    }),
+
                 TextColumn::make('access_mode')
                     ->label('Access')
                     ->state(fn (): string => auth()->user()?->isGateStaff() ? 'READ ONLY' : 'EDIT')

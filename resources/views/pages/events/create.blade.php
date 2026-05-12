@@ -101,6 +101,41 @@
                             </div>
                         </div>
 
+                        <div class="hec-form-group">
+                            <label for="service_package" class="hec-label">Package Needed <span class="hec-required">*</span></label>
+                            <div class="hec-select-wrapper">
+                                <select
+                                    id="service_package"
+                                    name="service_package"
+                                    class="hec-select @error('service_package') is-invalid @enderror"
+                                    required
+                                >
+                                    <option value="">Select package for this event</option>
+                                    <option value="premium_wristbands" @selected(old('service_package') === 'premium_wristbands')>Premium wristbands</option>
+                                    <option value="batch_tickets" @selected(old('service_package') === 'batch_tickets')>Batch printed tickets</option>
+                                    <option value="online_ticketing" @selected(old('service_package') === 'online_ticketing')>Online ticketing</option>
+                                </select>
+                            </div>
+                            <span class="hec-help-text">We use this to prepare what your event needs for delivery and fulfilment.</span>
+                            @error('service_package')
+                                <span class="hec-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="hec-form-group">
+                            <label for="service_package_notes" class="hec-label">Package Notes</label>
+                            <textarea
+                                id="service_package_notes"
+                                name="service_package_notes"
+                                class="hec-textarea @error('service_package_notes') is-invalid @enderror"
+                                rows="3"
+                                placeholder="Optional notes, e.g. quantity of wristbands, print format, delivery timing..."
+                            >{{ old('service_package_notes') }}</textarea>
+                            @error('service_package_notes')
+                                <span class="hec-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="hec-form-row">
                             <div class="hec-form-group">
                                 <label for="venue" class="hec-label">Venue <span class="hec-required">*</span></label>

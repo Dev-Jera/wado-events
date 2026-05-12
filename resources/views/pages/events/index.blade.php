@@ -77,7 +77,9 @@
                                 @if ($liveStatus === 'live')
                                     <span class="live-badge">● Live now</span>
                                 @endif
-                                @if ((float) $event->ticket_price <= 0)
+                                @if (in_array((string) ($event->service_package ?? 'online_ticketing'), ['batch_tickets', 'premium_wristbands'], true))
+                                    <span class="price-badge paid">Buy at gate</span>
+                                @elseif ((float) $event->ticket_price <= 0)
                                     <span class="price-badge free">Free</span>
                                 @else
                                     <span class="price-badge paid">From UGX {{ number_format((float) $event->ticket_price, 0) }}</span>

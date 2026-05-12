@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\EventOwnerDashboardAccount;
 use App\Models\User;
 
 return [
@@ -50,6 +51,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Dedicated guard for event owner dashboard credentials.
+        'event_owner' => [
+            'driver' => 'session',
+            'provider' => 'event_owners',
+        ],
     ],
 
     /*
@@ -73,6 +80,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'event_owners' => [
+            'driver' => 'eloquent',
+            'model' => EventOwnerDashboardAccount::class,
         ],
 
         // 'users' => [

@@ -42,6 +42,12 @@ class CheckoutController extends Controller
 
     public function create(Request $request, Event $event)
     {
+        if (in_array((string) $event->service_package, ['batch_tickets', 'premium_wristbands'], true)) {
+            return redirect()
+                ->route('events.show', $event)
+                ->with('success', 'This event uses gate sales. Please buy at the event gate and verify on-site.');
+        }
+
         $event->load('ticketCategories');
         abort_if($this->isCheckoutClosed($event), 404);
 
@@ -81,6 +87,12 @@ class CheckoutController extends Controller
 
     public function store(CheckoutRequest $request, Event $event)
     {
+        if (in_array((string) $event->service_package, ['batch_tickets', 'premium_wristbands'], true)) {
+            return redirect()
+                ->route('events.show', $event)
+                ->with('error', 'Online checkout is disabled for this event. Purchases happen at the gate.');
+        }
+
         if ($request->filled('website')) {
             return redirect()->route('events.show', $event);
         }

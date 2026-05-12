@@ -97,6 +97,16 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
+        if ($event->status !== 'published') {
+            return redirect()->route('events.index');
+        }
+
+        if (in_array((string) $event->service_package, ['batch_tickets', 'premium_wristbands'], true)) {
+            return view('pages.events.physical', [
+                'event' => $event->loadMissing(['category', 'ticketCategories']),
+            ]);
+        }
+
         if ($event->ticketCategories()->exists()) {
             return redirect()->route('checkout.create', $event);
         }
@@ -123,6 +133,8 @@ class EventController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'service_package' => 'required|in:premium_wristbands,batch_tickets,online_ticketing',
+            'service_package_notes' => 'nullable|string|max:1000',
             'venue' => 'required|string|max:255',
             'city' => 'required|string|max:120',
             'country' => 'required|string|max:120',
@@ -171,6 +183,9 @@ class EventController extends Controller
             $event->reentry_limit = $validated['reentry_limit'] ?? 1;
             $event->reentry_cooldown_minutes = $validated['reentry_cooldown_minutes'] ?? 0;
             $event->is_free = $validated['is_free'] ?? false;
+            $event->fulfilment_status = in_array(($validated['service_package'] ?? 'online_ticketing'), ['batch_tickets', 'premium_wristbands'], true)
+                ? 'pending'
+                : 'not_required';
 
             $ticketCategories = collect($validated['ticket_categories'] ?? []);
             $event->capacity = (int) $ticketCategories->sum(fn (array $ticketCat): int => (int) ($ticketCat['ticket_count'] ?? 0));
@@ -227,7 +242,7 @@ class EventController extends Controller
                 ])
                 ->post('https://api.brevo.com/v3/smtp/email', [
                     'sender' => [
-                        'name' => (string) config('mail.from.name', config('app.name', 'WADO Events')),
+                        'name' => 'WADO Events',
                         'email' => (string) config('mail.from.address', 'noreply@wado-events.com'),
                     ],
                     'to' => [[
