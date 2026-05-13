@@ -40,6 +40,14 @@ class CheckoutRequest extends FormRequest
             $normalizedPhone = '+' . substr((string) $normalizedPhone, 2);
         }
 
+        if (! blank($normalizedPhone) && ! str_starts_with((string) $normalizedPhone, '+')) {
+            $digits = preg_replace('/\D+/', '', (string) $normalizedPhone) ?: '';
+
+            if (str_starts_with($digits, '0')) {
+                $normalizedPhone = '+256' . ltrim($digits, '0');
+            }
+        }
+
         $normalizedEmail = Str::lower(trim((string) $this->input('email')));
         $normalizedPromo = Str::upper(trim((string) $this->input('promo_code')));
 
