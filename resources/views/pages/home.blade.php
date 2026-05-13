@@ -1184,17 +1184,15 @@ body {
     border-radius: 18px;
     overflow: hidden;
     cursor: pointer;
-    background: rgba(255,255,255,.09);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: 0 8px 32px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12);
+    background: rgba(22, 18, 20, .92);
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,.22);
     transition: transform .22s ease, border-color .2s, box-shadow .22s;
 }
 .hp-fcard:hover {
-    transform: translateY(-7px);
-    border-color: rgba(160,32,46,.6);
-    box-shadow: 0 22px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(160,32,46,.3), 0 0 30px rgba(160,32,46,.12);
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,.14);
+    box-shadow: 0 10px 28px rgba(0,0,0,.26);
 }
 .hp-fcard-img {
     position: relative;
@@ -1207,20 +1205,20 @@ body {
 }
 .hp-fcard-date-badge {
     position: absolute; top: .75rem; right: .75rem; z-index: 1;
-    background: #fff;
+    background: rgba(16, 13, 15, .92);
+    border: 1px solid rgba(255,255,255,.16);
     border-radius: 10px; padding: .28rem .55rem;
     display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1;
-    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+    box-shadow: 0 4px 12px rgba(0,0,0,.3);
 }
-.hp-fcard-day { font-size: 1rem; font-weight: 800; color: var(--maroon); }
-.hp-fcard-mon { font-size: .56rem; font-weight: 700; letter-spacing: .07em; color: #222; text-transform: uppercase; }
+.hp-fcard-day { font-size: 1rem; font-weight: 800; color: #fff; }
+.hp-fcard-mon { font-size: .56rem; font-weight: 700; letter-spacing: .07em; color: rgba(255,255,255,.72); text-transform: uppercase; }
 .hp-fcard-cat-badge {
     position: absolute; bottom: .7rem; left: .75rem; z-index: 1;
     font-size: .63rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-    color: #fff;
-    background: var(--maroon-glass);
-    border: 1px solid rgba(160,32,46,.45);
-    backdrop-filter: var(--glass-blur-sm);
+    color: rgba(255,255,255,.88);
+    background: rgba(16, 13, 15, .85);
+    border: 1px solid rgba(255,255,255,.12);
     border-radius: 6px; padding: .22rem .52rem;
 }
 .hp-fcard-body {
@@ -1229,12 +1227,12 @@ body {
 }
 .hp-fcard-title {
     margin: 0 0 .12rem;
-    font-size: .97rem; font-weight: 700; color: #fff; line-height: 1.25;
+    font-size: .98rem; font-weight: 700; color: #fff; line-height: 1.28;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 .hp-fcard-meta {
     display: flex; align-items: center; gap: .3rem; margin: 0;
-    font-size: .75rem; color: var(--muted); line-height: 1.3;
+    font-size: .78rem; color: rgba(255,255,255,.68); line-height: 1.35;
 }
 .hp-fcard-meta svg { width: .78rem; height: .78rem; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; opacity: .65; }
 .hp-fcard-foot {
@@ -1248,16 +1246,16 @@ body {
     display: inline-flex; align-items: center; justify-content: center;
     padding: .38rem .9rem; border-radius: 999px;
     background: var(--blue); color: #fff;
-    font-size: .76rem; font-weight: 700; text-decoration: none;
-    box-shadow: 0 3px 12px var(--blue-glow);
+    font-size: .78rem; font-weight: 600; text-decoration: none;
+    box-shadow: none;
     transition: background .18s, transform .15s;
 }
-.hp-fcard-btn:hover { background: var(--blue-hover); transform: scale(1.04); }
+.hp-fcard-btn:hover { background: var(--blue-hover); transform: none; }
 
 /* ── Past event state ── */
 .hp-fcard.is-past .hp-fcard-img,
 .hp-ecard.is-past .hp-ecard-thumb {
-    filter: grayscale(55%) brightness(.8);
+    filter: grayscale(35%) brightness(.78);
 }
 .hp-fcard.is-past .hp-fcard-btn,
 .hp-ecard.is-past .hp-ecard-btn {
@@ -1270,14 +1268,13 @@ body {
     right: .6rem;
     padding: .22rem .6rem;
     border-radius: 6px;
-    background: rgba(10,10,14,.72);
-    border: 1px solid rgba(255,255,255,.15);
-    backdrop-filter: blur(6px);
+    background: rgba(10,10,14,.86);
+    border: 1px solid rgba(255,255,255,.18);
     font-size: .65rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: rgba(255,255,255,.65);
+    color: rgba(255,255,255,.72);
 }
 
 /* scroll arrows */
@@ -1306,19 +1303,17 @@ body {
 
 /* event card — glass */
 .hp-ecard {
-    background: rgba(255,255,255,.09);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: rgba(22, 18, 20, .92);
+    border: 1px solid rgba(255,255,255,.08);
     border-radius: 16px; overflow: hidden; cursor: pointer;
     display: flex; flex-direction: column;
-    box-shadow: 0 6px 24px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,.22);
     transition: transform .22s ease, border-color .2s, box-shadow .22s;
 }
 .hp-ecard:hover {
-    transform: translateY(-6px);
-    border-color: rgba(160,32,46,.55);
-    box-shadow: 0 20px 40px rgba(0,0,0,.3), 0 0 0 1px rgba(160,32,46,.25), 0 0 24px rgba(160,32,46,.1);
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,.14);
+    box-shadow: 0 10px 28px rgba(0,0,0,.26);
 }
 .hp-ecard.is-hidden { display: none; }
 
@@ -1329,13 +1324,14 @@ body {
 }
 .hp-ecard-date-badge {
     position: absolute; top: .65rem; right: .65rem;
-    background: #fff;
+    background: rgba(16, 13, 15, .92);
+    border: 1px solid rgba(255,255,255,.16);
     border-radius: 8px; padding: .26rem .52rem;
     display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1;
-    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+    box-shadow: 0 4px 12px rgba(0,0,0,.3);
 }
-.hp-ecard-day { font-size: .95rem; font-weight: 800; color: var(--maroon); }
-.hp-ecard-mon { font-size: .53rem; font-weight: 700; letter-spacing: .07em; color: #222; text-transform: uppercase; }
+.hp-ecard-day { font-size: .95rem; font-weight: 800; color: #fff; }
+.hp-ecard-mon { font-size: .53rem; font-weight: 700; letter-spacing: .07em; color: rgba(255,255,255,.72); text-transform: uppercase; }
 
 .hp-ecard-body {
     padding: .85rem 1rem 1rem;
@@ -1343,16 +1339,16 @@ body {
 }
 .hp-ecard-cat {
     font-size: .66rem; font-weight: 700; letter-spacing: .11em;
-    color: rgba(255,180,185,.9); text-transform: uppercase;
+    color: rgba(255,255,255,.6); text-transform: uppercase;
 }
 .hp-ecard-title {
     margin: 0 0 .28rem;
-    font-size: .95rem; font-weight: 700; color: #fff; line-height: 1.25;
+    font-size: .98rem; font-weight: 700; color: #fff; line-height: 1.28;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 .hp-ecard-meta {
     display: flex; align-items: center; gap: .3rem; margin: 0;
-    font-size: .75rem; color: var(--muted); line-height: 1.3;
+    font-size: .78rem; color: rgba(255,255,255,.68); line-height: 1.35;
 }
 .hp-ecard-meta svg { width: .78rem; height: .78rem; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; opacity: .65; }
 .hp-ecard-foot {
@@ -1366,8 +1362,8 @@ body {
     display: inline-flex; align-items: center; justify-content: center;
     padding: .38rem .9rem; border-radius: 999px;
     background: var(--blue); color: #fff;
-    font-size: .76rem; font-weight: 700; text-decoration: none;
-    box-shadow: 0 3px 10px var(--blue-glow);
+    font-size: .78rem; font-weight: 600; text-decoration: none;
+    box-shadow: none;
     transition: background .18s;
 }
 .hp-ecard-btn:hover { background: var(--blue-hover); }
