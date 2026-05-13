@@ -5,15 +5,22 @@ namespace App\Http\Controllers;
 use App\Services\Checkout\PromoCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PromoCodeController extends Controller
 {
     public function validate(Request $request, PromoCodeService $promoCodeService): JsonResponse
     {
+        $request->merge([
+            'code' => Str::upper(trim((string) $request->input('code'))),
+        ]);
+
         $data = $request->validate([
-            'code'       => ['required', 'string', 'max:32'],
-            'event_id'   => ['required', 'integer'],
+            'code'       => ['required', 'string', 'max:32', 'regex:/^[A-Z0-9_-]+$/'],
+            'event_id'   => ['required', 'integer', 'exists:events,id'],
             'subtotal'   => ['required', 'numeric', 'min:0'],
+        ], [
+            'code.regex' => 'Promo code may contain only letters, numbers, hyphen, and underscore.',
         ]);
 
         $result = $promoCodeService->validate(

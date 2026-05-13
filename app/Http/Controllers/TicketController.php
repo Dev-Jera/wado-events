@@ -68,8 +68,12 @@ class TicketController extends Controller
     {
         abort_unless($ticket->user_id === auth()->id(), 403);
 
+        $request->merge([
+            'reason' => trim((string) $request->input('reason')),
+        ]);
+
         $data = $request->validate([
-            'reason' => ['required', 'string', 'max:500'],
+            'reason' => ['required', 'string', 'min:3', 'max:500'],
         ]);
 
         $payment = PaymentTransaction::query()

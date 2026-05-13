@@ -27,10 +27,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
         $this->ensureIsNotRateLimited($request);
 
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email:rfc,dns', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
@@ -81,11 +85,26 @@ class AuthController extends Controller
             return redirect()->route('home');
         }
 
+        $normalizedEmail = Str::lower(trim((string) $request->input('email')));
+        $normalizedPhone = preg_replace('/(?!^)\+|[^\d+]/', '', trim((string) $request->input('phone')) ?? '');
+        if (str_starts_with($normalizedPhone, '00')) {
+            $normalizedPhone = '+' . substr($normalizedPhone, 2);
+        }
+
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'email' => $normalizedEmail,
+            'phone' => $normalizedPhone,
+        ]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'email' => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users', 'email')],
+            'phone' => ['nullable', 'regex:/^\+?[1-9]\d{7,14}$/'],
             'password' => ['required', 'confirmed', 'min:8'],
+        ], [
+            'email.email' => 'Please enter a valid email address with a real domain.',
+            'phone.regex' => 'Please enter a valid phone number with country code, for example +256700000000.',
         ]);
 
         $user = User::create([
@@ -111,7 +130,11 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $request)
     {
-        $request->validate(['email' => ['required', 'email']]);
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
+        $request->validate(['email' => ['required', 'email:rfc,dns']]);
 
         Password::sendResetLink($request->only('email'));
 
@@ -127,9 +150,13 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
         $request->validate([
             'token'    => ['required'],
-            'email'    => ['required', 'email'],
+            'email'    => ['required', 'email:rfc,dns'],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 

@@ -34,19 +34,19 @@
 
                 <div class="prof-field">
                     <label for="name">Full name</label>
-                    <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}" required>
+                    <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}" required maxlength="255" autocomplete="name">
                     @error('name') <small class="prof-err">{{ $message }}</small> @enderror
                 </div>
 
                 <div class="prof-field">
                     <label for="email">Email address</label>
-                    <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required>
+                    <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required maxlength="255" autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="none">
                     @error('email') <small class="prof-err">{{ $message }}</small> @enderror
                 </div>
 
                 <div class="prof-field">
                     <label for="phone">Phone number <span class="prof-optional">(optional)</span></label>
-                    <input id="phone" type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="+256 700 000 000">
+                    <input id="phone" type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="+256 700 000 000" autocomplete="tel" inputmode="numeric" pattern="^\+?[1-9]\d{7,14}$" maxlength="16" title="Use international format, for example +256700000000">
                     @error('phone') <small class="prof-err">{{ $message }}</small> @enderror
                 </div>
 
@@ -80,7 +80,7 @@
                 <div class="prof-field">
                     <label for="password">New password</label>
                     <div class="prof-pw-wrap">
-                        <input id="password" type="password" name="password" required autocomplete="new-password">
+                        <input id="password" type="password" name="password" required autocomplete="new-password" minlength="8" maxlength="72">
                         <button type="button" class="prof-eye" data-target="password" aria-label="Show password">
                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path class="eye-off" d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
                         </button>
@@ -91,7 +91,7 @@
                 <div class="prof-field">
                     <label for="password_confirmation">Confirm new password</label>
                     <div class="prof-pw-wrap">
-                        <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
+                        <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" minlength="8" maxlength="72">
                         <button type="button" class="prof-eye" data-target="password_confirmation" aria-label="Show password">
                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path class="eye-off" d="M4 20 20 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
                         </button>

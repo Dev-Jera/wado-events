@@ -28,7 +28,7 @@
 
                         <label>
                             <span>Email address</span>
-                            <input type="email" name="email" value="{{ old('email') }}" required autofocus>
+                            <input type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="none" maxlength="255">
                             @error('email') <small>{{ $message }}</small> @enderror
                         </label>
 

@@ -34,7 +34,7 @@
 
                         <label>
                             <span>Email address</span>
-                            <input type="email" name="email" value="{{ old('email') }}" required>
+                            <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="none">
                             @error('email') <small>{{ $message }}</small> @enderror
                         </label>
 
@@ -42,7 +42,7 @@
 
                         <label>
                             <span>Phone number (optional)</span>
-                            <input type="text" name="phone" value="{{ old('phone') }}" placeholder="e.g. +256700000000">
+                            <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="e.g. +256700000000" autocomplete="tel" inputmode="numeric" pattern="^\+?[1-9]\d{7,14}$" title="Use international format, for example +256700000000">
                             @error('phone') <small>{{ $message }}</small> @enderror
                         </label>
 
@@ -393,6 +393,15 @@
 
     <script>
         (function () {
+            const phoneInput = document.querySelector('input[name="phone"]');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', () => {
+                    phoneInput.value = phoneInput.value
+                        .replace(/[^\d+]/g, '')
+                        .replace(/(?!^)\+/g, '');
+                });
+            }
+
             document.querySelectorAll('.auth-eye-btn').forEach((btn) => {
                 btn.addEventListener('click', () => {
                     const input = document.getElementById(btn.getAttribute('data-target'));

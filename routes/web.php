@@ -37,13 +37,13 @@ Route::get('/refund-policy', fn() => view('pages.refund-policy'))->name('refund-
 // Host event creation (requires login)
 // Event owner dashboard login
 Route::get('/owner/{eventSlug}/dashboard-access', [\App\Http\Controllers\EventOwnerDashboardController::class, 'showLogin'])->name('owner.dashboard-access');
-Route::post('/owner/{eventSlug}/dashboard-access', [\App\Http\Controllers\EventOwnerDashboardController::class, 'login'])->name('owner.dashboard-login');
-Route::post('/owner/dashboard/logout', [\App\Http\Controllers\EventOwnerDashboardController::class, 'logout'])->name('owner.dashboard-logout');
+Route::post('/owner/{eventSlug}/dashboard-access', [\App\Http\Controllers\EventOwnerDashboardController::class, 'login'])->middleware('throttle:5,1')->name('owner.dashboard-login');
+Route::post('/owner/dashboard/logout', [\App\Http\Controllers\EventOwnerDashboardController::class, 'logout'])->middleware('throttle:20,1')->name('owner.dashboard-logout');
 
 Route::middleware('auth')->group(function () {
     Route::get('/host-event/create', [EventController::class, 'create'])->name('host-event.create');
-    Route::post('/host-event/store', [EventController::class, 'store'])->name('host-event.store');
-    Route::post('/api/categories', [EventController::class, 'createCategory'])->name('api.categories.store');
+    Route::post('/host-event/store', [EventController::class, 'store'])->middleware('throttle:10,1')->name('host-event.store');
+    Route::post('/api/categories', [EventController::class, 'createCategory'])->middleware('throttle:20,1')->name('api.categories.store');
 
     Route::get('/preview/emails/events/submitted/{event?}', function (?\App\Models\Event $event) {
         abort_unless(config('app.debug'), 404);
@@ -139,7 +139,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.update');
 });
 
 // Email verification — notice and resend require auth; verify link uses signed middleware only
@@ -148,26 +148,26 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])-
 Route::post('/email/resend-verification', [AuthController::class, 'resendVerification'])->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:30,1')->name('logout');
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::put('/profile', [ProfileController::class, 'update'])->middleware('throttle:20,1')->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('throttle:10,1')->name('profile.password');
 
     Route::get('/my-tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/my-tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::get('/my-tickets/{ticket}/download', [TicketController::class, 'download'])->name('tickets.download');
     Route::get('/my-tickets/{ticket}/pdf', [TicketController::class, 'downloadPdf'])->name('tickets.pdf');
-    Route::post('/my-tickets/{ticket}/refund-request', [TicketController::class, 'requestRefund'])->name('tickets.refund.request');
-    Route::post('/my-tickets/{ticket}/dismiss', [TicketDismissController::class, 'store'])->name('tickets.dismiss');
+    Route::post('/my-tickets/{ticket}/refund-request', [TicketController::class, 'requestRefund'])->middleware('throttle:10,1')->name('tickets.refund.request');
+    Route::post('/my-tickets/{ticket}/dismiss', [TicketDismissController::class, 'store'])->middleware('throttle:30,1')->name('tickets.dismiss');
 
-    Route::post('/events/{event}/bookmark', [EventBookmarkController::class, 'toggle'])->name('events.bookmark');
+    Route::post('/events/{event}/bookmark', [EventBookmarkController::class, 'toggle'])->middleware('throttle:60,1')->name('events.bookmark');
 
     // Payment Monitor → Filament admin
     Route::get('/admin/payments', fn () => redirect('/dashboard/payment-transactions'))->name('payments.admin.index');
-    Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->name('payments.admin.resend');
-    Route::post('/admin/payments/{paymentTransaction}/confirm', [PaymentController::class, 'adminConfirm'])->name('payments.admin.confirm');
-    Route::post('/admin/payments/{paymentTransaction}/refund', [PaymentController::class, 'adminRefund'])->name('payments.admin.refund');
+    Route::post('/admin/payments/{paymentTransaction}/resend', [PaymentController::class, 'adminResend'])->middleware('throttle:20,1')->name('payments.admin.resend');
+    Route::post('/admin/payments/{paymentTransaction}/confirm', [PaymentController::class, 'adminConfirm'])->middleware('throttle:20,1')->name('payments.admin.confirm');
+    Route::post('/admin/payments/{paymentTransaction}/refund', [PaymentController::class, 'adminRefund'])->middleware('throttle:20,1')->name('payments.admin.refund');
 
     Route::get('/gate-batches/{batchId}/download-pdf', [GateBatchController::class, 'downloadPdf'])->name('gate-batches.download-pdf');
 
@@ -233,12 +233,12 @@ Route::middleware('auth')->group(function () {
 // Gate portal routes — authenticated via the Filament admin guard
 Route::middleware('auth:admin')->group(function () {
     Route::get('/gate-portal', [GatePortalController::class, 'index'])->name('gate.portal');
-    Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->name('gate.portal.walkin.store');
+    Route::post('/gate-portal/walk-in-sale', [GatePortalController::class, 'storeWalkInSale'])->middleware('throttle:30,1')->name('gate.portal.walkin.store');
     Route::get('/gate-portal/walkin-requests', [GatePortalController::class, 'pendingWalkInRequests'])->name('gate.portal.walkin.requests');
 
     // Ticket verification/scanner routes
     Route::get('/ticket-verification', [TicketVerificationController::class, 'index'])->name('tickets.verify.index');
-    Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->name('tickets.verify.store');
+    Route::post('/ticket-verification', [TicketVerificationController::class, 'verify'])->middleware('throttle:30,1')->name('tickets.verify.store');
     Route::post('/ticket-verification/scan', [TicketVerificationController::class, 'scanJson'])->middleware('throttle:60,1')->name('tickets.verify.scan-json');
     Route::get('/ticket-verification/export', [TicketVerificationController::class, 'export'])->name('tickets.verify.export');
 });

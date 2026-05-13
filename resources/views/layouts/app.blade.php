@@ -212,6 +212,105 @@
                 navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
             });
         }
+
+        (function () {
+            const strictEmailPattern = /^[^\s@]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+            const strictPhonePattern = /^\+?[1-9]\d{7,14}$/;
+
+            function cleanControlChars(value) {
+                return value.replace(/[\u0000-\u001F\u007F]/g, '');
+            }
+
+            function normalizeValue(field) {
+                const type = (field.getAttribute('type') || '').toLowerCase();
+                if (field.tagName !== 'INPUT' && field.tagName !== 'TEXTAREA') return;
+                if (['file', 'hidden', 'password'].includes(type)) return;
+
+                let value = cleanControlChars(field.value || '');
+                if (type === 'email') {
+                    value = value.trim().toLowerCase();
+                } else if (type === 'tel') {
+                    value = value.trim().replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
+                } else {
+                    value = value.trim();
+                }
+
+                field.value = value;
+            }
+
+            function applyDefaults(field) {
+                const type = (field.getAttribute('type') || '').toLowerCase();
+
+                if (field.tagName === 'TEXTAREA' && !field.hasAttribute('maxlength')) {
+                    field.setAttribute('maxlength', '5000');
+                }
+
+                if (field.tagName === 'INPUT') {
+                    if (type === 'email') {
+                        field.setAttribute('inputmode', 'email');
+                        field.setAttribute('spellcheck', 'false');
+                        field.setAttribute('autocapitalize', 'none');
+                        if (!field.hasAttribute('maxlength')) field.setAttribute('maxlength', '255');
+                    }
+
+                    if (type === 'tel') {
+                        field.setAttribute('inputmode', 'numeric');
+                        if (!field.hasAttribute('maxlength')) field.setAttribute('maxlength', '16');
+                        if (!field.hasAttribute('pattern')) field.setAttribute('pattern', '^\\+?[1-9]\\d{7,14}$');
+                    }
+
+                    if (['text', 'search', 'url'].includes(type) && !field.hasAttribute('maxlength')) {
+                        field.setAttribute('maxlength', '255');
+                    }
+                }
+            }
+
+            function validateField(field) {
+                const type = (field.getAttribute('type') || '').toLowerCase();
+                const value = (field.value || '').trim();
+                field.setCustomValidity('');
+
+                if (type === 'email' && value !== '' && !strictEmailPattern.test(value)) {
+                    field.setCustomValidity('Please enter a valid email address.');
+                }
+
+                if (type === 'tel' && value !== '' && !strictPhonePattern.test(value)) {
+                    field.setCustomValidity('Please enter a valid phone number in international format, for example +256700000000.');
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const forms = document.querySelectorAll('form:not([data-sanitize="off"])');
+
+                forms.forEach((form) => {
+                    const fields = form.querySelectorAll('input, textarea');
+
+                    fields.forEach((field) => {
+                        applyDefaults(field);
+
+                        field.addEventListener('blur', function () {
+                            normalizeValue(field);
+                            validateField(field);
+                        });
+                    });
+
+                    form.addEventListener('submit', function (event) {
+                        let invalid = false;
+
+                        fields.forEach((field) => {
+                            normalizeValue(field);
+                            validateField(field);
+                            if (!field.checkValidity()) invalid = true;
+                        });
+
+                        if (invalid) {
+                            event.preventDefault();
+                            form.reportValidity();
+                        }
+                    });
+                });
+            });
+        })();
     </script>
 </body>
 </html>

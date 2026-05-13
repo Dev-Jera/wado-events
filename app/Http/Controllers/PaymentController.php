@@ -120,8 +120,12 @@ class PaymentController extends Controller
             return back()->with('error', 'Scanned tickets cannot be refunded from admin.');
         }
 
+        $request->merge([
+            'reason' => trim((string) $request->input('reason')),
+        ]);
+
         $data = $request->validate([
-            'reason' => ['required', 'string', 'max:500'],
+            'reason' => ['required', 'string', 'min:3', 'max:500'],
         ]);
 
         $actor = $request->user()?->name ?: 'admin';

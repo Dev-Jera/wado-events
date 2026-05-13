@@ -51,6 +51,7 @@
                                 class="hec-input @error('title') is-invalid @enderror"
                                 value="{{ old('title') }}"
                                 placeholder="e.g. Live Music Night"
+                                maxlength="255"
                                 required
                             >
                             @error('title')
@@ -96,6 +97,7 @@
                                         id="new_category_name" 
                                         class="hec-input"
                                         placeholder="Enter new category name"
+                                        maxlength="100"
                                     >
                                 </div>
                             </div>
@@ -130,6 +132,7 @@
                                 class="hec-textarea @error('service_package_notes') is-invalid @enderror"
                                 rows="3"
                                 placeholder="Optional notes, e.g. quantity of wristbands, print format, delivery timing..."
+                                maxlength="1000"
                             >{{ old('service_package_notes') }}</textarea>
                             @error('service_package_notes')
                                 <span class="hec-error">{{ $message }}</span>
@@ -146,6 +149,7 @@
                                     class="hec-input @error('venue') is-invalid @enderror"
                                     value="{{ old('venue') }}"
                                     placeholder="e.g. Kampala Serena Hotel"
+                                    maxlength="255"
                                     required
                                 >
                                 @error('venue')
@@ -162,6 +166,7 @@
                                     class="hec-input @error('city') is-invalid @enderror"
                                     value="{{ old('city') }}"
                                     placeholder="e.g. Kampala"
+                                    maxlength="120"
                                     required
                                 >
                                 @error('city')
@@ -178,6 +183,7 @@
                                     class="hec-input @error('country') is-invalid @enderror"
                                     value="{{ old('country', 'Uganda') }}"
                                     placeholder="e.g. Uganda"
+                                    maxlength="120"
                                     required
                                 >
                                 @error('country')
@@ -225,6 +231,8 @@
                                 class="hec-textarea @error('description') is-invalid @enderror"
                                 placeholder="Describe your event…"
                                 rows="6"
+                                minlength="20"
+                                maxlength="5000"
                                 required
                             >{{ old('description') }}</textarea>
                             @error('description')
@@ -354,6 +362,7 @@
                                         class="hec-input"
                                         value="{{ old('reentry_limit', 1) }}"
                                         min="1"
+                                        max="20"
                                     >
                                     <span class="hec-help-text">How many times a ticket can re-enter after the first entry. 1 = one re-entry allowed.</span>
                                 </div>
@@ -367,6 +376,7 @@
                                         class="hec-input"
                                         value="{{ old('reentry_cooldown_minutes', 0) }}"
                                         min="0"
+                                        max="1440"
                                     >
                                     <span class="hec-help-text">How long after exiting before re-entry is allowed. 0 = no cooldown.</span>
                                 </div>
@@ -888,6 +898,15 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // Tab switching
     const tabs = document.querySelectorAll('.hec-tab');
     const panels = document.querySelectorAll('.hec-tab-panel');
@@ -985,8 +1004,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         type="text" 
                         name="ticket_categories[${index}][name]" 
                         class="hec-input"
-                        value="${data.name || ''}"
+                        value="${escapeHtml(data.name || '')}"
                         placeholder="e.g. VIP"
+                        maxlength="100"
                         required
                     >
                 </div>
@@ -996,9 +1016,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         type="number" 
                         name="ticket_categories[${index}][price]" 
                         class="hec-input ticket-price"
-                        value="${data.price || ''}"
+                        value="${escapeHtml(data.price || '')}"
                         placeholder="50000"
                         min="0"
+                        max="1000000000"
                         ${isFree ? 'disabled' : 'required'}
                     >
                 </div>
@@ -1008,9 +1029,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         type="number" 
                         name="ticket_categories[${index}][ticket_count]" 
                         class="hec-input"
-                        value="${data.ticket_count || ''}"
+                        value="${escapeHtml(data.ticket_count || '')}"
                         placeholder="100"
                         min="1"
+                        max="100000"
                         required
                     >
                 </div>
@@ -1022,7 +1044,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     class="hec-textarea"
                     placeholder="e.g. Front row seating, lounge access…"
                     rows="2"
-                >${data.description || ''}</textarea>
+                    maxlength="255"
+                >${escapeHtml(data.description || '')}</textarea>
             </div>
         `;
         

@@ -147,14 +147,14 @@
 
                 <label class="field">
                     <span>Full name</span>
-                    <input type="text" name="holder_name" value="{{ old('holder_name', $holderName) }}" placeholder="e.g. John Smith" required autocomplete="name">
+                    <input type="text" name="holder_name" value="{{ old('holder_name', $holderName) }}" placeholder="e.g. John Smith" required autocomplete="name" maxlength="255">
                     @error('holder_name') <small>{{ $message }}</small> @enderror
                 </label>
 
                 @guest
                     <label class="field">
                         <span>Email for ticket delivery</span>
-                        <input type="text" name="email" value="{{ old('email', $email ?? '') }}" placeholder="e.g. you@example.com" required autocomplete="email">
+                        <input type="email" name="email" value="{{ old('email', $email ?? '') }}" placeholder="e.g. you@example.com" required autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="none" maxlength="255">
                         @error('email') <small>{{ $message }}</small> @enderror
                     </label>
 
@@ -207,7 +207,7 @@
 
                     <label class="field">
                         <span>Mobile money number</span>
-                        <input type="text" name="phone_number" value="{{ old('phone_number', $phoneNumber) }}" placeholder="e.g. 2567XXXXXXXX">
+                        <input type="tel" name="phone_number" value="{{ old('phone_number', $phoneNumber) }}" placeholder="e.g. +256700000000" inputmode="numeric" pattern="^\+?[1-9]\d{7,14}$" maxlength="16" title="Use international format, for example +256700000000">
                         @error('phone_number') <small>{{ $message }}</small> @enderror
                     </label>
 

@@ -180,6 +180,10 @@
                     placeholder="your@email.com"
                     required
                     autofocus
+                    autocomplete="email"
+                    inputmode="email"
+                    spellcheck="false"
+                    autocapitalize="none"
                     class="@error('email') error-input @enderror"
                 >
                 @error('email')
@@ -210,5 +214,39 @@
         </div>
     </div>
 </div>
+<script>
+    (function () {
+        const form = document.querySelector('form');
+        const emailInput = document.querySelector('input[name="email"]');
+        const strictEmailPattern = /^[^\s@]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+
+        if (!form || !emailInput) return;
+
+        function normalizeEmail() {
+            emailInput.value = (emailInput.value || '')
+                .replace(/[\u0000-\u001F\u007F]/g, '')
+                .trim()
+                .toLowerCase();
+        }
+
+        emailInput.addEventListener('blur', function () {
+            normalizeEmail();
+            emailInput.setCustomValidity('');
+            if (emailInput.value !== '' && !strictEmailPattern.test(emailInput.value)) {
+                emailInput.setCustomValidity('Please enter a valid email address.');
+            }
+        });
+
+        form.addEventListener('submit', function (event) {
+            normalizeEmail();
+            emailInput.setCustomValidity('');
+            if (emailInput.value !== '' && !strictEmailPattern.test(emailInput.value)) {
+                emailInput.setCustomValidity('Please enter a valid email address.');
+                event.preventDefault();
+                form.reportValidity();
+            }
+        });
+    })();
+</script>
 </body>
 </html>

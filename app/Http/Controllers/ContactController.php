@@ -7,6 +7,7 @@ use App\Models\Enquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ContactController extends Controller
 {
@@ -17,12 +18,29 @@ class ContactController extends Controller
 
     public function send(Request $request)
     {
+        $normalizedPhone = preg_replace('/(?!^)\+|[^\d+]/', '', trim((string) $request->input('phone')));
+        if (str_starts_with((string) $normalizedPhone, '00')) {
+            $normalizedPhone = '+' . substr((string) $normalizedPhone, 2);
+        }
+        $normalizedPhone = blank($normalizedPhone) ? null : $normalizedPhone;
+
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'phone' => $normalizedPhone,
+            'package' => trim((string) $request->input('package')),
+            'message' => trim((string) $request->input('message')),
+        ]);
+
         $validated = $request->validate([
             'name'    => 'required|string|max:100',
-            'email'   => 'required|email|max:150',
-            'phone'   => 'nullable|string|max:30',
+            'email'   => 'required|email:rfc,dns|max:150',
+            'phone'   => ['nullable', 'regex:/^\+?[1-9]\d{7,14}$/'],
             'package' => 'required|string|max:100',
             'message' => 'required|string|max:2000',
+        ], [
+            'email.email' => 'Please enter a valid email address with a real domain.',
+            'phone.regex' => 'Please enter a valid phone number in international format, for example +256700000000.',
         ]);
 
         $enquiry = Enquiry::create($validated);

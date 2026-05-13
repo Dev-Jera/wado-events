@@ -126,9 +126,37 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
+        $rawTicketCategories = $request->input('ticket_categories', []);
+        $normalizedTicketCategories = collect(is_array($rawTicketCategories) ? $rawTicketCategories : [])
+            ->map(function ($ticketCategory) {
+                $ticketCategory = is_array($ticketCategory) ? $ticketCategory : [];
+
+                return [
+                    'name' => trim((string) ($ticketCategory['name'] ?? '')),
+                    'price' => $ticketCategory['price'] ?? null,
+                    'ticket_count' => $ticketCategory['ticket_count'] ?? null,
+                    'description' => blank(trim((string) ($ticketCategory['description'] ?? '')))
+                        ? null
+                        : trim((string) ($ticketCategory['description'] ?? '')),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $servicePackageNotes = trim((string) $request->input('service_package_notes'));
+
         $request->merge([
+            'title' => trim((string) $request->input('title')),
+            'service_package' => trim((string) $request->input('service_package')),
+            'service_package_notes' => blank($servicePackageNotes) ? null : $servicePackageNotes,
+            'venue' => trim((string) $request->input('venue')),
+            'city' => trim((string) $request->input('city')),
+            'country' => trim((string) $request->input('country')),
+            'description' => trim((string) $request->input('description')),
+            'verification_mode' => trim((string) $request->input('verification_mode')),
             'is_free' => $request->boolean('is_free'),
             'reentry_allowed' => $request->boolean('reentry_allowed'),
+            'ticket_categories' => $normalizedTicketCategories,
         ]);
 
         $validated = $request->validate([
@@ -139,20 +167,20 @@ class EventController extends Controller
             'venue' => 'required|string|max:255',
             'city' => 'required|string|max:120',
             'country' => 'required|string|max:120',
-            'starts_at' => 'required|date_format:Y-m-d\TH:i',
+            'starts_at' => 'required|date_format:Y-m-d\TH:i|after:now',
             'ends_at' => 'nullable|date_format:Y-m-d\TH:i|after:starts_at',
-            'description' => 'required|string',
+            'description' => 'required|string|min:20|max:5000',
             'image_url' => 'nullable|image|max:5120',
             'verification_mode' => 'required|in:wado_managed,self_managed',
             'is_free' => 'boolean',
             'reentry_allowed' => 'boolean',
-            'reentry_limit' => 'nullable|integer|min:1',
-            'reentry_cooldown_minutes' => 'nullable|integer|min:0',
+            'reentry_limit' => 'nullable|integer|min:1|max:20',
+            'reentry_cooldown_minutes' => 'nullable|integer|min:0|max:1440',
             'ticket_categories' => 'required|array|min:1',
             'ticket_categories.*.name' => 'required|string|max:100',
-            'ticket_categories.*.price' => 'nullable|numeric|min:0',
-            'ticket_categories.*.ticket_count' => 'required|integer|min:1',
-            'ticket_categories.*.description' => 'nullable|string',
+            'ticket_categories.*.price' => 'nullable|numeric|min:0|max:1000000000',
+            'ticket_categories.*.ticket_count' => 'required|integer|min:1|max:100000',
+            'ticket_categories.*.description' => 'nullable|string|max:255',
         ]);
 
         // Handle image upload
@@ -288,8 +316,12 @@ class EventController extends Controller
     public function createCategory(Request $request)
     {
         // Always return JSON for async category creation requests
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+        ]);
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pN\s\-\&\'\.]+$/u'],
         ]);
 
         if ($validator->fails()) {

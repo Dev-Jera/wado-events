@@ -25,14 +25,14 @@
 
                         <label>
                             <span>Email address</span>
-                            <input type="email" name="email" value="{{ old('email', request()->email) }}" required autofocus>
+                            <input type="email" name="email" value="{{ old('email', request()->email) }}" required autofocus autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="none" maxlength="255">
                             @error('email') <small>{{ $message }}</small> @enderror
                         </label>
 
                         <label>
                             <span>New password</span>
                             <div class="auth-password-wrap">
-                                <input id="reset-password" type="password" name="password" required>
+                                <input id="reset-password" type="password" name="password" required minlength="8" maxlength="72" autocomplete="new-password">
                                 <button type="button" class="auth-eye-btn" data-target="reset-password" aria-label="Show password">
                                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -47,7 +47,7 @@
                         <label>
                             <span>Confirm new password</span>
                             <div class="auth-password-wrap">
-                                <input id="reset-password-confirm" type="password" name="password_confirmation" required>
+                                <input id="reset-password-confirm" type="password" name="password_confirmation" required minlength="8" maxlength="72" autocomplete="new-password">
                                 <button type="button" class="auth-eye-btn" data-target="reset-password-confirm" aria-label="Show confirmation">
                                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/>

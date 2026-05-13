@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TicketPackageController extends Controller
 {
@@ -140,14 +141,34 @@ class TicketPackageController extends Controller
 
     public function enquire(Request $request)
     {
+        $normalizedPhone = preg_replace('/(?!^)\+|[^\d+]/', '', trim((string) $request->input('phone')));
+        if (str_starts_with((string) $normalizedPhone, '00')) {
+            $normalizedPhone = '+' . substr((string) $normalizedPhone, 2);
+        }
+
+        $normalizedAttendance = trim((string) $request->input('attendance'));
+        $normalizedMessage = trim((string) $request->input('message'));
+
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'phone' => blank($normalizedPhone) ? null : $normalizedPhone,
+            'package' => trim((string) $request->input('package')),
+            'attendance' => blank($normalizedAttendance) ? null : $normalizedAttendance,
+            'message' => blank($normalizedMessage) ? null : $normalizedMessage,
+        ]);
+
         $validated = $request->validate([
             'name'       => 'required|string|max:100',
-            'email'      => 'required|email|max:150',
-            'phone'      => 'nullable|string|max:30',
+            'email'      => 'required|email:rfc,dns|max:150',
+            'phone'      => ['nullable', 'regex:/^\+?[1-9]\d{7,14}$/'],
             'package'    => 'required|string|max:100',
             'event_date' => 'nullable|date',
             'attendance' => 'nullable|string|max:50',
             'message'    => 'nullable|string|max:1000',
+        ], [
+            'email.email' => 'Please enter a valid email address with a real domain.',
+            'phone.regex' => 'Please enter a valid phone number in international format, for example +256700000000.',
         ]);
 
         $enquiry = Enquiry::create($validated);

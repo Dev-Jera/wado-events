@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -20,10 +21,25 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        $normalizedPhone = preg_replace('/(?!^)\+|[^\d+]/', '', trim((string) $request->input('phone')));
+        if (str_starts_with((string) $normalizedPhone, '00')) {
+            $normalizedPhone = '+' . substr((string) $normalizedPhone, 2);
+        }
+        $normalizedPhone = blank($normalizedPhone) ? null : $normalizedPhone;
+
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'phone' => $normalizedPhone,
+        ]);
+
         $data = $request->validate([
             'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'email' => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'regex:/^\+?[1-9]\d{7,14}$/'],
+        ], [
+            'email.email' => 'Please enter a valid email address with a real domain.',
+            'phone.regex' => 'Please enter a valid phone number in international format, for example +256700000000.',
         ]);
 
         $user->forceFill([
@@ -41,7 +57,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'current_password' => ['required', 'string', 'current_password'],
-            'password'         => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'password'         => ['required', 'confirmed', 'max:72', Password::min(8)->mixedCase()->numbers()],
         ]);
 
         $user->forceFill([

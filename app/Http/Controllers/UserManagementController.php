@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserManagementController extends Controller
 {
@@ -47,13 +48,30 @@ class UserManagementController extends Controller
     {
         $this->ensureSuperAdmin($request);
 
+        $normalizedPhone = preg_replace('/(?!^)\+|[^\d+]/', '', trim((string) $request->input('phone')));
+        if (str_starts_with((string) $normalizedPhone, '00')) {
+            $normalizedPhone = '+' . substr((string) $normalizedPhone, 2);
+        }
+
+        $normalizedPassword = trim((string) $request->input('password'));
+
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'phone' => blank($normalizedPhone) ? null : $normalizedPhone,
+            'password' => blank($normalizedPassword) ? null : $normalizedPassword,
+        ]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'email' => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users', 'email')],
+            'phone' => ['nullable', 'regex:/^\+?[1-9]\d{7,14}$/'],
             'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
-            'password' => ['nullable', 'string', 'min:8'],
+            'password' => ['nullable', 'string', 'max:72', Password::min(8)->mixedCase()->numbers()],
             'profile_image' => ['nullable', 'image', 'max:3072'],
+        ], [
+            'email.email' => 'Please enter a valid email address with a real domain.',
+            'phone.regex' => 'Please enter a valid phone number in international format, for example +256700000000.',
         ]);
 
         $profileImagePath = null;

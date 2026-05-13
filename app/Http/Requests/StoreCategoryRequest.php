@@ -14,8 +14,18 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100', 'unique:categories,name'],
+            'name' => ['required', 'string', 'max:100', 'regex:/^[\pL\pN\s\-\&\'\.]+$/u', 'unique:categories,name'],
             'description' => ['nullable', 'string', 'max:500'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $normalizedDescription = trim((string) $this->input('description'));
+
+        $this->merge([
+            'name' => trim((string) $this->input('name')),
+            'description' => blank($normalizedDescription) ? null : $normalizedDescription,
+        ]);
     }
 }

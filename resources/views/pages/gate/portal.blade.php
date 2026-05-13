@@ -74,19 +74,19 @@
 
                     <label>
                         <span>Client name</span>
-                        <input type="text" name="holder_name" value="{{ old('holder_name') }}" required>
+                        <input type="text" name="holder_name" value="{{ old('holder_name') }}" required maxlength="255" autocomplete="name">
                         @error('holder_name') <small>{{ $message }}</small> @enderror
                     </label>
 
                     <label>
                         <span>Client email (optional)</span>
-                        <input type="email" name="email" value="{{ old('email') }}">
+                        <input type="email" name="email" value="{{ old('email') }}" maxlength="255" autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="none">
                         @error('email') <small>{{ $message }}</small> @enderror
                     </label>
 
                     <label>
                         <span>Client phone</span>
-                        <input type="text" name="phone_number" value="{{ old('phone_number') }}" placeholder="Required for MTN/Airtel">
+                        <input type="tel" name="phone_number" value="{{ old('phone_number') }}" placeholder="Required for MTN/Airtel" inputmode="numeric" pattern="^\+?[1-9]\d{7,14}$" maxlength="16" title="Use international format, for example +256700000000">
                         @error('phone_number') <small>{{ $message }}</small> @enderror
                     </label>
 
@@ -109,7 +109,7 @@
 
                     <label>
                         <span>Receipt / reference (optional)</span>
-                        <input type="text" name="collector_reference" value="{{ old('collector_reference') }}" placeholder="Receipt no. / terminal ref">
+                        <input type="text" name="collector_reference" value="{{ old('collector_reference') }}" placeholder="Receipt no. / terminal ref" maxlength="120">
                         @error('collector_reference') <small>{{ $message }}</small> @enderror
                     </label>
                 </div>

@@ -6,6 +6,7 @@ use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 class EventOwnerDashboardController extends Controller
 {
@@ -26,11 +27,16 @@ class EventOwnerDashboardController extends Controller
      */
     public function login(Request $request, string $eventSlug)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email:rfc,dns|max:255',
             'password' => 'required|string',
         ], [
             'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email address with a real domain.',
             'password.required' => 'Password is required',
         ]);
 
@@ -40,7 +46,7 @@ class EventOwnerDashboardController extends Controller
 
         $credentials = [
             'event_id' => $event->id,
-            'email' => $request->string('email')->toString(),
+            'email' => Str::lower(trim($request->string('email')->toString())),
             'password' => $request->string('password')->toString(),
             'is_active' => true,
         ];
