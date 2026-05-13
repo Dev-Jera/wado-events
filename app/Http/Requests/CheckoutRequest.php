@@ -23,7 +23,7 @@ class CheckoutRequest extends FormRequest
             'ticket_category_id' => ['required', 'integer'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'holder_name' => ['required', 'string', 'max:120'],
-            'email' => [$user ? 'nullable' : 'required', 'email:rfc,dns', 'max:255'],
+            'email' => [$user ? 'nullable' : 'required', 'email:rfc', 'max:255'],
             'payment_provider' => ['nullable', 'in:mtn,airtel'],
             'phone_number' => ['nullable', 'regex:/^\+?[1-9]\d{7,14}$/'],
             'create_account' => ['nullable', 'boolean'],
