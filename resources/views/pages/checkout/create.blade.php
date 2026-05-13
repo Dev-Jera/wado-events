@@ -20,6 +20,20 @@
                     $bannerImageUrl = asset($normalizedBannerPath);
                 }
             }
+
+            $initialCategory = $event->ticketCategories->firstWhere('id', (int) old('ticket_category_id', $selectedCategoryId));
+            if (! $initialCategory) {
+                $initialCategory = $event->ticketCategories->first();
+            }
+
+            $initialQty = max(1, (int) old('quantity', $selectedQuantity ?? 1));
+            $initialUnitPrice = (float) ($initialCategory?->price ?? 0);
+            $initialSubtotal = $initialUnitPrice * $initialQty;
+            $initialTotalLabel = $initialSubtotal <= 0 ? 'Free' : 'UGX '.number_format($initialSubtotal, 0);
+            $initialUnitLabel = $initialUnitPrice <= 0 ? 'Free' : 'UGX '.number_format($initialUnitPrice, 0);
+            $initialChargeText = $initialSubtotal <= 0
+                ? 'You will be charged: Free'
+                : 'You will be charged: '.$initialTotalLabel;
         @endphp
 
         @if (is_array($paymentNotice) && !empty($paymentNotice['message']))
@@ -39,7 +53,7 @@
             {{-- LEFT: Event info + order summary --}}
             <div class="checkout-left">
 
-                <div class="event-banner" style="background-image: linear-gradient(rgba(7,16,28,0.3), rgba(7,16,28,0.85)), url('{{ $bannerImageUrl }}')">
+                <div class="event-banner" style="background-image: linear-gradient(rgba(20,9,12,0.35), rgba(20,9,12,0.82)), url('{{ $bannerImageUrl }}')">
                     <p class="banner-cat">{{ $event->category?->name ?? 'Event' }}</p>
                     <p class="banner-title">{{ $event->title }}</p>
                     <div class="banner-meta">
@@ -58,24 +72,25 @@
                     <p class="os-title">Order summary</p>
                     <div class="os-row">
                         <span class="os-label">Ticket type</span>
-                        <span class="os-val" id="summary-category">—</span>
+                        <span class="os-val" id="summary-category">{{ $initialCategory?->name ?? '—' }}</span>
                     </div>
                     <div class="os-row">
                         <span class="os-label">Unit price</span>
-                        <span class="os-val" id="summary-price">—</span>
+                        <span class="os-val" id="summary-price">{{ $initialUnitLabel }}</span>
                     </div>
                     <div class="os-row">
                         <span class="os-label">Quantity</span>
-                        <span class="os-val" id="summary-qty">1</span>
+                        <span class="os-val" id="summary-qty">{{ $initialQty }}</span>
                     </div>
                     <div class="os-row os-discount-row" id="summary-discount-row" style="display:none;color:#1a7a3f;">
                         <span class="os-label">Promo discount</span>
                         <span class="os-val" id="summary-discount">—</span>
                     </div>
                     <div class="os-total">
-                        <span class="os-total-label">Total</span>
-                        <span class="os-total-val" id="summary-total">—</span>
+                        <span class="os-total-label">Amount to pay</span>
+                        <span class="os-total-val" id="summary-total">{{ $initialTotalLabel }}</span>
                     </div>
+                    <p class="os-note" id="summary-server-note">Amount is verified on the server before payment is initiated.</p>
                 </div>
 
                 <a href="{{ route('events.show', $event) }}" class="checkout-back">
@@ -232,6 +247,8 @@
                     <p class="promo-feedback" id="promo-feedback" style="display:none;"></p>
                 </div>
 
+                <p class="checkout-charge-line" id="checkout-charge-line">{{ $initialChargeText }}</p>
+
                 <button type="submit" class="checkout-btn" id="checkout-submit-btn">
                     {{ $allFree ? 'Get Ticket →' : 'Initiate payment →' }}
                 </button>
@@ -247,16 +264,25 @@
 
     <style>
         :root {
+            --brand-maroon: #c0283c;
+            --brand-maroon-dark: #a01e2e;
             --brand-blue: #1a73e8;
             --brand-blue-dark: #1558c0;
-            --brand-red: #e8241a;
-            --brand-red-dark: #c01e15;
+            --bg-deep: #180e12;
+            --bg-panel: #231419;
+            --bg-input: #1b1015;
+            --border: rgba(255,255,255,.16);
+            --text-main: #f7f4f5;
+            --text-sub: rgba(247,244,245,.8);
         }
 
         .checkout-page {
             min-height: 100vh;
             padding: 8.5rem 1rem 4rem;
-            background: #07101c;
+            background:
+                radial-gradient(ellipse 60% 44% at 0% 0%, rgba(192,40,60,.14) 0%, transparent 58%),
+                radial-gradient(ellipse 42% 30% at 100% 0%, rgba(18,85,192,.08) 0%, transparent 62%),
+                var(--bg-deep);
         }
 
         .checkout-shell {
@@ -264,7 +290,7 @@
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 18px;
             align-items: start;
         }
 
@@ -272,7 +298,7 @@
             position: fixed;
             inset: 0;
             z-index: 60;
-            background: rgba(2, 8, 20, 0.65);
+            background: rgba(10, 6, 8, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -283,19 +309,19 @@
             width: min(520px, calc(100% - 1rem));
             border-radius: 16px;
             padding: 1rem 1rem 0.9rem;
-            border: 1px solid #2b4771;
-            background: #10223a;
+            border: 1px solid var(--border);
+            background: #24151b;
             box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
         }
 
         .checkout-popup-success {
-            border-color: #2f855a;
-            background: #0f2b23;
+            border-color: #3f6e57;
+            background: #1e2b25;
         }
 
         .checkout-popup-error {
-            border-color: #a03b41;
-            background: #33161a;
+            border-color: #7f3037;
+            background: #34181d;
         }
 
         .checkout-popup-title {
@@ -307,7 +333,7 @@
 
         .checkout-popup-message {
             margin: 0.55rem 0 0;
-            color: #d5e2f5;
+            color: var(--text-sub);
             font-size: 0.92rem;
             line-height: 1.45;
         }
@@ -316,13 +342,14 @@
             margin-top: 0.9rem;
             border: none;
             border-radius: 10px;
-            background: #1a73e8;
+            background: var(--brand-maroon);
             color: #ffffff;
             font-size: 0.86rem;
             font-weight: 700;
             padding: 0.58rem 1rem;
             cursor: pointer;
         }
+        .checkout-popup-close:hover { background: var(--brand-maroon-dark); }
 
         /* ── Left ── */
         .checkout-left { display: flex; flex-direction: column; gap: 12px; }
@@ -337,7 +364,7 @@
 
         .banner-cat {
             font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-            text-transform: uppercase; color: var(--brand-blue); margin-bottom: 4px;
+            text-transform: uppercase; color: rgba(255,205,210,.92); margin-bottom: 4px;
         }
 
         .banner-title {
@@ -348,69 +375,75 @@
         .banner-meta { display: flex; flex-direction: column; gap: 4px; }
 
         .banner-meta-item {
-            font-size: 11px; color: #8a9ab8;
+            font-size: 11px; color: rgba(247,244,245,.78);
             display: flex; align-items: center; gap: 5px;
         }
 
         .banner-meta-item svg { opacity: 0.6; flex-shrink: 0; }
 
         .order-summary {
-            background: #111d2e; border: 0.5px solid #1e3050;
-            border-radius: 16px; padding: 16px 18px;
+            background: var(--bg-panel); border: 1px solid var(--border);
+            border-radius: 16px; padding: 18px 20px;
         }
 
         .os-title {
             font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-            text-transform: uppercase; color: var(--brand-blue); margin-bottom: 10px;
+            text-transform: uppercase; color: rgba(255,205,210,.88); margin-bottom: 10px;
         }
 
         .os-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 0; border-bottom: 0.5px solid #1a2d45;
+            padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.08);
         }
 
         .os-row:last-of-type { border-bottom: none; }
-        .os-label { font-size: 12px; color: #5a7a9a; }
+        .os-label { font-size: 12px; color: rgba(247,244,245,.72); }
         .os-val { font-size: 13px; font-weight: 600; color: #fff; }
 
         .os-total {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 10px; padding-top: 10px; border-top: 1px solid #1e3050;
+            margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1);
         }
 
         .os-total-label { font-size: 13px; font-weight: 700; color: #fff; }
         .os-total-val { font-size: 16px; font-weight: 700; color: var(--brand-blue); }
+        .os-note {
+            margin: 10px 0 0;
+            font-size: 11px;
+            line-height: 1.45;
+            color: rgba(247,244,245,.72);
+        }
 
         .checkout-back {
             display: inline-flex; align-items: center; gap: 5px;
-            font-size: 12px; color: #4a6480; text-decoration: none;
+            font-size: 12px; color: rgba(247,244,245,.56); text-decoration: none;
             transition: color 0.15s;
         }
 
-        .checkout-back:hover { color: var(--brand-blue); }
+        .checkout-back:hover { color: rgba(255,205,210,.92); }
 
         /* ── Right ── */
         .checkout-right {
-            background: #111d2e; border: 0.5px solid #1e3050;
-            border-radius: 16px; padding: 20px;
-            display: flex; flex-direction: column; gap: 14px;
+            background: var(--bg-panel); border: 1px solid var(--border);
+            border-radius: 16px; padding: 22px;
+            display: flex; flex-direction: column; gap: 16px;
         }
 
         .form-title { font-size: 15px; font-weight: 700; color: #fff; }
-        .form-sub { font-size: 12px; color: #5a7a9a; margin-top: -8px; }
+        .form-sub { font-size: 12px; color: rgba(247,244,245,.72); margin-top: -8px; }
 
-        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field { display: flex; flex-direction: column; gap: 7px; }
 
         .field span, .field-span {
-            font-size: 11px; font-weight: 600; color: #c0cfe8; letter-spacing: 0.04em;
+            font-size: 11px; font-weight: 600; color: rgba(247,244,245,.9); letter-spacing: 0.04em;
         }
 
         .field select,
         .field input[type="text"],
         .field input[type="number"] {
             width: 100%; height: 42px;
-            border: 1px solid #1e3050; border-radius: 10px;
-            background: #0d1929; color: #fff;
+            border: 1px solid rgba(255,255,255,.18); border-radius: 10px;
+            background: var(--bg-input); color: #fff;
             padding: 0 12px; font-size: 13px;
             transition: border-color 0.15s, box-shadow 0.15s;
             appearance: auto;
@@ -419,18 +452,18 @@
         .field select:focus,
         .field input:focus {
             outline: none;
-            border-color: var(--brand-blue);
-            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+            border-color: rgba(192,40,60,.65);
+            box-shadow: 0 0 0 3px rgba(192,40,60,.14);
         }
 
-        .field select option { background: #0d1929; color: #fff; }
-        .field small, .field-error { font-size: 11px; color: var(--brand-red); font-weight: 500; }
+        .field select option { background: var(--bg-input); color: #fff; }
+        .field small, .field-error { font-size: 11px; color: #ff99a2; font-weight: 600; }
 
-        .field-divider { height: 0.5px; background: #1e3050; }
+        .field-divider { height: 1px; background: rgba(255,255,255,.09); }
 
         .guest-warning {
-            border: 1px solid #2d4d76;
-            background: #0f2036;
+            border: 1px solid rgba(192,40,60,.3);
+            background: rgba(192,40,60,.1);
             border-radius: 12px;
             padding: 0.7rem 0.8rem;
             display: grid;
@@ -441,14 +474,14 @@
             margin: 0;
             font-size: 0.8rem;
             font-weight: 700;
-            color: #dcecff;
+            color: #ffe3e6;
         }
 
         .guest-warning-text {
             margin: 0;
             font-size: 0.72rem;
             line-height: 1.45;
-            color: #9eb7d5;
+            color: rgba(247,244,245,.76);
         }
 
         .account-opt-in {
@@ -456,7 +489,7 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.76rem;
-            color: #dcecff;
+            color: var(--text-main);
             font-weight: 600;
             cursor: pointer;
         }
@@ -464,32 +497,32 @@
         .account-opt-in input {
             width: 15px;
             height: 15px;
-            accent-color: var(--brand-blue);
+            accent-color: var(--brand-maroon);
         }
 
         .password-block {
-            border: 1px solid #1e3050;
+            border: 1px solid rgba(255,255,255,.12);
             border-radius: 10px;
             padding: 0.7rem;
             display: grid;
             gap: 0.65rem;
-            background: #0d1929;
+            background: var(--bg-input);
         }
 
-        .provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+        .provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 
         .provider-btn {
-            border: 1px solid #1e3050; border-radius: 10px;
-            background: #0d1929; padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,.18); border-radius: 10px;
+            background: var(--bg-input); padding: 10px 12px;
             display: flex; align-items: center; gap: 8px;
             cursor: pointer; transition: border-color 0.15s, background 0.15s;
         }
 
-        .provider-btn:hover { border-color: var(--brand-blue); }
+        .provider-btn:hover { border-color: rgba(192,40,60,.55); }
 
         .provider-btn.is-selected {
-            border-color: var(--brand-blue);
-            background: rgba(26,115,232,0.1);
+            border-color: var(--brand-maroon);
+            background: rgba(192,40,60,.12);
         }
 
         .provider-icon {
@@ -503,11 +536,11 @@
         .mtn-icon { background: #ffcc00; }
         .airtel-icon { background: #fff; }
 
-        .provider-name { font-size: 12px; font-weight: 600; color: #c0cfe8; }
+        .provider-name { font-size: 12px; font-weight: 600; color: rgba(247,244,245,.86); }
         .provider-btn.is-selected .provider-name { color: #fff; }
 
         .checkout-btn {
-            height: 48px; border: none; border-radius: 12px;
+            height: 50px; border: none; border-radius: 12px;
             background: #1255c0; color: #fff;
             font-size: 14px; font-weight: 700; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -516,27 +549,35 @@
 
         .checkout-btn:hover { background: #0e3fa0; }
 
+        .checkout-charge-line {
+            margin: 0 0 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255,232,236,.95);
+            text-align: center;
+        }
+
         .secure-note {
-            text-align: center; font-size: 11px; color: #2a4060;
+            text-align: center; font-size: 11px; color: rgba(247,244,245,.74);
             display: flex; align-items: center; justify-content: center; gap: 4px;
         }
 
-        .promo-section { margin-bottom: 14px; }
+        .promo-section { margin-bottom: 12px; }
         .promo-row { display: flex; gap: 8px; }
         .promo-input {
-            flex: 1; padding: 10px 12px; border: 1.5px solid #dbe4f0; border-radius: 8px;
-            font-size: 13px; background: #f8faff; color: #132744; outline: none;
+            flex: 1; padding: 10px 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px;
+            font-size: 13px; background: var(--bg-input); color: #fff; outline: none;
             text-transform: uppercase;
         }
-        .promo-input:focus { border-color: #0a4fbe; }
+        .promo-input:focus { border-color: rgba(192,40,60,.65); }
         .promo-btn {
-            padding: 10px 16px; background: #0a4fbe; color: #fff; border: none;
+            padding: 10px 16px; background: var(--brand-maroon); color: #fff; border: none;
             border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
             white-space: nowrap;
         }
-        .promo-btn:hover:not(:disabled) { background: #0843a8; }
+        .promo-btn:hover:not(:disabled) { background: var(--brand-maroon-dark); }
         .promo-btn:disabled { opacity: 0.6; cursor: default; }
-        .promo-feedback { font-size: 12px; margin-top: 5px; }
+        .promo-feedback { font-size: 12px; margin-top: 5px; font-weight: 600; }
 
         @media (max-width: 760px) {
             .checkout-shell { grid-template-columns: 1fr; }
@@ -554,6 +595,8 @@
             const summaryTotal = document.getElementById('summary-total');
             const summaryDiscountRow = document.getElementById('summary-discount-row');
             const summaryDiscount = document.getElementById('summary-discount');
+            const summaryServerNote = document.getElementById('summary-server-note');
+            const chargeLine = document.getElementById('checkout-charge-line');
             const providerInput = document.getElementById('payment_provider_input');
             const providerBtns = document.querySelectorAll('.provider-btn');
             const popup = document.getElementById('checkout-popup');
@@ -594,6 +637,16 @@
                 }
 
                 if (summaryTotal) summaryTotal.textContent = isFree ? 'Free' : formatUgx(finalTotal);
+                if (chargeLine) {
+                    chargeLine.textContent = isFree
+                        ? 'You will be charged: Free'
+                        : `You will be charged: ${formatUgx(finalTotal)}`;
+                }
+                if (summaryServerNote) {
+                    summaryServerNote.textContent = isFree
+                        ? 'Free ticket. Availability is confirmed on the server before issuing your ticket.'
+                        : 'Amount is verified on the server before payment is initiated.';
+                }
 
                 if (paymentFields) paymentFields.style.display = isFree ? 'none' : '';
                 if (secureNote) secureNote.style.display = isFree ? 'none' : '';
@@ -655,7 +708,7 @@
                 if (!promoFeedback) return;
                 promoFeedback.textContent = msg;
                 promoFeedback.style.display = '';
-                promoFeedback.style.color = ok ? '#1a7a3f' : '#c0283c';
+                promoFeedback.style.color = ok ? '#7ad89a' : '#ff99a2';
             };
 
             if (promoApplyBtn) promoApplyBtn.addEventListener('click', applyPromo);

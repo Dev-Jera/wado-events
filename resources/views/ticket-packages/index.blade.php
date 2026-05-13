@@ -29,7 +29,6 @@
                 <div class="tp-pkg-media">
                     <img src="{{ asset('images/Online ticket.jpg') }}" alt="Online ticketing">
                     <div class="tp-pkg-media-overlay"></div>
-                    <div class="tp-pkg-media-badge">Most Popular</div>
                 </div>
                 <div class="tp-pkg-body">
                     <span class="tp-pkg-tag tp-pkg-tag--blue">Online Ticketing</span>
@@ -45,7 +44,7 @@
                         <div class="tp-feat-item">Multiple ticket tiers including VIP, General and Early Bird</div>
                         <div class="tp-feat-item">Automatic capacity limits and sold-out management</div>
                         <div class="tp-feat-item">Refund and cancellation handling</div>
-                        <div class="tp-feat-item tp-feat-item--opt">Gate verification team on event day <span class="tp-opt-tag">on request</span></div>
+                        <div class="tp-feat-item">Gate verification team on event day</div>
                     </div>
 
                     <div class="tp-section-label">Your part</div>
@@ -99,8 +98,8 @@
                         <div class="tp-feat-item">High-quality print on counterfeit-resistant stock</div>
                         <div class="tp-feat-item">Standard (mono) or premium (full-colour, gloss) finish</div>
                         <div class="tp-feat-item">Tickets ready for collection at least 3 days before the event</div>
-                        <div class="tp-feat-item tp-feat-item--opt">QR scanner system for gate control <span class="tp-opt-tag">on request</span></div>
-                        <div class="tp-feat-item tp-feat-item--opt">Gate verification staff on event day <span class="tp-opt-tag">on request</span></div>
+                        <div class="tp-feat-item">QR scanner system for gate control</div>
+                        <div class="tp-feat-item">Gate verification staff on event day</div>
                     </div>
 
                     <div class="tp-section-label">Your part</div>
@@ -144,7 +143,6 @@
                 <div class="tp-pkg-media">
                     <img src="{{ asset('images/wrist-ticket.jpg') }}" alt="VIP wristband tickets">
                     <div class="tp-pkg-media-overlay"></div>
-                    <div class="tp-pkg-media-badge tp-pkg-media-badge--gold">Premium</div>
                 </div>
                 <div class="tp-pkg-body">
                     <span class="tp-pkg-tag tp-pkg-tag--gold">VIP Wristbands</span>
@@ -159,8 +157,8 @@
                         <div class="tp-feat-item">Anti-tamper snap-lock closure on tyvek wristbands</div>
                         <div class="tp-feat-item">Entry control system and gate scanning setup</div>
                         <div class="tp-feat-item">Re-entry tracking and blacklist management</div>
-                        <div class="tp-feat-item tp-feat-item--opt">Full gate operations team with live dashboard <span class="tp-opt-tag">on request</span></div>
-                        <div class="tp-feat-item tp-feat-item--soon">RFID / NFC wristbands <span class="tp-opt-tag tp-opt-tag--soon">coming soon</span></div>
+                        <div class="tp-feat-item">Full gate operations team with live dashboard</div>
+                        <div class="tp-feat-item">RFID / NFC wristbands</div>
                     </div>
 
                     <div class="tp-section-label">Your part</div>
@@ -193,33 +191,21 @@
             <h2 class="tp-addons-title">Optional add-ons</h2>
             <div class="tp-addons-grid">
                 <div class="tp-addon-card">
-                    <div class="tp-addon-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 12a19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.78a16 16 0 0 0 6.29 6.29l1.08-1.08a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    </div>
                     <h3 class="tp-addon-name">SMS Ticket Delivery</h3>
                     <p class="tp-addon-desc">Send tickets directly to buyers' phones via SMS for guests who can't access email.</p>
                     <span class="tp-addon-price">50,000 UGX / event</span>
                 </div>
                 <div class="tp-addon-card">
-                    <div class="tp-addon-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                    </div>
                     <h3 class="tp-addon-name">Event Promotion Listing</h3>
                     <p class="tp-addon-desc">Priority featured placement on the WADO homepage, pushed to our audience and social channels.</p>
                     <span class="tp-addon-price">Contact us for rates</span>
                 </div>
                 <div class="tp-addon-card">
-                    <div class="tp-addon-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
                     <h3 class="tp-addon-name">Full Gate Operations</h3>
                     <p class="tp-addon-desc">Our trained staff run your entire gate operation: scanners, access logs, crowd control and live reporting.</p>
                     <span class="tp-addon-price">From 200,000 UGX / event</span>
                 </div>
                 <div class="tp-addon-card">
-                    <div class="tp-addon-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                    </div>
                     <h3 class="tp-addon-name">Live Sales Dashboard</h3>
                     <p class="tp-addon-desc">Real-time revenue, attendance, and scan data on a private dashboard shared with you during the event.</p>
                     <span class="tp-addon-price">Included with online ticketing</span>
@@ -242,9 +228,24 @@
 </div>
 
 <style>
+    :root {
+        --tp-bg: #170d11;
+        --tp-bg-soft: #1f1218;
+        --tp-panel: #23151c;
+        --tp-panel-soft: #291922;
+        --tp-border: #3a2a31;
+        --tp-text: #f8f3f5;
+        --tp-text-sub: rgba(248,243,245,.72);
+        --tp-text-muted: rgba(248,243,245,.56);
+        --tp-maroon: #c0283c;
+        --tp-maroon-dark: #a01e2e;
+        --tp-blue: #1255c0;
+        --tp-blue-dark: #0e3fa0;
+    }
+
     .tp-page {
         padding-top: 5.5rem;
-        background: #1a0a0e;
+        background: linear-gradient(180deg, #180d12 0%, #1f1218 100%);
         min-height: 100vh;
     }
 
@@ -258,8 +259,8 @@
     .tp-hero {
         padding: 4rem 1.25rem 3.5rem;
         text-align: center;
-        background: linear-gradient(160deg, #2c0d16 0%, #1a0a0e 60%);
-        border-bottom: 1px solid rgba(255,255,255,.07);
+        background: #24141b;
+        border-bottom: 1px solid #37272e;
     }
 
     .tp-hero-inner { max-width: 700px; margin: 0 auto; }
@@ -285,7 +286,7 @@
         margin: 0;
         font-size: 1.02rem;
         line-height: 1.65;
-        color: rgba(255,255,255,.72);
+        color: var(--tp-text-sub);
     }
 
     /* ── Host CTA Section ── */
@@ -320,7 +321,7 @@
     .tp-host-cta-btn {
         display: inline-block;
         padding: 0.75rem 2rem;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: #1255c0;
         color: #fff;
         font-size: 0.95rem;
         font-weight: 600;
@@ -329,30 +330,27 @@
         text-decoration: none;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
     }
 
     .tp-host-cta-btn:hover {
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-        transform: translateY(-2px);
+        background: #0e3fa0;
     }
 
     /* ── Package sections ── */
     .tp-pkg {
         padding: 5rem 0;
-        border-bottom: 1px solid rgba(255,255,255,.06);
+        border-bottom: 1px solid #33242b;
     }
-    .tp-pkg--alt { background: rgba(255,255,255,.02); }
+    .tp-pkg--alt { background: #201318; }
 
     .tp-pkg-grid {
         display: grid;
         grid-template-columns: 1fr 1.15fr;
         gap: 0;
-        border-radius: 24px;
+        border-radius: 18px;
         overflow: hidden;
-        border: 1px solid rgba(255,255,255,.09);
-        background: rgba(255,255,255,.025);
+        border: 1px solid var(--tp-border);
+        background: var(--tp-panel);
     }
 
     .tp-pkg:nth-child(odd) .tp-pkg-grid { direction: rtl; }
@@ -370,28 +368,13 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform .6s ease;
+        transform: scale(1);
     }
-    .tp-pkg-grid:hover .tp-pkg-media img { transform: scale(1.04); }
     .tp-pkg-media-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(20,5,12,.55) 0%, rgba(20,5,12,.2) 100%);
+        background: linear-gradient(180deg, rgba(10,6,8,.25) 0%, rgba(10,6,8,.58) 100%);
     }
-    .tp-pkg-media-badge {
-        position: absolute;
-        top: 1.25rem;
-        left: 1.25rem;
-        padding: .32rem .85rem;
-        border-radius: 999px;
-        background: #1255c0;
-        color: #fff;
-        font-size: .7rem;
-        font-weight: 700;
-        letter-spacing: .06em;
-        text-transform: uppercase;
-    }
-    .tp-pkg-media-badge--gold { background: #1255c0; }
 
     /* ── Body panel ── */
     .tp-pkg-body {
@@ -399,22 +382,25 @@
         display: flex;
         flex-direction: column;
         gap: 0;
+        background: #2a1821;
     }
 
     .tp-pkg-tag {
         display: inline-flex;
         align-self: flex-start;
-        padding: .28rem .8rem;
-        border-radius: 999px;
-        font-size: .68rem;
-        font-weight: 700;
-        letter-spacing: .08em;
+        padding: 0;
+        border-radius: 0;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .12em;
         text-transform: uppercase;
-        margin-bottom: .85rem;
+        margin-bottom: .65rem;
+        border: none;
+        background: transparent;
     }
-    .tp-pkg-tag--blue   { background: rgba(18,85,192,.18);  border: 1px solid rgba(18,85,192,.45);  color: #6ea8fe; }
-    .tp-pkg-tag--maroon { background: rgba(192,40,60,.15);  border: 1px solid rgba(192,40,60,.4);   color: #ff8096; }
-    .tp-pkg-tag--gold   { background: rgba(192,40,60,.12);  border: 1px solid rgba(192,40,60,.35);  color: #ff8096; }
+    .tp-pkg-tag--blue   { color: #9fc0ff; }
+    .tp-pkg-tag--maroon { color: #ffb7c3; }
+    .tp-pkg-tag--gold   { color: #c2d8ff; }
 
     .tp-pkg-title {
         margin: 0 0 .7rem;
@@ -427,7 +413,7 @@
         margin: 0 0 1.5rem;
         font-size: .95rem;
         line-height: 1.65;
-        color: rgba(255,255,255,.62);
+        color: var(--tp-text-sub);
     }
 
     /* ── Section label ── */
@@ -436,56 +422,34 @@
         font-weight: 700;
         letter-spacing: .14em;
         text-transform: uppercase;
-        color: rgba(255,255,255,.35);
+        color: var(--tp-text-muted);
         margin: 1.5rem 0 .8rem;
         padding-bottom: .4rem;
-        border-bottom: 1px solid rgba(255,255,255,.07);
+        border-bottom: 1px solid rgba(255,255,255,.08);
     }
 
     /* ── Feature grid ── */
     .tp-feat-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: .5rem;
+        gap: .45rem;
         margin-bottom: .25rem;
     }
     .tp-feat-item {
         font-size: .845rem;
         line-height: 1.45;
-        color: rgba(255,255,255,.75);
-        background: rgba(255,255,255,.04);
-        border-radius: 8px;
-        padding: .55rem .75rem;
+        color: var(--tp-text-sub);
+        background: #2c1c24;
+        border: 1px solid #3f2b34;
+        border-radius: 10px;
+        padding: .6rem .8rem;
     }
-    .tp-feat-item--opt {
-        color: rgba(255,255,255,.42);
-        background: rgba(192,40,60,.05);
-    }
-    .tp-feat-item--soon {
-        color: rgba(255,255,255,.25);
-        background: rgba(255,255,255,.02);
-    }
-
-    .tp-opt-tag {
-        font-size: .75rem;
-        font-weight: 600;
-        color: #1255c0;
-        margin-left: .3rem;
-        text-decoration: underline;
-        text-decoration-style: dotted;
-        text-underline-offset: 3px;
-    }
-    .tp-opt-tag--soon {
-        color: rgba(255,255,255,.3);
-        text-decoration: none;
-    }
-
     /* ── Role prose ── */
     .tp-role-prose {
         margin: 0;
         font-size: .88rem;
         line-height: 1.65;
-        color: rgba(255,255,255,.55);
+        color: var(--tp-text-sub);
     }
 
     /* ── Fee footer ── */
@@ -493,16 +457,16 @@
         margin-top: 1.75rem;
         padding: 1.1rem 1.25rem;
         border-radius: 12px;
-        background: rgba(18,85,192,.08);
-        border: 1px solid rgba(18,85,192,.25);
+        background: #26171d;
+        border: 1px solid #402830;
     }
     .tp-fee-footer--maroon {
-        background: rgba(192,40,60,.07);
-        border-color: rgba(192,40,60,.22);
+        background: #2c1820;
+        border-color: #50303a;
     }
     .tp-fee-footer--gold {
-        background: rgba(18,85,192,.08);
-        border-color: rgba(18,85,192,.25);
+        background: #1f2d47;
+        border-color: #354c72;
     }
     .tp-fee-main {
         display: flex;
@@ -528,12 +492,12 @@
     .tp-fee-min {
         font-size: .78rem;
         font-weight: 500;
-        color: rgba(255,255,255,.45);
+        color: var(--tp-text-muted);
         margin-left: .2rem;
     }
     .tp-fee-extras {
         font-size: .78rem;
-        color: rgba(255,255,255,.4);
+        color: var(--tp-text-muted);
         line-height: 1.5;
     }
 
@@ -544,24 +508,24 @@
         padding: .7rem 1.5rem;
         border-radius: 999px;
         border: none;
-        background: #1255c0;
+        background: var(--tp-blue);
         color: #fff;
         font-size: .9rem;
         font-weight: 700;
         cursor: pointer;
-        transition: background .15s, transform .15s;
+        transition: background .15s;
         margin-top: 1.5rem;
     }
-    .tp-pkg-cta:hover { background: #0e3fa0; transform: translateY(-1px); }
-    .tp-pkg-cta--maroon { background: #c0283c; }
-    .tp-pkg-cta--maroon:hover { background: #a01e2e; }
-    .tp-pkg-cta--gold { background: #1255c0; }
-    .tp-pkg-cta--gold:hover { background: #0e3fa0; transform: translateY(-1px); }
+    .tp-pkg-cta:hover { background: var(--tp-blue-dark); }
+    .tp-pkg-cta--maroon { background: var(--tp-blue); }
+    .tp-pkg-cta--maroon:hover { background: var(--tp-blue-dark); }
+    .tp-pkg-cta--gold { background: var(--tp-blue); }
+    .tp-pkg-cta--gold:hover { background: var(--tp-blue-dark); }
 
     /* ── Add-ons section ── */
     .tp-addons {
         padding: 4.5rem 0;
-        border-top: 1px solid rgba(255,255,255,.06);
+        border-top: 1px solid #33242b;
     }
     .tp-addons-title {
         text-align: center;
@@ -576,33 +540,38 @@
         gap: 1.25rem;
     }
     .tp-addon-card {
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 16px;
+        background: var(--tp-panel-soft);
+        border: 1px solid var(--tp-border);
+        border-radius: 12px;
         padding: 1.5rem 1.25rem;
         display: flex;
         flex-direction: column;
-        gap: .7rem;
+        gap: .55rem;
         transition: border-color .2s;
     }
-    .tp-addon-card:hover { border-color: rgba(192,40,60,.4); }
-    .tp-addon-icon {
-        width: 2.5rem; height: 2.5rem;
-        background: rgba(18,85,192,.15);
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
+    .tp-addon-card:hover { border-color: #6a2c39; }
+    .tp-addon-name {
+        margin: 0;
+        font-size: .92rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.3;
+        padding-bottom: .45rem;
+        border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .tp-addon-icon svg { width: 1.25rem; height: 1.25rem; stroke: #6ea8fe; }
-    .tp-addon-name { margin: 0; font-size: .95rem; font-weight: 700; color: #fff; line-height: 1.25; }
-    .tp-addon-desc { margin: 0; font-size: .83rem; line-height: 1.55; color: rgba(255,255,255,.55); flex: 1; }
-    .tp-addon-price { font-size: .8rem; font-weight: 700; color: #ff8096; }
+    .tp-addon-desc { margin: 0; font-size: .83rem; line-height: 1.55; color: var(--tp-text-sub); flex: 1; }
+    .tp-addon-price {
+        font-size: .78rem;
+        font-weight: 700;
+        color: #b9d8ff;
+        padding-top: .15rem;
+    }
 
     /* ── Bottom CTA ── */
     .tp-cta { padding: 3rem 0 5rem; }
     .tp-cta-box {
-        background: linear-gradient(130deg, #2c0d16 0%, #1f1030 100%);
-        border: 1px solid rgba(255,255,255,.1);
+        background: #2b1821;
+        border: 1px solid var(--tp-border);
         border-radius: 20px;
         padding: 3rem 2.5rem;
         text-align: center;
@@ -614,12 +583,11 @@
     .tp-cta-btn {
         display: inline-flex; align-self: center; justify-self: center;
         padding: .75rem 2rem; border-radius: 999px; border: none;
-        background: #1255c0; color: #fff; font-size: .95rem; font-weight: 700;
+        background: var(--tp-blue); color: #fff; font-size: .95rem; font-weight: 700;
         cursor: pointer; margin-top: .5rem;
-        transition: background .15s, transform .15s;
-        box-shadow: 0 4px 16px rgba(18,85,192,.35);
+        transition: background .15s;
     }
-    .tp-cta-btn:hover { background: #0e3fa0; transform: translateY(-1px); }
+    .tp-cta-btn:hover { background: var(--tp-blue-dark); }
 
     /* ── Responsive ── */
     @media (max-width: 1024px) {
@@ -753,12 +721,12 @@
         transition: opacity .28s ease, visibility .28s ease;
     }
     .enq-overlay.is-open { opacity: 1; visibility: visible; pointer-events: auto; }
-    .enq-backdrop { position: absolute; inset: 0; background: rgba(4,6,14,.80); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .enq-backdrop { position: absolute; inset: 0; background: rgba(6,8,14,.88); }
 
     .enq-dialog {
         position: relative; z-index: 1; width: min(760px, 100%); max-height: 92vh; overflow-y: auto;
-        border-radius: 20px; background: #16080d; border: 1px solid rgba(255,255,255,.1);
-        box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(192,40,60,.15);
+        border-radius: 20px; background: #1f1218; border: 1px solid #3d2c33;
+        box-shadow: 0 24px 48px rgba(0,0,0,.55);
         padding: 2.5rem; transform: translateY(20px) scale(.97);
         transition: transform .3s ease, opacity .28s ease;
         scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent;
@@ -767,7 +735,7 @@
 
     .enq-close {
         position: absolute; top: 1.1rem; right: 1.1rem; width: 2.1rem; height: 2.1rem;
-        border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07);
+        border-radius: 999px; border: 1px solid #4a3941; background: #2c1b23;
         color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
         transition: background .15s; flex-shrink: 0;
     }
@@ -788,7 +756,7 @@
     .enq-field input,
     .enq-field select,
     .enq-field textarea {
-        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
+        background: #2c1a22; border: 1px solid #4b3941; border-radius: 10px;
         padding: .65rem .9rem; color: #fff; font-size: .92rem; font-family: inherit; outline: none;
         transition: border-color .18s, box-shadow .18s; width: 100%; box-sizing: border-box;
     }
@@ -804,7 +772,7 @@
     .enq-field textarea { resize: vertical; min-height: 100px; }
     .enq-field-err { font-size: .74rem; color: #f87171; min-height: 1em; }
 
-    .enq-form-error { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); border-radius: 10px; padding: .75rem 1rem; font-size: .85rem; color: #fca5a5; margin-bottom: 1.1rem; line-height: 1.5; }
+    .enq-form-error { background: #442126; border: 1px solid #6f333b; border-radius: 10px; padding: .75rem 1rem; font-size: .85rem; color: #fca5a5; margin-bottom: 1.1rem; line-height: 1.5; }
     .enq-form-error a { color: #fca5a5; }
 
     .enq-submit {
@@ -821,7 +789,7 @@
     .enq-spinner { width: 1rem; height: 1rem; animation: enqSpin .7s linear infinite; }
 
     .enq-success-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 0 .5rem; gap: 1rem; }
-    .enq-success-icon { width: 4rem; height: 4rem; border-radius: 999px; background: rgba(34,197,94,.12); border: 1.5px solid rgba(34,197,94,.35); display: flex; align-items: center; justify-content: center; }
+    .enq-success-icon { width: 4rem; height: 4rem; border-radius: 999px; background: #1f3a2a; border: 1.5px solid #2d6b45; display: flex; align-items: center; justify-content: center; }
     .enq-success-icon svg { width: 2rem; height: 2rem; stroke: #22c55e; }
     .enq-success-title { margin: 0; font-size: 1.6rem; font-weight: 800; color: #fff; }
     .enq-success-msg { margin: 0; font-size: .95rem; color: rgba(255,255,255,.6); line-height: 1.6; max-width: 38ch; }

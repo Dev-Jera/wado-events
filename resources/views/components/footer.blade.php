@@ -1,13 +1,12 @@
-<footer class="wf">
+<footer class="wf" role="contentinfo">
     <div class="wf-inner">
-
-        {{-- Brand column --}}
-        <div class="wf-col wf-col-brand">
+        <section class="wf-col wf-col-brand" aria-label="Brand">
             <a href="{{ route('home') }}" class="wf-logo-link">
                 <img src="{{ asset('images/logos/Wado Ticketing.png') }}" alt="WADO Ticketing" class="wf-logo">
             </a>
-            <p class="wf-tagline">Uganda's home for live events.<br>Buy, sell, and manage tickets seamlessly.</p>
-            <div class="wf-social">
+            <p class="wf-tagline">Uganda's home for live events. Buy, sell, and manage tickets seamlessly.</p>
+            <h4 class="wf-col-heading wf-follow-heading">Follow Us</h4>
+            <div class="wf-social" aria-label="Social links">
                 <a href="https://www.facebook.com/wadoconcepts" target="_blank" rel="noopener" aria-label="Facebook" class="wf-social-link">
                     <img src="{{ asset('images/facebook-logo.png') }}" alt="Facebook" class="wf-social-icon wf-social-icon--facebook">
                 </a>
@@ -21,10 +20,41 @@
                     <img src="{{ asset('images/logos/whatsap-logo.png') }}" alt="WhatsApp" class="wf-social-icon wf-social-icon--whatsapp">
                 </a>
             </div>
-        </div>
+        </section>
 
-        {{-- Explore column --}}
-        <div class="wf-col">
+        <section class="wf-mobile-grid" aria-label="Footer mobile links">
+            <nav class="wf-mobile-col" aria-label="Contact us">
+                <h4 class="wf-col-heading">Contact Us</h4>
+                <ul class="wf-mobile-list">
+                    <li>
+                        <span class="wf-mobile-k">Address:</span>
+                        <span>Kireka, Kampala, Uganda</span>
+                    </li>
+                    <li>
+                        <span class="wf-mobile-k">Contact:</span>
+                        <a href="tel:+256703015846">0703 015 846</a>
+                    </li>
+                    <li>
+                        <span class="wf-mobile-k">E-mail:</span>
+                        <a href="mailto:wadoconcepts@gmail.com">wadoconcepts@gmail.com</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <nav class="wf-mobile-col" aria-label="Legal and navigation">
+                <h4 class="wf-col-heading">Legal &amp; Nav</h4>
+                <ul class="wf-links wf-mobile-nav">
+                    <li><a href="{{ route('home') }}">Home</a></li>
+                    <li><a href="{{ route('events.index') }}">Events</a></li>
+                    <li><a href="{{ route('terms') }}">Terms</a></li>
+                    <li><a href="{{ route('ticket-policy') }}">Ticket Policy</a></li>
+                    <li><a href="{{ route('refund-policy') }}">Refunds</a></li>
+                    <li><a href="{{ route('contact') }}">Contact</a></li>
+                </ul>
+            </nav>
+        </section>
+
+        <nav class="wf-col" aria-label="Explore">
             <h4 class="wf-col-heading">Explore</h4>
             <ul class="wf-links">
                 <li><a href="{{ route('home') }}">Home</a></li>
@@ -32,10 +62,9 @@
                 <li><a href="{{ route('ticket-packages.index') }}">Ticket Packages</a></li>
                 <li><a href="{{ route('contact') }}">Contact Us</a></li>
             </ul>
-        </div>
+        </nav>
 
-        {{-- Account column --}}
-        <div class="wf-col">
+        <nav class="wf-col" aria-label="Account">
             <h4 class="wf-col-heading">Account</h4>
             <ul class="wf-links">
                 @auth
@@ -46,10 +75,9 @@
                     <li><a href="{{ route('register') }}">Create Account</a></li>
                 @endauth
             </ul>
-        </div>
+        </nav>
 
-        {{-- Legal column --}}
-        <div class="wf-col">
+        <nav class="wf-col" aria-label="Legal">
             <h4 class="wf-col-heading">Legal</h4>
             <ul class="wf-links">
                 <li><a href="{{ route('terms') }}">Terms &amp; Conditions</a></li>
@@ -57,10 +85,9 @@
                 <li><a href="{{ route('refund-policy') }}">Refund &amp; Returns</a></li>
                 <li><a href="{{ route('contact') }}">Support</a></li>
             </ul>
-        </div>
+        </nav>
 
-        {{-- Contact column --}}
-        <div class="wf-col">
+        <section class="wf-col" aria-label="Contact">
             <h4 class="wf-col-heading">Contact</h4>
             <ul class="wf-links wf-links-contact">
                 <li>
@@ -77,116 +104,84 @@
                 </li>
                 <li>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span>Mon – Fri, 9am – 6pm EAT</span>
+                    <span>Mon - Fri, 9am - 6pm EAT</span>
                 </li>
             </ul>
-        </div>
-
-    </div>
-
-    {{-- Mobile compact view --}}
-    <div class="wf-mobile">
-        
-        {{-- Follow us section --}}
-        <div class="wf-mobile-section">
-            <p class="wf-mobile-title">FOLLOW US</p>
-            <div class="wf-mobile-social">
-                <a href="https://www.facebook.com/wadoconcepts" target="_blank" rel="noopener" aria-label="Facebook">
-                    <img src="{{ asset('images/facebook-logo.png') }}" alt="Facebook" class="wf-mobile-social-icon wf-mobile-social-icon--facebook">
-                </a>
-                <a href="https://www.instagram.com/wadoconcepts" target="_blank" rel="noopener" aria-label="Instagram">
-                    <img src="{{ asset('images/logos/insta-logo.png') }}" alt="Instagram" class="wf-mobile-social-icon wf-mobile-social-icon--instagram">
-                </a>
-                <a href="https://twitter.com/wadoconcepts" target="_blank" rel="noopener" aria-label="X / Twitter">
-                    <img src="{{ asset('images/logos/x-logo.png') }}" alt="X" class="wf-mobile-social-icon wf-mobile-social-icon--x">
-                </a>
-                <a href="https://wa.me/256703015846" target="_blank" rel="noopener" aria-label="WhatsApp">
-                    <img src="{{ asset('images/logos/whatsap-logo.png') }}" alt="WhatsApp" class="wf-mobile-social-icon wf-mobile-social-icon--whatsapp">
-                </a>
-            </div>
-        </div>
-
-        {{-- Two-column section --}}
-        <div class="wf-mobile-cols">
-            
-            {{-- Left: Contact --}}
-            <div class="wf-mobile-col">
-                <p class="wf-mobile-title">CONTACT US</p>
-                <div class="wf-mobile-items">
-                    <div class="wf-mobile-item">
-                        <p class="wf-mobile-item-label">Address:</p>
-                        <p class="wf-mobile-item-val">Kireka, Kampala, Uganda</p>
-                    </div>
-                    <div class="wf-mobile-item">
-                        <p class="wf-mobile-item-label">Contact:</p>
-                        <p class="wf-mobile-item-val"><a href="tel:+256703015846">0703 015 846</a></p>
-                    </div>
-                    <div class="wf-mobile-item">
-                        <p class="wf-mobile-item-label">E-mail:</p>
-                        <p class="wf-mobile-item-val"><a href="mailto:wadoconcepts@gmail.com">wadoconcepts@gmail.com</a></p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Right: Navigate/Legal --}}
-            <div class="wf-mobile-col">
-                <p class="wf-mobile-title">LEGAL &amp; NAV</p>
-                <div class="wf-mobile-nav">
-                    <a href="{{ route('home') }}">Home</a>
-                    <a href="{{ route('events.index') }}">Events</a>
-                    <a href="{{ route('terms') }}">Terms</a>
-                    <a href="{{ route('ticket-policy') }}">Ticket Policy</a>
-                    <a href="{{ route('refund-policy') }}">Refunds</a>
-                    <a href="{{ route('contact') }}">Contact</a>
-                </div>
-            </div>
-
-        </div>
+        </section>
     </div>
 
     <div class="wf-bottom">
         <span>&copy; {{ date('Y') }} WADO Ticketing. All rights reserved.</span>
-        <span>Developed by <strong>Aloyo Brenda Ojera</strong></span>
+        <span class="wf-credit">Developed by <strong>Aloyo Brenda Ojera</strong></span>
     </div>
 </footer>
 
 <style>
 .wf {
-    background: #08111f;
-    border-top: 1px solid rgba(255,255,255,.07);
-    color: rgba(200,215,235,.75);
+    background: #171013;
+    border-top: 1px solid rgba(255,255,255,.08);
+    color: rgba(247,244,245,.76);
     font-size: .9rem;
-    padding: 3.5rem 1.25rem 0;
+    padding: 3rem 1.25rem 0;
 }
+
 .wf-inner {
     max-width: var(--site-width, 1140px);
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1.7fr 1fr 1fr 1fr 1.4fr;
-    gap: 2.5rem 2rem;
-    padding-bottom: 2.5rem;
-    border-bottom: 1px solid rgba(255,255,255,.07);
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1.35fr;
+    gap: 2rem 1.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255,255,255,.09);
 }
-.wf-logo-link { display: inline-block; margin-bottom: .9rem; }
-.wf-logo { height: 44px; width: auto; }
+
+.wf-logo-link {
+    display: inline-block;
+    margin-bottom: .9rem;
+}
+
+.wf-logo {
+    height: 44px;
+    width: auto;
+}
+
 .wf-tagline {
-    font-size: .86rem;
-    line-height: 1.65;
-    color: rgba(180,200,230,.6);
-    margin-bottom: 1.25rem;
+    font-size: .88rem;
+    line-height: 1.62;
+    color: rgba(247,244,245,.62);
+    margin: 0 0 1.15rem;
+    max-width: 34ch;
 }
-.wf-social { display: flex; gap: .55rem; flex-wrap: wrap; }
+
+.wf-follow-heading {
+    display: none;
+    margin: 0 0 .7rem;
+}
+
+.wf-social {
+    display: flex;
+    gap: .55rem;
+    flex-wrap: wrap;
+}
+
 .wf-social-link {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.05);
-    display: flex; align-items: center; justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.04);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
-    color: rgba(200,215,235,.7);
-    transition: background .17s, color .17s, border-color .17s;
+    transition: border-color .16s, background .16s;
 }
-.wf-social-link:hover { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.wf-social-link:hover {
+    border-color: rgba(192,40,60,.65);
+    background: rgba(192,40,60,.18);
+}
+
 .wf-social-icon {
     width: 100%;
     height: 100%;
@@ -200,38 +195,94 @@
 .wf-social-icon--x { transform: scale(1.2); }
 .wf-social-icon--whatsapp { transform: scale(1.08); }
 
-.wf-col-heading {
+.wf-mobile-grid {
+    display: none;
+}
+
+.wf-mobile-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .66rem;
+}
+
+.wf-mobile-list li {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    font-size: .86rem;
+    color: rgba(247,244,245,.74);
+    line-height: 1.35;
+}
+
+.wf-mobile-k {
+    text-transform: uppercase;
+    letter-spacing: .06em;
     font-size: .72rem;
+    font-weight: 700;
+    color: rgba(247,244,245,.88);
+}
+
+.wf-mobile-list a {
+    color: rgba(247,244,245,.74);
+    text-decoration: none;
+}
+
+.wf-mobile-list a:hover {
+    color: #fff;
+}
+
+.wf-mobile-nav {
+    gap: .48rem;
+}
+
+.wf-col-heading {
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: rgba(255,255,255,.9);
-    margin: 0 0 1rem;
+    color: rgba(247,244,245,.9);
+    margin: 0 0 .92rem;
 }
+
 .wf-links {
     list-style: none;
-    padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: .55rem;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
 }
+
 .wf-links a {
-    color: rgba(180,200,230,.65);
+    color: rgba(247,244,245,.68);
     text-decoration: none;
     font-size: .88rem;
     transition: color .15s;
 }
-.wf-links a:hover { color: #fff; }
+
+.wf-links a:hover {
+    color: #fff;
+}
 
 .wf-links-contact li {
     display: flex;
     align-items: flex-start;
     gap: .5rem;
-    font-size: .83rem;
-    color: rgba(180,200,230,.6);
+    color: rgba(247,244,245,.64);
     line-height: 1.5;
+    font-size: .84rem;
 }
-.wf-links-contact svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: .15rem; color: rgba(200,215,235,.5); }
-.wf-links-contact a { color: rgba(180,200,230,.65); text-decoration: none; }
-.wf-links-contact a:hover { color: #fff; }
+
+.wf-links-contact svg {
+    width: 14px;
+    height: 14px;
+    margin-top: .15rem;
+    flex-shrink: 0;
+    color: rgba(247,244,245,.46);
+}
 
 .wf-bottom {
     max-width: var(--site-width, 1140px);
@@ -239,144 +290,101 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: .9rem;
     flex-wrap: wrap;
-    gap: .75rem;
-    padding: 1.25rem 0 1.5rem;
+    padding: 1.15rem 0 1.35rem;
+    color: rgba(247,244,245,.5);
     font-size: .78rem;
-    color: rgba(180,200,230,.4);
 }
-.wf-bottom-links { display: flex; gap: 1.25rem; flex-wrap: wrap; }
-.wf-bottom-links a { color: rgba(180,200,230,.4); text-decoration: none; transition: color .15s; }
-.wf-bottom-links a:hover { color: rgba(200,220,255,.8); }
 
-/* Mobile compact footer */
-.wf-mobile { display: none; }
-
-@media (max-width: 1050px) {
-    .wf-inner { grid-template-columns: 1fr 1fr 1fr; }
-    .wf-col-brand { grid-column: 1 / -1; }
+.wf-credit strong {
+    color: rgba(247,244,245,.72);
+    font-weight: 600;
 }
-@media (max-width: 640px) {
-    .wf { padding: 1.5rem 1rem 0; }
-    .wf-inner { display: none; }
-    .wf-mobile { display: block; }
 
-    .wf-mobile {
-        padding: 0 1rem;
+@media (max-width: 1080px) {
+    .wf-inner {
+        grid-template-columns: 1fr 1fr 1fr;
     }
 
-    .wf-mobile-section {
-        text-align: center;
-        padding-bottom: 1.25rem;
-        margin-bottom: 1.25rem;
-        border-bottom: 1px solid rgba(255,255,255,.08);
+    .wf-col-brand {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    .wf {
+        padding: 2rem 1rem 0;
     }
 
-    .wf-mobile-title {
-        font-size: .65rem;
-        letter-spacing: .15em;
-        text-transform: uppercase;
-        color: rgba(255,255,255,.75);
-        font-weight: 700;
-        margin: 0 0 1rem;
+    .wf-inner {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+        padding-bottom: 1.35rem;
     }
 
-    .wf-mobile-social {
+    .wf-col-brand {
+        grid-column: 1 / -1;
+    }
+
+    .wf-logo-link,
+    .wf-tagline,
+    .wf-inner > .wf-col:not(.wf-col-brand) {
+        display: none;
+    }
+
+    .wf-col-brand {
         display: flex;
-        gap: .8rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    .wf-mobile-social a {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        border: 1.2px solid rgba(255,255,255,.15);
-        background: rgba(255,255,255,.08);
-        display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        color: rgba(200,215,235,.6);
-        transition: background .15s, color .15s, border-color .15s;
-        text-decoration: none;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,.09);
     }
-    .wf-mobile-social a:hover { background: #c0283c; color: #fff; border-color: #c0283c; }
-    .wf-mobile-social-icon {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
+
+    .wf-follow-heading {
         display: block;
+        margin-bottom: .75rem;
     }
 
-    .wf-mobile-social-icon--facebook { transform: scale(1); }
-    .wf-mobile-social-icon--instagram { transform: scale(1.9); }
-    .wf-mobile-social-icon--x { transform: scale(1.2); }
-    .wf-mobile-social-icon--whatsapp { transform: scale(1.08); }
-
-    .wf-mobile-cols {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding-bottom: 1.25rem;
-        margin: 0 auto 0.75rem;
-        border-bottom: 1px solid rgba(255,255,255,.08);
+    .wf-social {
+        justify-content: center;
     }
 
-    .wf-mobile-col {
-        display: flex;
-        flex-direction: column;
+    .wf-mobile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem 1.1rem;
+        padding-bottom: .2rem;
+        align-items: start;
     }
 
-    .wf-mobile-col:last-child {
-        align-items: flex-end;
-        text-align: right;
+    .wf-mobile-grid .wf-mobile-col:first-child {
+        justify-self: start;
+        text-align: left;
     }
 
-    .wf-mobile-items { display: flex; flex-direction: column; gap: .8rem; }
+    .wf-mobile-grid .wf-mobile-col:last-child {
+        justify-self: end;
+        text-align: left;
+    }
 
-    .wf-mobile-item { }
-    .wf-mobile-item-label {
-        font-size: .65rem;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: rgba(255,255,255,.65);
-        font-weight: 700;
-        margin: 0 0 .25rem;
+    .wf-bottom {
+        padding: .95rem 0 1.1rem;
+        font-size: .75rem;
+        justify-content: center;
+        text-align: center;
     }
-    .wf-mobile-item-val {
-        font-size: .82rem;
-        color: rgba(180,200,230,.75);
-        margin: 0;
-        line-height: 1.5;
-    }
-    .wf-mobile-item-val a {
-        color: rgba(180,200,230,.8);
-        text-decoration: none;
-        transition: color .15s;
-    }
-    .wf-mobile-item-val a:hover { color: #fff; }
+}
 
-    .wf-mobile-nav {
-        display: flex;
-        flex-direction: column;
-        gap: .5rem;
+@media (max-width: 520px) {
+    .wf-mobile-grid {
+        gap: 1rem .9rem;
     }
-    .wf-mobile-nav a {
-        color: rgba(180,200,230,.75);
-        text-decoration: none;
-        font-size: .82rem;
-        transition: color .15s;
-    }
-    .wf-mobile-nav a:hover { color: #fff; }
 
     .wf-bottom {
         flex-direction: column;
         align-items: center;
-        text-align: center;
-        gap: .3rem;
-        padding: .9rem 0 1.25rem;
+        gap: .35rem;
     }
 }
 </style>

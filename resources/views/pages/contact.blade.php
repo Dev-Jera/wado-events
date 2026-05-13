@@ -7,7 +7,7 @@
     {{-- ── Hero ── --}}
     <section class="ct-hero">
         <div class="ct-hero-inner">
-            <p class="ct-eyebrow">GET IN TOUCH</p>
+            <p class="ct-eyebrow">Contact us</p>
             <h1 class="ct-heading">We'd love to hear from you</h1>
             <p class="ct-sub">Whether you have a question about an event, need support with a ticket, or just want to say hello, we are here.</p>
         </div>
@@ -58,7 +58,7 @@
                 {{-- ── Right: form ── --}}
                 <div class="ct-form-wrap">
                     <div class="ct-form-card">
-                        <h2 class="ct-form-title">Send us a message</h2>
+                        <h2 class="ct-form-title">Send a message</h2>
 
                         <form id="ct-form" novalidate>
                             @csrf
@@ -136,7 +136,7 @@
     {{-- ── FAQ ── --}}
     <section class="ct-faq">
         <div class="ct-shell">
-            <p class="ct-eyebrow" style="text-align:center;margin-bottom:.6rem">COMMON QUESTIONS</p>
+            <p class="ct-eyebrow" style="text-align:center;margin-bottom:.6rem">Common questions</p>
             <h2 class="ct-faq-title">Frequently asked questions</h2>
 
             <div class="ct-faq-grid">
@@ -190,7 +190,7 @@
 <style>
     .ct-page {
         padding-top: 5.5rem;
-        background: #1a0a0e;
+        background: #180d11;
         min-height: 100vh;
     }
 
@@ -204,8 +204,8 @@
     .ct-hero {
         padding: 4rem 1.25rem 3.5rem;
         text-align: center;
-        background: linear-gradient(160deg, #2c0d16 0%, #1a0a0e 60%);
-        border-bottom: 1px solid rgba(255,255,255,.07);
+        background: #24131a;
+        border-bottom: 1px solid #39232b;
     }
 
     .ct-hero-inner { max-width: 620px; margin: 0 auto; }
@@ -215,7 +215,7 @@
         font-size: .72rem;
         font-weight: 700;
         letter-spacing: .14em;
-        color: rgba(192,40,60,.9);
+        color: #6ea8fe;
         text-transform: uppercase;
     }
 
@@ -231,7 +231,7 @@
         margin: 0;
         font-size: 1rem;
         line-height: 1.65;
-        color: rgba(255,255,255,.65);
+        color: rgba(255,255,255,.7);
     }
 
     /* ── Body layout ── */
@@ -260,7 +260,7 @@
         margin: 0;
         font-size: .9rem;
         line-height: 1.7;
-        color: rgba(255,255,255,.58);
+        color: rgba(255,255,255,.66);
     }
 
     .ct-details { display: flex; flex-direction: column; gap: .75rem; }
@@ -270,7 +270,7 @@
         align-items: center;
         gap: .75rem;
         font-size: .9rem;
-        color: rgba(255,255,255,.65);
+        color: rgba(255,255,255,.7);
     }
 
     .ct-detail-row svg {
@@ -281,7 +281,7 @@
     }
 
     .ct-detail-row a {
-        color: rgba(255,255,255,.65);
+        color: rgba(255,255,255,.7);
         text-decoration: none;
     }
 
@@ -289,8 +289,8 @@
 
     /* ── Form card ── */
     .ct-form-card {
-        background: rgba(255,255,255,.03);
-        border: 1px solid rgba(255,255,255,.09);
+        background: #22141a;
+        border: 1px solid #39232b;
         border-radius: 20px;
         padding: 2.25rem 2rem;
     }
@@ -299,7 +299,7 @@
         margin: 0 0 1.75rem;
         font-size: 1.15rem;
         font-weight: 800;
-        color: #fff;
+        color: #9fc0ff;
     }
 
     .ct-fields {
@@ -325,8 +325,8 @@
     .ct-field input,
     .ct-field select,
     .ct-field textarea {
-        background: rgba(255,255,255,.06);
-        border: 1px solid rgba(255,255,255,.12);
+        background: #1b1115;
+        border: 1px solid #4a333c;
         border-radius: 10px;
         padding: .65rem .9rem;
         color: #fff;
@@ -345,7 +345,7 @@
     .ct-field select:focus,
     .ct-field textarea:focus {
         border-color: #c0283c;
-        box-shadow: 0 0 0 3px rgba(192,40,60,.18);
+        box-shadow: 0 0 0 2px rgba(192,40,60,.16);
     }
 
     .ct-field input.is-invalid,
@@ -370,16 +370,16 @@
     .ct-field-err { font-size: .74rem; color: #f87171; min-height: 1em; }
 
     .ct-form-error {
-        background: rgba(248,113,113,.1);
-        border: 1px solid rgba(248,113,113,.28);
+        background: #3b1d24;
+        border: 1px solid #6a303a;
         border-radius: 10px;
         padding: .75rem 1rem;
         font-size: .85rem;
-        color: #fca5a5;
+        color: #ffb4bc;
         margin-bottom: 1rem;
         line-height: 1.5;
     }
-    .ct-form-error a { color: #fca5a5; }
+    .ct-form-error a { color: #ffd0d6; }
 
     .ct-submit {
         display: inline-flex;
@@ -396,10 +396,9 @@
         font-weight: 700;
         font-family: inherit;
         cursor: pointer;
-        transition: background .15s, transform .15s;
-        box-shadow: 0 4px 16px rgba(18,85,192,.3);
+        transition: background .15s;
     }
-    .ct-submit:hover:not(:disabled) { background: #0e3fa0; transform: translateY(-1px); }
+    .ct-submit:hover:not(:disabled) { background: #0e3fa0; }
     .ct-submit:disabled { opacity: .6; cursor: not-allowed; }
 
     @keyframes ctSpin { to { transform: rotate(360deg); } }
@@ -416,18 +415,18 @@
     .ct-success-icon {
         width: 3.5rem; height: 3.5rem;
         border-radius: 50%;
-        background: rgba(34,197,94,.1);
-        border: 1.5px solid rgba(34,197,94,.3);
+        background: #163122;
+        border: 1.5px solid #2d6b45;
         display: flex; align-items: center; justify-content: center;
     }
     .ct-success-icon svg { width: 1.75rem; height: 1.75rem; stroke: #22c55e; }
     .ct-success-wrap h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #fff; }
-    .ct-success-wrap p { margin: 0; font-size: .9rem; color: rgba(255,255,255,.55); line-height: 1.6; max-width: 32ch; }
+    .ct-success-wrap p { margin: 0; font-size: .9rem; color: rgba(255,255,255,.66); line-height: 1.6; max-width: 32ch; }
 
     /* ── FAQ ── */
     .ct-faq {
         padding: 4.5rem 0 6rem;
-        border-top: 1px solid rgba(255,255,255,.06);
+        border-top: 1px solid #322026;
     }
 
     .ct-faq-title {
@@ -435,7 +434,7 @@
         margin: 0 0 3rem;
         font-size: clamp(1.4rem, 2.5vw, 1.85rem);
         font-weight: 800;
-        color: #fff;
+        color: #9fc0ff;
     }
 
     .ct-faq-grid {
@@ -446,7 +445,7 @@
 
     .ct-faq-item {
         padding-top: 1.25rem;
-        border-top: 1px solid rgba(255,255,255,.08);
+        border-top: 1px solid #33242b;
     }
 
     .ct-faq-item h3 {
@@ -461,7 +460,7 @@
         margin: 0;
         font-size: .875rem;
         line-height: 1.7;
-        color: rgba(255,255,255,.55);
+        color: rgba(255,255,255,.66);
     }
 
     /* ── Responsive ── */

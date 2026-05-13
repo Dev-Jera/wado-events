@@ -74,9 +74,6 @@
                         <a href="{{ $event->url ?? route('events.show', $event) }}" class="event-card-img-link">
                             <div class="event-card-img" style="background-image: url('{{ $imageUrl }}')">
                                 <span class="status-badge status-badge--{{ $liveStatus }}">{{ $statusLabel }}</span>
-                                @if ($liveStatus === 'live')
-                                    <span class="live-badge">● Live now</span>
-                                @endif
                                 @if (in_array((string) ($event->service_package ?? 'online_ticketing'), ['batch_tickets', 'premium_wristbands'], true))
                                     <span class="price-badge paid">Buy at gate</span>
                                 @elseif ((float) $event->ticket_price <= 0)
@@ -130,10 +127,29 @@
     </section>
 
     <style>
+        :root {
+            --events-bg: #170b0f;
+            --events-bg-2: #241017;
+            --events-panel: #1f1116;
+            --events-panel-soft: #25141a;
+            --events-border: rgba(255, 255, 255, 0.14);
+            --events-border-strong: rgba(192, 40, 60, 0.38);
+            --events-text: #f7f2f4;
+            --events-text-sub: rgba(247, 242, 244, 0.74);
+            --events-text-muted: rgba(247, 242, 244, 0.56);
+            --events-accent: #c0283c;
+            --events-accent-dark: #9f2030;
+            --events-blue: #1a73e8;
+            --events-blue-dark: #145ec0;
+        }
+
         /* ── Page shell ── */
         .events-page {
             padding: 9rem 1rem 5rem;
-            background: linear-gradient(180deg, #150508 0%, #1e0b0e 100%);
+            background:
+                radial-gradient(ellipse 70% 40% at 0% 0%, rgba(192, 40, 60, 0.16) 0%, transparent 62%),
+                radial-gradient(ellipse 50% 28% at 100% 0%, rgba(26, 115, 232, 0.08) 0%, transparent 68%),
+                linear-gradient(180deg, var(--events-bg) 0%, var(--events-bg-2) 100%);
             min-height: 100vh;
         }
         .events-shell {
@@ -150,7 +166,7 @@
             margin-bottom: 1.25rem;
         }
         .eyebrow {
-            color: #6b7280;
+            color: rgba(255, 216, 222, 0.85);
             font-size: 13px;
             margin: 0 0 4px;
             text-transform: uppercase;
@@ -164,7 +180,7 @@
         }
         .events-count {
             font-size: 13px;
-            color: #6b7280;
+            color: var(--events-text-sub);
             padding-bottom: 4px;
         }
         .sr-only {
@@ -190,24 +206,32 @@
             width: 100%;
             height: 42px;
             border-radius: 8px;
-            border: 0.5px solid #2a2a2a;
-            background: #1a1a1a;
-            color: #fff;
+            border: 1px solid var(--events-border);
+            background: var(--events-panel);
+            color: var(--events-text);
             padding: 0 14px;
             outline: none;
         }
+        .events-search input::placeholder {
+            color: var(--events-text-muted);
+        }
         .events-search input:focus {
-            border-color: rgba(192, 40, 60, 0.8);
+            border-color: var(--events-accent);
+            box-shadow: 0 0 0 3px rgba(192, 40, 60, 0.16);
         }
         .events-toolbar button {
             height: 42px;
             border: 0;
             border-radius: 8px;
-            background: #444;
+            background: var(--events-blue);
             color: #fff;
             font-weight: 700;
             padding: 0 18px;
             cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .events-toolbar button:hover {
+            background: var(--events-blue-dark);
         }
         .events-category-bar {
             display: flex;
@@ -222,20 +246,20 @@
             min-height: 34px;
             padding: 7px 12px;
             border-radius: 999px;
-            border: 0.5px solid #2a2a2a;
-            background: #1a1a1a;
-            color: #bbb;
+            border: 1px solid var(--events-border);
+            background: var(--events-panel);
+            color: var(--events-text-sub);
             text-decoration: none;
             font-size: 13px;
             font-weight: 700;
         }
         .category-pill span {
-            color: #777;
+            color: var(--events-text-muted);
             font-size: 12px;
         }
         .category-pill:hover,
         .category-pill.is-active {
-            border-color: rgba(192, 40, 60, 0.65);
+            border-color: var(--events-border-strong);
             color: #fff;
             background: rgba(192, 40, 60, 0.14);
         }
@@ -244,25 +268,44 @@
         .events-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
+            gap: 18px;
         }
 
         /* ── Card ── */
         .event-card {
+            position: relative;
             display: flex;
             flex-direction: column;
-            background: #1a1a1a;
-            border: 0.5px solid #2a2a2a;
-            border-radius: 16px;
+            background: var(--events-panel-soft);
+            border: 1px solid var(--events-border);
+            border-radius: 18px;
             overflow: hidden;
-            transition: border-color 0.15s, transform 0.15s;
+            transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+        }
+        .event-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            z-index: 2;
         }
         .event-card:hover {
-            border-color: #c0283c;
-            transform: translateY(-2px);
+            border-color: rgba(192, 40, 60, 0.65);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32);
+        }
+        .event-card--live::before,
+        .event-card--upcoming::before {
+            background: linear-gradient(90deg, rgba(192, 40, 60, 0.95), rgba(26, 115, 232, 0.88));
+        }
+        .event-card--ended::before {
+            background: rgba(148, 163, 184, 0.42);
         }
         .event-card--ended .event-card-img {
-            filter: grayscale(45%) brightness(0.78);
+            filter: grayscale(56%) brightness(0.72);
         }
         .event-card-img-link { display: block; }
 
@@ -275,23 +318,18 @@
             background-position: center;
             background-color: #2a1015;
         }
-
-        /* ── Live badge ── */
-        .live-badge {
-            display: none;
+        .event-card-img::after {
+            content: '';
             position: absolute;
-            top: 10px;
-            left: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 999px;
-            background: rgba(239, 68, 68, 0.18);
-            color: #f87171;
-            border: 0.5px solid rgba(248, 113, 113, 0.35);
-            letter-spacing: 0.02em;
-            animation: pulse-live 2s ease-in-out infinite;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.44) 100%);
+            pointer-events: none;
         }
+        .status-badge,
+        .price-badge {
+            z-index: 1;
+        }
+
         .status-badge {
             position: absolute;
             top: 10px;
@@ -304,24 +342,19 @@
             text-transform: uppercase;
         }
         .status-badge--live {
-            background: rgba(239, 68, 68, 0.18);
-            color: #f87171;
-            border: 0.5px solid rgba(248, 113, 113, 0.35);
-            animation: pulse-live 2s ease-in-out infinite;
+            background: rgba(192, 40, 60, 0.2);
+            color: #ffc3cb;
+            border: 1px solid rgba(255, 175, 185, 0.42);
         }
         .status-badge--upcoming {
-            background: rgba(59, 130, 246, 0.16);
-            color: #93c5fd;
-            border: 0.5px solid rgba(147, 197, 253, 0.32);
+            background: rgba(26, 115, 232, 0.16);
+            color: #b9d8ff;
+            border: 1px solid rgba(136, 187, 255, 0.35);
         }
         .status-badge--ended {
             background: rgba(17, 24, 39, 0.72);
             color: #d1d5db;
-            border: 0.5px solid rgba(209, 213, 219, 0.22);
-        }
-        @keyframes pulse-live {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.65; }
+            border: 1px solid rgba(209, 213, 219, 0.22);
         }
 
         /* ── Price badge (overlaid on image) ── */
@@ -338,12 +371,12 @@
         .price-badge.free {
             background: rgba(16, 185, 129, 0.15);
             color: #6ee7b7;
-            border: 0.5px solid rgba(110, 231, 183, 0.3);
+            border: 1px solid rgba(110, 231, 183, 0.3);
         }
         .price-badge.paid {
-            background: rgba(192, 40, 60, 0.15);
-            color: #c0283c;
-            border: 0.5px solid rgba(192, 40, 60, 0.3);
+            background: rgba(26, 115, 232, 0.2);
+            color: #dbeafe;
+            border: 1px solid rgba(147, 197, 253, 0.45);
         }
 
         /* ── Card body ── */
@@ -355,11 +388,50 @@
             flex: 1;
         }
 
-        /* Blue footer for non-passed events */
+        /* Keep subtle differentiation without bright slab */
         .event-card--live .event-card-body,
         .event-card--upcoming .event-card-body {
-            background: rgba(0, 132, 255, 0.25);
-            border-top: 2px solid #0084FF;
+            background: linear-gradient(180deg, rgba(192, 40, 60, 0.08) 0%, rgba(37, 20, 26, 0.96) 100%);
+            border-top: 1px solid rgba(192, 40, 60, 0.28);
+        }
+
+        .event-card--ended {
+            border-color: rgba(148, 163, 184, 0.28);
+            background: #1b171c;
+        }
+
+        .event-card--ended:hover {
+            border-color: rgba(148, 163, 184, 0.42);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+        }
+
+        .event-card--ended .event-card-body {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.18) 0%, rgba(30, 24, 30, 0.94) 100%);
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .event-card--ended .event-card-img::after {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.12) 0%, rgba(15, 23, 42, 0.42) 100%);
+        }
+
+        .event-card--ended .event-title,
+        .event-card--ended .meta-item,
+        .event-card--ended .event-category {
+            color: rgba(226, 232, 240, 0.82);
+        }
+
+        .event-card--ended .event-title:hover {
+            color: rgba(241, 245, 249, 0.96);
+        }
+
+        .event-card--ended .event-state {
+            border: 1px solid rgba(148, 163, 184, 0.28);
+        }
+
+        .event-card--ended .price-badge {
+            background: rgba(51, 65, 85, 0.55);
+            color: rgba(226, 232, 240, 0.92);
+            border-color: rgba(148, 163, 184, 0.35);
         }
 
         .event-card-top {
@@ -372,8 +444,8 @@
         /* ── Title ── */
         .event-title {
             margin: 0;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
             color: #fff;
             line-height: 1.35;
             text-decoration: none;
@@ -386,7 +458,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: #555;
+            color: rgba(247, 242, 244, 0.54);
             padding: 2px;
             flex-shrink: 0;
             line-height: 1;
@@ -411,22 +483,22 @@
             align-items: center;
             gap: 6px;
             font-size: 12px;
-            color: #888;
+            color: var(--events-text-sub);
         }
         .meta-item svg {
-            opacity: 0.5;
+            opacity: 0.68;
             flex-shrink: 0;
         }
 
         /* ── Empty state ── */
         .empty-state {
             grid-column: 1 / -1;
-            background: #1a1a1a;
-            border: 0.5px solid #2a2a2a;
+            background: var(--events-panel);
+            border: 1px solid var(--events-border);
             border-radius: 16px;
             padding: 4rem 2rem;
             text-align: center;
-            color: #666;
+            color: var(--events-text-sub);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -449,10 +521,10 @@
             gap: 10px;
             margin-top: 4px;
             padding-top: 10px;
-            border-top: 0.5px solid #2a2a2a;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         .event-category {
-            color: #aaa;
+            color: var(--events-text-sub);
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -470,12 +542,22 @@
             background: rgba(239, 68, 68, 0.12);
         }
         .event-state--upcoming {
-            color: #93c5fd;
-            background: rgba(59, 130, 246, 0.12);
+            color: #b9d8ff;
+            background: rgba(26, 115, 232, 0.16);
         }
         .event-state--ended {
             color: #d1d5db;
             background: rgba(107, 114, 128, 0.16);
+        }
+
+        .event-card-img-link:focus-visible,
+        .event-title:focus-visible,
+        .category-pill:focus-visible,
+        .bookmark-btn:focus-visible,
+        .events-toolbar button:focus-visible {
+            outline: 2px solid rgba(26, 115, 232, 0.9);
+            outline-offset: 2px;
+            border-radius: 8px;
         }
 
         @media (max-width: 600px) {
