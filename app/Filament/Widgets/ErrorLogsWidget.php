@@ -1,6 +1,7 @@
 <?php
-
 namespace App\Filament\Widgets;
+
+use Filament\Tables\Actions\Action;
 
 use App\Models\ErrorLog;
 use Filament\Tables;
