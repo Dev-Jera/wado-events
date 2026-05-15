@@ -1,9 +1,9 @@
 <?php
 namespace App\Filament\Widgets;
 
-use Filament\Tables\Actions\Action;
-
 use App\Models\ErrorLog;
+use Filament\Actions\Action as TableAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -31,23 +31,27 @@ class ErrorLogsWidget extends BaseWidget
                     ->dateTime('M d, H:i')
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('type')
+                Tables\Columns\TextColumn::make('type')
                     ->label('Type')
-                    ->colors([
-                        'danger' => 'webhook',
-                        'warning' => 'payment',
-                        'info' => 'ticket',
-                        'secondary' => 'queue',
-                    ])
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'webhook' => 'danger',
+                        'payment' => 'warning',
+                        'ticket' => 'info',
+                        'queue' => 'gray',
+                        default => 'gray',
+                    })
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('severity')
+                Tables\Columns\TextColumn::make('severity')
                     ->label('Severity')
-                    ->colors([
-                        'danger' => 'error',
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'error' => 'danger',
                         'warning' => 'warning',
-                        'success' => 'info',
-                    ])
+                        'info' => 'success',
+                        default => 'gray',
+                    })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('message')
@@ -85,11 +89,11 @@ class ErrorLogsWidget extends BaseWidget
                     ),
             ])
             ->actions([
-                Tables\Actions\Action::make('view')
+                ViewAction::make()
                     ->icon('heroicon-o-eye')
                     ->url(fn (ErrorLog $record) => route('filament.admin.resources.error-logs.view', $record)),
 
-                Tables\Actions\Action::make('resolve')
+                TableAction::make('resolve')
                     ->icon('heroicon-o-check')
                     ->hidden(fn (ErrorLog $record) => $record->resolved_at !== null)
                     ->action(fn (ErrorLog $record) => $record->resolve())
