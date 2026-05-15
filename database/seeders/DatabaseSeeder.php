@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $admin = User::query()->updateOrCreate(
-            ['email' => 'admin@wado.test'],
+            ['email' => 'wadoconcepts@gmail.com'],
             [
                 'name' => 'Admin User',
                 'password' => bcrypt('password'),
@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::query()->updateOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'aloyobrendaojera@gmail.com'],
             [
                 'name' => 'Test User',
                 'password' => bcrypt('password'),
