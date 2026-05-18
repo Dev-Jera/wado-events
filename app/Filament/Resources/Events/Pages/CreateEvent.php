@@ -36,11 +36,21 @@ class CreateEvent extends CreateRecord
         $data['capacity'] = (int) $ticketCategories->sum('ticket_count');
         $data['tickets_available'] = (int) $ticketCategories->sum('ticket_count');
         $data['ticket_price'] = (float) ($ticketCategories->min('price') ?? 0);
+        $data['is_free'] = $isFree;
         $data['image_url'] = self::normalizeImagePath($data['image_url'] ?? null);
 
-        unset($data['artists'], $data['ticketCategories'], $data['is_free']);
+        unset($data['artists'], $data['ticketCategories']);
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $event = $this->getRecord();
+
+        if ($event && (bool) $event->is_free) {
+            $event->ticketCategories()->update(['price' => 0]);
+        }
     }
 
     protected static function normalizeImagePath(?string $path): ?string

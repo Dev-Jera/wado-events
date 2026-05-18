@@ -49,11 +49,22 @@ class PromoCodeService
     }
 
     /**
-     * Atomically increment the usage counter.
-     * Call this inside a DB transaction after locking the promo code row.
+     * Atomically increment the usage counter inside a DB transaction.
+     * Re-checks isUsable() after acquiring the lock to prevent the race condition
+     * where two requests both pass validate() before either increments.
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function incrementUses(PromoCode $promo): void
     {
-        PromoCode::query()->lockForUpdate()->findOrFail($promo->id)->increment('uses');
+        $locked = PromoCode::query()->lockForUpdate()->findOrFail($promo->id);
+
+        if (! $locked->isUsable()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'promo_code' => 'This promo code has just been used up. Please proceed without it.',
+            ]);
+        }
+
+        $locked->increment('uses');
     }
 }

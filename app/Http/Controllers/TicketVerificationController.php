@@ -468,7 +468,11 @@ class TicketVerificationController extends Controller
                 ->with('error', 'You are not assigned to that event.');
         }
 
-        $eventIdForRedirect = ['event_id' => $selectedEventId];
+        $eventIdForRedirect = array_filter([
+            'event_id' => $selectedEventId,
+            'embedded' => $request->boolean('embedded') ? '1' : null,
+            'back'     => $request->input('back') ?: null,
+        ]);
 
         $lookup = trim((string) ($data['lookup'] ?? ''));
         if ($lookup !== '' && blank($data['ticket_code'] ?? null) && blank($data['scanned_payload'] ?? null)) {

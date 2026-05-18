@@ -25,7 +25,7 @@ class EventController extends Controller
         $category = Str::of((string) $request->query('category'))->lower()->trim()->toString();
         $search = Str::of((string) $request->query('search'))->lower()->trim()->toString();
 
-        $events = Cache::remember('events:list:all-published', 120, function () {
+        $events = Cache::remember('events:list:all-published', 5, function () {
             return Event::query()
                 ->with(['category', 'ticketCategories', 'artists'])
                 ->where('status', 'published')
@@ -99,7 +99,16 @@ class EventController extends Controller
     public function show(Event $event)
     {
         if ($event->status !== 'published') {
-            return redirect()->route('events.index');
+            $user = auth()->user();
+            $canPreview = $user && (
+                $user->isSuperAdmin() ||
+                $user->isAdmin() ||
+                (int) $event->user_id === (int) $user->id
+            );
+
+            if (! $canPreview) {
+                return redirect()->route('events.index');
+            }
         }
 
         if (in_array((string) $event->service_package, ['batch_tickets', 'premium_wristbands'], true)) {

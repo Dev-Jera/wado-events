@@ -95,9 +95,10 @@ class EditEvent extends EditRecord
         $data['capacity'] = (int) $ticketCategories->sum('ticket_count');
         $data['tickets_available'] = (int) $ticketCategories->sum('ticket_count');
         $data['ticket_price'] = (float) ($ticketCategories->min('price') ?? 0);
+        $data['is_free'] = $isFree;
         $data['image_url'] = self::normalizeImagePath($data['image_url'] ?? null);
 
-        unset($data['artists'], $data['ticketCategories'], $data['is_free']);
+        unset($data['artists'], $data['ticketCategories']);
 
         return $data;
     }
@@ -113,6 +114,10 @@ class EditEvent extends EditRecord
 
         if (! $event) {
             return;
+        }
+
+        if ((bool) $event->is_free) {
+            $event->ticketCategories()->update(['price' => 0]);
         }
 
         $isPhysicalPackage = in_array((string) $event->service_package, ['batch_tickets', 'premium_wristbands'], true);

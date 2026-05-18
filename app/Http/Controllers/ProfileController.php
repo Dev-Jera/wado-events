@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -64,6 +65,12 @@ class ProfileController extends Controller
             'password' => Hash::make($request->password),
         ])->save();
 
-        return back()->with('success', 'Password changed successfully.');
+        Auth::logoutOtherDevices($request->password);
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Password changed. Please log in with your new password.');
     }
 }

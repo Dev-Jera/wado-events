@@ -151,7 +151,6 @@ class EventForm
                                         ->disk('public')
                                         ->directory('event-images')
                                         ->image()
-                                        ->imageEditor()
                                         ->visibility('public')
                                         ->moveFiles()
                                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
